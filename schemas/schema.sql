@@ -10,5 +10,6 @@ CREATE SEQUENCE stock_id_seq
 
 CREATE TABLE stock (
     id int DEFAULT nextval('stock_id_seq'::regclass) NOT NULL,
-    document_sw jsonb
+    document_sw jsonb,
+    documnt_br jsonb
 )
