@@ -1,24 +1,25 @@
-var Promise = require('bluebird');
-var fs = Promise.promisifyAll(fs = require('fs'));
+'use strict';
+
+var promise = require('bluebird');
+var fs = promise.promisifyAll(fs = require('fs'));
 var Converter = require('csvtojson').Converter;
 var squel = require('squel');
 
-var db = require('./../lib/db');
-var valuationSwFilename = 'stockwatch.pl-Wyceny-2016-02-14.csv';
-var connectionUrl = 'postgres://realskill:realskill@localhost/realskill';
+var db = require('../libs/db');
+var valuationSwFilename = './assets/stockwatch.pl-Wyceny-2016-02-14.csv';
 
 function getSchemaDefinition()
 {
-    return fs.readFileAsync('schema.sql').then(function (schema)
+    return fs.readFileAsync('./schemas/schema.sql').then(function (schema)
     {
         return schema.toString();
-    })
+    });
 }
 
 function createSchema(schema)
 {
     console.log('Creating schema');
-    return db(connectionUrl).then(function (client)
+    return db().then(function (client)
     {
         return client.query(schema).finally(client.done);
     });
@@ -39,9 +40,8 @@ function convertValuationSW()
         });
         return converter.fromString(csv, function (err, json)
         {
-            console.log(json);
-            json.splice(json.length-1,1);
-            return db(connectionUrl).then(function (client)
+            json.splice(json.length - 1, 1);
+            return db().then(function (client)
             {
                 json.forEach(function (item)
                 {

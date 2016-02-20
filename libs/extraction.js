@@ -1,5 +1,6 @@
-var Promise = require('bluebird');
-var request = Promise.promisifyAll(require('request'));
+'use strict';
+
+var promise = require('bluebird');
 var cheerio = require('cheerio');
 var fs = require('fs');
 var _ = require('lodash');
@@ -13,7 +14,7 @@ fs.readFile('./exampleBr.html', (err, document)=>
 
 function processDocument(doc, map)
 {
-    return new Promise((resolve, reject)=>
+    return new promise((resolve, reject)=>
     {
         $ = cheerio.load(doc);
         var extracted = {};
@@ -24,11 +25,3 @@ function processDocument(doc, map)
         resolve(extracted);
     });
 }
-
-
-//request.getAsync('http://www.biznesradar.pl/notowania/PKO').spread((instance, body) =>
-//{
-//console.log(body);
-//var $ = cheerio.load(body);
-//console.log($('h1').text());
-//});

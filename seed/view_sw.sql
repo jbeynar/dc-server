@@ -1,4 +1,4 @@
-DROP VIEW sw;
+DROP VIEW  IF EXISTS sw;
 CREATE VIEW sw AS
 SELECT id,
 document_sw->>'Spolka' as symbol,
