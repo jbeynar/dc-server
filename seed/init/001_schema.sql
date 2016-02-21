@@ -18,13 +18,18 @@ CREATE SEQUENCE stock_id_seq
 CREATE TABLE document (
     id bigint DEFAULT nextval('document_id_seq'::regclass) NOT NULL,
     type character varying(64),
-    body jsonb,
+    host character varying(256),
+    path character varying(512),
+    code integer,
+    headers jsonb,
+    body text,
+    length bigint,
     ts timestamp without time zone DEFAULT now()
 );
 
 CREATE TABLE stock (
     id bigint DEFAULT nextval('stock_id_seq'::regclass) NOT NULL,
-    symbol character varying(3),
+    symbol character varying(5),
     symbol_long character varying(16),
     name character varying(512),
     sector character varying(128),
