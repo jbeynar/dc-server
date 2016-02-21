@@ -1,4 +1,4 @@
-INSERT INTO stock (symbol) VALUES
+INSERT INTO stock (symbol_long) VALUES
 ('06MAGNA'),
 ('08OCTAVA'),
 ('11BIT'),

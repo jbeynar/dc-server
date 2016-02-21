@@ -4,9 +4,12 @@ const pg = require('pg');
 const promise = require('bluebird');
 const config = require('../config');
 
+var highlighStart = '\x1b[31m';
+var highlightEnd = '\x1b[0m';
+
 pg.defaults.poolIdleTimeout = config.db.driverOptions.poolIdleTimeout;
 
-module.exports = function db(connectionUrl)
+module.exports.connect = function db(connectionUrl)
 {
     connectionUrl = connectionUrl || config.db.connectionUrl;
     var pgConnect = promise.promisify(pg.connect, pg);
@@ -18,4 +21,15 @@ module.exports = function db(connectionUrl)
             done: connection[1]
         };
     });
+};
+
+module.exports.exceptionHandler = function (err)
+{
+    console.error(highlighStart + 'SQL ' + err.toString());
+    if (err.detail) {
+        console.error('detail: ' + err.detail);
+    }
+    console.error('code: ' + err.code);
+    console.error('position: ' + err.position);
+    console.error('routine: ' + err.routine, highlightEnd);
 };

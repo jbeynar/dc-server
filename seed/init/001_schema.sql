@@ -20,13 +20,13 @@ CREATE TABLE document (
     type character varying(64),
     body jsonb,
     ts timestamp without time zone DEFAULT now()
-)
+);
 
 CREATE TABLE stock (
     id bigint DEFAULT nextval('stock_id_seq'::regclass) NOT NULL,
-    symbol varying character(3),
-    symbol_long varying character(16),
-    name varying character(512),
-    sector varying character(128),
-    website varying character(512)
-)
+    symbol character varying(3),
+    symbol_long character varying(16),
+    name character varying(512),
+    sector character varying(128),
+    website character varying(512)
+);
