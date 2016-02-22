@@ -7,32 +7,41 @@ const _ = require('lodash');
 
 const SEED_DIR = 'seed/init';
 
-return fs.readdirAsync(SEED_DIR).then((files) =>
+function seed()
 {
-    return promise.map(files, (file) =>
+    return fs.readdirAsync(SEED_DIR).then((files) =>
     {
-        return fs.readFileAsync(SEED_DIR + '/' + file).then((script)=>
+        return promise.map(files, (file) =>
         {
-            return script.toString();
+            return fs.readFileAsync(SEED_DIR + '/' + file).then((script)=>
+            {
+                return script.toString();
+            });
+        });
+    }).then(function (scripts)
+    {
+        return db.connect().then(function (client)
+        {
+            var queryPromises = [];
+            _.forEach(scripts, function (sql)
+            {
+                queryPromises.push(client.query(sql));
+            });
+            return promise.all(queryPromises).then(()=>
+            {
+                client.done();
+            }).catch((err)=>
+            {
+                db.exceptionHandler(err);
+                console.error('Fatal error occurred while seeding. Failure exit.');
+                process.exit(1);
+            }).finally(()=>
+            {
+                console.log('Database seed finished successfully.');
+                process.exit(0);
+            });
         });
     });
-}).then(function (scripts)
-{
-    return db.connect().then(function (client)
-    {
-        var queryPromises = [];
-        _.forEach(scripts, function (sql)
-        {
-            queryPromises.push(client.query(sql));
-        });
-        return promise.all(queryPromises).then(()=>
-        {
-            client.done();
-        }).catch((err)=>
-        {
-            db.exceptionHandler(err);
-            console.error('Fatal error occurred while seeding. Failure exit.');
-            process.exit(1);
-        });
-    });
-});
+}
+
+module.exports = seed;
