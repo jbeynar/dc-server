@@ -36,3 +36,28 @@ CREATE TABLE stock (
     website character varying(512),
     description text
 );
+
+CREATE SEQUENCE valuation_sw_id_seq
+    START WITH 1001
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE valuation_sw (
+    id bigint DEFAULT nextval('valuation_sw_id_seq'::regclass) NOT NULL,
+    document jsonb
+);
+
+CREATE SEQUENCE valuation_br_id_seq
+    START WITH 1001
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE valuation_br (
+    id bigint DEFAULT nextval('valuation_br_id_seq'::regclass) NOT NULL,
+    document jsonb
+);
+

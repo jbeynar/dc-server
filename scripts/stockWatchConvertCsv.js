@@ -1,29 +1,13 @@
 'use strict';
 
-var promise = require('bluebird');
-var fs = promise.promisifyAll(fs = require('fs'));
-var Converter = require('csvtojson').Converter;
-var squel = require('squel');
+const promise = require('bluebird');
+const fs = promise.promisifyAll(require('fs'));
+const Converter = require('csvtojson').Converter;
+const squel = require('squel').useFlavour('postgres');
+const rfr = require('rfr');
+const db = rfr('libs/db');
 
-var db = require('../libs/db');
-var valuationSwFilename = './assets/stockwatch.pl-Wyceny-2016-02-14.csv';
-
-function getSchemaDefinition()
-{
-    return fs.readFileAsync('./schemas/schema.sql').then(function (schema)
-    {
-        return schema.toString();
-    });
-}
-
-function createSchema(schema)
-{
-    console.log('Creating schema');
-    return db().then(function (client)
-    {
-        return client.query(schema).finally(client.done);
-    });
-}
+const valuationSwFilename = './../assets/stockwatch.pl-Wyceny-2016-02-14.csv';
 
 function convertValuationSW()
 {
@@ -41,12 +25,12 @@ function convertValuationSW()
         return converter.fromString(csv, function (err, json)
         {
             json.splice(json.length - 1, 1);
-            return db().then(function (client)
+            return db.connect().then(function (client)
             {
-                json.forEach(function (item)
+                json.forEach(function (doc)
                 {
-                    var insertQuery = squel.insert().into('stock').set('document_sw', JSON.stringify(item)).toString();
-                    client.query(insertQuery);
+                    var query = squel.insert().into('valuation_sw').set('document', JSON.stringify(doc)).toParam();
+                    client.query(query.text, query.values);
                 });
                 console.log('Success!');
                 client.done();
@@ -56,4 +40,4 @@ function convertValuationSW()
     });
 }
 
-getSchemaDefinition().then(createSchema).then(convertValuationSW);
+convertValuationSW();

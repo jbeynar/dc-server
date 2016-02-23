@@ -1,20 +1,21 @@
 {
-    "name": "gpw-command",
-    "version": "0.0.3",
-    "description": "Command line utility for shares valuation in term of fundamental analysis",
-    "main": "index.js",
-    "scripts": {
-        "start": "echo \"Just run one of scripts\" && exit 1",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "seed": "node -e \"require('./scripts/seed.js')();\""
-    },
-    "dependencies": {
-        "bluebird": "2.10.2",
-        "cheerio": "0.20.0",
-        "csvtojson": "0.5.2",
-        "lodash": "4.4.0",
-        "pg": "4.4.4",
-        "squel": "4.2.3"
-    },
-    "author": "jbeynar"
+  "name": "gpw-command",
+  "version": "0.0.3",
+  "description": "Command line utility for shares valuation in term of fundamental analysis",
+  "main": "index.js",
+  "scripts": {
+    "start": "echo \"Just run one of scripts\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node -e \"require('./scripts/seed.js')();\""
+  },
+  "dependencies": {
+    "bluebird": "2.10.2",
+    "cheerio": "0.20.0",
+    "csvtojson": "0.5.2",
+    "lodash": "4.4.0",
+    "pg": "4.4.4",
+    "rfr": "1.2.3",
+    "squel": "4.2.3"
+  },
+  "author": "jbeynar"
 }
