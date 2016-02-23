@@ -8,6 +8,18 @@ module.exports = [
         as: 'description'
     },
     {
+        select: 'h1',
+        as: 'heading'
+    },
+    {
+        select: 'h2',
+        as: 'name'
+    },
+    {
+        select: '.box-left[itemtype] table.profileSummary tr:nth-child(5) td a[title]',
+        as: 'sector'
+    },
+    {
         select: '.dynamic-cols section:nth-child(2) table tr:nth-child(1) td:nth-child(2)',
         as: 'cwk'
     },

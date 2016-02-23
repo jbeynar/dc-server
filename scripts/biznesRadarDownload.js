@@ -6,8 +6,8 @@ const _ = require('lodash');
 const promise = require('bluebird');
 const request = promise.promisifyAll(require('request'));
 
-const downloadDelay = 1500; // ms
-const binzesRaadarUrlPattern = 'http://www.biznesradar.pl/notowania/$SYMBOL_LONG$#1m_lin_lin';
+const downloadDelay = 4000; // ms
+const biznesRadarUrlPattern = 'http://www.biznesradar.pl/notowania/$SYMBOL_LONG$#1m_lin_lin';
 
 function getSourceURLs()
 {
@@ -22,7 +22,7 @@ function getSourceURLs()
     {
         return _.map(symbols, function (item)
         {
-            return binzesRaadarUrlPattern.replace('$SYMBOL_LONG$', item.symbol);
+            return biznesRadarUrlPattern.replace('$SYMBOL_LONG$', item.symbol);
         });
     });
 }
@@ -78,5 +78,3 @@ getSourceURLs().then((urls)=>
         process.exit(1);
     });
 });
-
-//downloadDocuments(testDocs);
