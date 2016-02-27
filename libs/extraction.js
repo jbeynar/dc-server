@@ -21,7 +21,11 @@ function extract(doc, map)
 
             var match = $(selector).text();
             if (_.isObject(def) && def.process && def.process instanceof Function) {
-                match = def.process('' + match);
+                try {
+                    match = def.process(match);
+                } catch (err) {
+                    console.error('Process function fail at `' + key + '` mapping cause:', err);
+                }
             }
             extracted[key] = match;
         }

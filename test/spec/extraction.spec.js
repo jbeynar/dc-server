@@ -80,4 +80,27 @@ describe('Extraction library', () =>
         });
     });
 
+    it('Should not crash whole extraction if one process function fail', ()=>
+    {
+        var mapping = {
+            title: {
+                selector: 'h1',
+                process: function (element)
+                {
+                    return element.match(/\((.*)\)/)[2];
+                }
+            },
+            subtitle: 'h4'
+        };
+        var expected = {
+            title: 'Employee list',
+            subtitle: 'Here is an employee list'
+        };
+
+        return extraction.extract(htmlDocument, mapping).then((data)=>
+        {
+            expect(data).to.eql(expected);
+        });
+    });
+
 });
