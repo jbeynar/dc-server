@@ -1,12 +1,15 @@
 'use strict';
-
-const biznesRadarMap = require('./../assets/maps/biznesRadarProfile.js');
-const db = require('../libs/db');
+const _ = require('lodash');
+const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
-const extraction = require('../libs/extraction');
 const promise = require('bluebird');
 const fs = promise.promisifyAll(require('fs'));
-const _ = require('lodash');
+
+const biznesRadarMap = require('./profile.map.js');
+const db = rfr('libs/db');
+const extraction = rfr('libs/extraction');
+
+// TODO this file require to be adjustet after extraction upgrade
 
 function toSqlInsert(jsonDoc)
 {
@@ -19,6 +22,7 @@ function toSqlInsert(jsonDoc)
     map.push(jsonDoc.sector);
     map.push(jsonDoc.website);
     map.push(jsonDoc.description.replace(/'/g, '`'));
+    /*jshint -W109*/
     return ("('" + map.join("', '") + "'),\n");
 }
 
@@ -41,8 +45,8 @@ return db.connect().then(function (client)
         });
     }).then(()=>
     {
-        console.log('Saving file');
-        fs.writeFileAsync('seed/stocks-list.sql', stmt).then(()=>
+        console.log('Saving file stocks-list.sql');
+        fs.writeFileAsync('stocks-list.sql', stmt).then(()=>
         {
             console.log('DONE');
         });

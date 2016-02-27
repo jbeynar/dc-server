@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "echo \"Just run one of scripts\" && exit 1",
-    "test": "echo \"Error: no test specified\" && exit 1",
+      "test": "./node_modules/.bin/mocha --recursive",
     "seed": "node -e \"require('./scripts/seed.js')();\""
   },
   "dependencies": {
@@ -17,5 +17,9 @@
     "rfr": "1.2.3",
     "squel": "4.2.3"
   },
-  "author": "jbeynar"
+  "author": "jbeynar",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "2.4.5"
+  }
 }

@@ -1,6 +1,9 @@
 {
     "globals": {
-        "module": true
+        "module": true,
+        "describe": true,
+        "it": true,
+        "before": true
     },
     "bitwise": true,
     "browser": true,

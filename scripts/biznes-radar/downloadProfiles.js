@@ -1,6 +1,6 @@
 'use strict';
 
-const db = require('../libs/db');
+const db = require('../../libs/db');
 const squel = require('squel').useFlavour('postgres');
 const _ = require('lodash');
 const promise = require('bluebird');
