@@ -90,14 +90,34 @@ describe('Extraction library', () =>
                     return element.match(/\((.*)\)/)[2];
                 }
             },
-            subtitle: 'h4'
+            subtitle: 'h2'
         };
         var expected = {
             title: 'Employee list',
-            subtitle: 'Here is an employee list'
+            subtitle: 'An xyz company'
         };
 
         return extraction.extract(htmlDocument, mapping).then((data)=>
+        {
+            expect(data).to.eql(expected);
+        });
+    });
+
+    it('Should only extract elements passed as props param', ()=>
+    {
+        var mapping = {
+            title: 'h1',
+            subtitle: 'h4',
+            leading: 'p',
+            author: 'strong'
+        };
+
+        var expected = {
+            title: 'Employee list',
+            author: 'Authored by jbeynar'
+        };
+
+        return extraction.extract(htmlDocument, mapping, ['title', 'author']).then((data)=>
         {
             expect(data).to.eql(expected);
         });

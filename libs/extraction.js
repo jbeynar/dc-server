@@ -9,7 +9,7 @@ const errorCode = {
     mapInvalid: 'ERR_MAP_INVALID'
 };
 
-function extract(doc, map)
+function extract(doc, map, props)
 {
     return new Promise((resolve, reject) =>
     {
@@ -17,6 +17,10 @@ function extract(doc, map)
 
         function extractOnce(def, key)
         {
+            if (_.isArray(props) && -1 === _.indexOf(props, key)) {
+                return;
+            }
+
             var selector = _.isString(def) ? def : def.selector;
 
             var match = $(selector).text();
