@@ -17,18 +17,26 @@ return db.connect().then(function (client)
 }).then((documents)=>
 {
     console.log('Processing documents...');
-    var data = [];
+    var data = [], whiteCard = ['symbol', 'value', 'cwk', 'cwk_rel', 'cz', 'cz_rel', 'cp_rel', 'czo_rel', 'roe_rel', 'roa_rel'];
     promise.each(documents, (doc)=>
     {
-        return extraction.extract(doc.body, biznesRadarProfileMap, ['symbol', 'valuation']).then((obj)=>
+        return extraction.extract(doc.body, biznesRadarProfileMap, whiteCard).then((obj)=>
         {
             data.push(obj);
         });
     }).then(()=>
     {
-        console.log('Data extracted.');
-        console.log(data);
-
-        // TODO save data into database
+        console.log('Saving data in database...');
+        return db.connect().then(function (client)
+        {
+            client.query(squel.delete().from('valuation_br').toString()).then(()=>
+            {
+                return promise.each(data, (record)=>
+                {
+                    var ins = squel.insert().into('valuation_br').setFields(record).toParam();
+                    return client.query(ins.text, ins.values).finally(client.done);
+                });
+            });
+        });
     });
 });

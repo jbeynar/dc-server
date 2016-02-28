@@ -1,6 +1,14 @@
 'use strict';
 /*jshint -W106*/
 
+const _ = require('lodash');
+
+function filterNumeric(number)
+{
+    number = _.toString(number);
+    return _.toNumber(number.match(/-?\d+.?\d+/));
+}
+
 module.exports = {
     website: '#left-content table.profileSummary.hidden tr:last-child td>a',
     description: '#left-content .profileDesc .hidden',
@@ -22,17 +30,56 @@ module.exports = {
     },
     name: 'h2',
     sector: '.box-left[itemtype] table.profileSummary tr:nth-child(5) td a[title]',
-    cwk: '.dynamic-cols section:nth-child(2) table tr:nth-child(1) td:nth-child(2)',
-    cwk_sector_relative: '.dynamic-cols section:nth-child(2) table tr:nth-child(1) td:nth-child(3) .pv',
-    cp: '.dynamic-cols section:nth-child(2) table tr:nth-child(2) td:nth-child(2)',
-    cp_sector_relative: '.dynamic-cols section:nth-child(2) table tr:nth-child(2) td:nth-child(3) .pv',
-    cz: '.dynamic-cols section:nth-child(2) table tr:nth-child(3) td:nth-child(2)',
-    cz_sector_relative: '.dynamic-cols section:nth-child(2) table tr:nth-child(3) td:nth-child(3) .pv',
-    czo: '.dynamic-cols section:nth-child(2) table tr:nth-child(4) td:nth-child(2)',
-    czo_sector_relative: '.dynamic-cols section:nth-child(2) table tr:nth-child(4) td:nth-child(3) .pv',
-    roe: '.dynamic-cols section:nth-child(2) table tr:nth-child(5) td:nth-child(2)',
-    roe_sector_relative: '.dynamic-cols section:nth-child(2) table tr:nth-child(5) td:nth-child(3) .pv',
-    roa: '.dynamic-cols section:nth-child(2) table tr:nth-child(6) td:nth-child(2)',
-    roa_sector_relative: '.dynamic-cols section:nth-child(2) table tr:nth-child(6) td:nth-child(3) .pv',
-    valuation: '.ratings tr:nth-child(3) .pv:nth-child(1)'
+    cwk: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(1) td:nth-child(2)',
+        process: filterNumeric
+    },
+    cwk_rel: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(1) td:nth-child(3) .pv',
+        process: filterNumeric
+    },
+    cp: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(2) td:nth-child(2)',
+        process: filterNumeric
+    },
+    cp_rel: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(2) td:nth-child(3) .pv',
+        process: filterNumeric
+    },
+    cz: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(3) td:nth-child(2)',
+        process: filterNumeric
+    },
+    cz_rel: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(3) td:nth-child(3) .pv',
+        process: filterNumeric
+    },
+    czo: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(4) td:nth-child(2)',
+        process: filterNumeric
+    },
+    czo_rel: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(4) td:nth-child(3) .pv',
+        process: filterNumeric
+    },
+    roe: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(5) td:nth-child(2)',
+        process: filterNumeric
+    },
+    roe_rel: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(5) td:nth-child(3) .pv',
+        process: filterNumeric
+    },
+    roa: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(6) td:nth-child(2)',
+        process: filterNumeric
+    },
+    roa_rel: {
+        selector: '.dynamic-cols section:nth-child(2) table tr:nth-child(6) td:nth-child(3) .pv',
+        process: filterNumeric
+    },
+    value: {
+        selector: '.ratings tr:nth-child(3) .pv:nth-child(1)',
+        process: filterNumeric
+    }
 };
