@@ -21,6 +21,7 @@ function convertValuationSW()
             noheader: false,
             delimiter: ';',
             flatKeys: true
+        //    headers: []
         });
         return converter.fromString(csv, function (err, json)
         {

@@ -9,6 +9,8 @@ function filterNumeric(number)
     return _.toNumber(number.match(/-?\d+.?\d+/));
 }
 
+// description: map.push(jsonDoc.description.replace(/'/g, '`'));
+
 module.exports = {
     website: '#left-content table.profileSummary.hidden tr:last-child td>a',
     description: '#left-content .profileDesc .hidden',

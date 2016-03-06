@@ -7,6 +7,10 @@ const extraction = rfr('libs/extraction');
 const db = rfr('libs/db');
 const biznesRadarProfileMap = require('./profile.map.js');
 
+// todo save current price
+// todo save potential
+// figure out sw structure, mabey split document into document_html and document_json
+
 return db.connect().then(function (client)
 {
     let query = squel.select().from('document').where('host=?', 'www.biznesradar.pl').toParam();

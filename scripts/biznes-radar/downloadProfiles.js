@@ -1,80 +1,31 @@
 'use strict';
 
-const db = require('../../libs/db');
+const rfr = require('rfr');
+const db = rfr('libs/db');
 const squel = require('squel').useFlavour('postgres');
+const downloader = rfr('libs/downloader');
 const _ = require('lodash');
-const promise = require('bluebird');
-const request = promise.promisifyAll(require('request'));
-
-const downloadDelay = 4000; // ms
-const biznesRadarUrlPattern = 'http://www.biznesradar.pl/notowania/$SYMBOL_LONG$#1m_lin_lin';
 
 function getSourceURLs()
 {
-    return db.connect().then(function (client)
+    const pattern = 'http://www.biznesradar.pl/notowania/$SYMBOL_LONG$#1m_lin_lin';
+    var query = squel.select().from('stock').field('symbol').order('symbol');
+    return db.query(query).then(symbols =>
     {
-        let q = squel.select().from('stock').field('symbol').toString();
-        return client.query(q).then((res)=>
+        return _.map(symbols, item =>
         {
-            return res.rows;
-        }).finally(client.done);
-    }).then((symbols)=>
-    {
-        return _.map(symbols, function (item)
-        {
-            return biznesRadarUrlPattern.replace('$SYMBOL_LONG$', item.symbol);
+            return pattern.replace('$SYMBOL_LONG$', item.symbol);
         });
     });
 }
 
-function downloadDocuments(urls)
+getSourceURLs().then(downloader.downloadHttpDocuments).then(()=>
 {
-    return db.connect().then(function (client)
-    {
-        console.log('Start download', urls.length, 'documents');
-        return promise.each(urls, function (url)
-        {
-            console.log('# Downloading', url);
-            return request.getAsync(url).spread((response, body) =>
-            {
-                let data = {
-                    type: response.headers['content-type'],
-                    host: response.request.uri.hostname,
-                    path: response.request.uri.pathname,
-                    code: response.statusCode,
-                    headers: JSON.stringify(response.headers),
-                    body: body,
-                    length: body.length
-                };
-                let query = squel.insert().into('document').setFields(data).toParam();
-                return client.query(query.text, query.values).catch((err)=>
-                {
-                    console.log('ERROR while inserting document ' + url);
-                    db.exceptionHandler(err);
-                });
-            }).catch((err)=>
-            {
-                console.log('ERROR while downloading document ' + url);
-                console.log(err);
-            }).finally(()=>
-            {
-                return promise.delay(downloadDelay);
-            });
-        }).finally(client.done);
-
-    }).catch(db.exceptionHandler);
-}
-
-getSourceURLs().then((urls)=>
+    console.log('DONE');
+    process.exit();
+}).catch(function (err)
 {
-    downloadDocuments(urls).then(()=>
-    {
-        console.log('DONE');
-        process.exit();
-    }).catch(function (err)
-    {
-        console.log('Unrecognized error');
-        console.log(err);
-        process.exit(1);
-    });
+    console.log('Unrecognized error');
+    console.log(err);
+    process.exit(1);
 });
