@@ -7,7 +7,7 @@ const squel = require('squel').useFlavour('postgres');
 const rfr = require('rfr');
 const db = rfr('libs/db');
 
-const valuationSwFilename = './../assets/stockwatch.pl-Wyceny-2016-02-14.csv';
+const valuationSwFilename = 'assets/stockwatch.pl-Wyceny-2016-03-06.csv';
 
 function convertValuationSW()
 {
@@ -21,17 +21,23 @@ function convertValuationSW()
             noheader: false,
             delimiter: ';',
             flatKeys: true
-        //    headers: []
+            //    headers: []
         });
         return converter.fromString(csv, function (err, json)
         {
-            json.splice(json.length - 1, 1);
+            json.splice(json.length - 1, 1); // remove last line
             return db.connect().then(function (client)
             {
                 json.forEach(function (doc)
                 {
-                    var query = squel.insert().into('valuation_sw').set('document', JSON.stringify(doc)).toParam();
-                    client.query(query.text, query.values);
+                    let data = {
+                        type: 'stockwatch.valuation',
+                        body: JSON.stringify(doc)
+                    };
+                    data.length = data.body.length;
+
+                    var query = squel.insert().into('repo.document_json').setFields(data).toParam();
+                    client.query(query.text, query.values).catch(db.exceptionHandler);
                 });
                 console.log('Success!');
                 client.done();

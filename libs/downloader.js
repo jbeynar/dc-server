@@ -8,7 +8,7 @@
     const _ = require('lodash');
     const promise = require('bluebird');
 
-    const request = promise.promisifyAll(require('request'));
+    const Curl = require('node-libcurl').Curl;
 
     const defaultOptions = {
         downloadDelay: 3000,
@@ -29,31 +29,44 @@
             return promise.each(urls, function (url)
             {
                 console.log('%s/%s %s', ++i, urls.length, url);
-                return request.getAsync(url).spread((response, body) =>
+                return new promise(function (resolve)
                 {
-                    console.log('OK');
-                    let data = {
-                        type: response.headers['content-type'],
-                        url: url,
-                        host: response.request.uri.hostname,
-                        path: response.request.uri.pathname,
-                        code: response.statusCode,
-                        headers: JSON.stringify(response.headers),
-                        body: body,
-                        length: body.length
-                    };
-                    if (_.isFunction(saveFn)) {
-                        return saveFn(data);
-                    } else {
-                        return DocumentDAO.saveHttpDocument(data);
-                    }
-                }).catch((err)=>
-                {
-                    console.log(err);
-                }).finally(()=>
-                {
-                    return promise.delay(options.downloadDelay);
-                });
+                    var curl = new Curl();
+                    curl.setOpt(Curl.option.URL, url);
+                    curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
+                    curl.setOpt(Curl.option.TIMEOUT, 30);
+
+                    // todo, how host and path can be captured?
+                    curl.on('end', function (statusCode, body, headers)
+                    {
+                        let data = {
+                            type: curl.getInfo(Curl.info.CONTENT_TYPE),
+                            url: url,
+                            //host: '',
+                            //path: '',
+                            code: statusCode,
+                            headers: JSON.stringify(headers),
+                            body: body,
+                            length: body.length
+                        };
+                        if (_.isFunction(saveFn)) {
+                            saveFn(data).then(resolve);
+                        } else {
+                            DocumentDAO.saveHttpDocument(data).then(resolve);
+                        }
+                        this.close();
+                    });
+
+                    curl.on('error', function (error)
+                    {
+                        console.log('Downloader error');
+                        console.log(error);
+
+                    });
+
+                    curl.perform();
+
+                }).delay(options.downloadDelay);
             }).finally(client.done);
         }).catch(db.exceptionHandler);
     }

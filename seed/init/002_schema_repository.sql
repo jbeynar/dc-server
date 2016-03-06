@@ -27,7 +27,7 @@ CREATE TABLE document_http (
     headers jsonb,
     body text,
     length bigint,
-    retry_count integer,
+    retry_count integer DEFAULT 0,
     ts timestamp without time zone DEFAULT now()
 );
 

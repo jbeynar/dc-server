@@ -9,7 +9,7 @@ const _ = require('lodash');
 function getSourceURLs()
 {
     const pattern = 'http://www.biznesradar.pl/notowania/$SYMBOL_LONG$#1m_lin_lin';
-    var query = squel.select().from('stock').field('symbol').order('symbol');
+    var query = squel.select().from('stock').field('symbol').order('symbol').toString();
     return db.query(query).then(symbols =>
     {
         return _.map(symbols, item =>
