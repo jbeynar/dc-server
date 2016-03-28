@@ -1,26 +1,29 @@
 {
-  "name": "gpw-command",
-  "version": "0.0.3",
-  "description": "Command line utility for shares valuation in term of fundamental analysis",
-  "main": "index.js",
-  "scripts": {
-    "start": "echo \"Just run one of scripts\" && exit 1",
-    "test": "./node_modules/.bin/mocha --recursive",
-    "seed": "node -e \"require('./scripts/seed.js')();\""
-  },
-  "dependencies": {
-    "bluebird": "2.10.2",
-    "cheerio": "0.20.0",
-    "csvtojson": "0.5.2",
-    "lodash": "4.4.0",
-    "node-libcurl": "0.8.0",
-    "pg": "4.4.4",
-    "rfr": "1.2.3",
-    "squel": "4.2.3"
-  },
-  "author": "jbeynar",
-  "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "2.4.5"
-  }
+    "name": "gpw-command",
+    "version": "0.0.3",
+    "description": "Command line utility for shares valuation in term of fundamental analysis",
+    "main": "index.js",
+    "scripts": {
+        "start": "echo \"Just run one of scripts\" && exit 1",
+        "test": "./node_modules/.bin/mocha --recursive",
+        "seed": "node -e \"require('./scripts/seed.js')();\"",
+        "import-biznes-radar": "node ./scripts/valuation/biznes-radar/downloadProfiles.js && node ./scripts/valuation/biznes-radar/importValuations",
+        "import-stock-watch": "node ./scripts/valuation/stock-watch/importValuations.js",
+        "merge": "node ./scripts/valuation/merge.js"
+    },
+    "dependencies": {
+        "bluebird": "2.10.2",
+        "cheerio": "0.20.0",
+        "csvtojson": "0.5.2",
+        "lodash": "4.4.0",
+        "node-libcurl": "0.8.0",
+        "pg": "4.4.4",
+        "rfr": "1.2.3",
+        "squel": "4.2.3"
+    },
+    "author": "jbeynar",
+    "devDependencies": {
+        "chai": "^3.5.0",
+        "mocha": "2.4.5"
+    }
 }
