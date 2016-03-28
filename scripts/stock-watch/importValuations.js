@@ -6,6 +6,7 @@ const Converter = require('csvtojson').Converter;
 const squel = require('squel').useFlavour('postgres');
 const rfr = require('rfr');
 const db = rfr('libs/db');
+const _ = require('lodash');
 const DocumentDAO = rfr('libs/repo/DocumentDAO');
 
 const valuationSwFilename = 'assets/stockwatch.pl-Wyceny-2016-03-06.csv';
@@ -29,15 +30,21 @@ function convertValuationSW()
             json.splice(json.length - 1, 1); // remove last line
             return db.connect().then(function (client)
             {
-                json.forEach(function (doc)
+                promise.each(json, function (doc)
                 {
-                    return DocumentDAO.saveJsonDocument('valuation.stockwatch', JSON.stringify(doc));
+                    var query = squel.select('symbol_long').from('stock').where('symbol_long=?', [doc.Spolka]).toParam();
+                    return client.query(query.text, query.values).then((results)=>
+                    {
+                        doc.symbol = _.get(results, 'rows[0].symbol') || 'unmatched symbol';
+                        return DocumentDAO.saveJsonDocument('valuation.stockwatch', doc);
+                    });
+                }).then(()=>
+                {
+                    console.log('Success!');
+                    client.done();
                 });
-                console.log('Success!');
-                client.done();
             });
         });
-
     });
 }
 
