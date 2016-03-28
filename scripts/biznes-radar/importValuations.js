@@ -31,13 +31,15 @@ return db.connect().then(function (client)
                          'roa_rel'];
         return promise.each(documents, (doc)=>
         {
-            return extraction.extract(doc.body, biznesRadarProfileMap, whiteList).then((obj)=>
+            return extraction.extract(doc.body, biznesRadarProfileMap, whiteList).then((extractedData)=>
             {
-                if ('Błąd 404' === obj.symbol) {
+                //TODO: How we can validate raw documents?
+                // Map constraint like length or selector might be approach
+                if ('Błąd 404' === extractedData.symbol) {
                     console.log('Wrong document format', doc.url);
                     return promise.resolve();
                 } else {
-                    return DocumentDAO.saveJsonDocument('valuation.biznesradar', doc.body);
+                    return DocumentDAO.saveJsonDocument('valuation.biznesradar', extractedData);
                 }
             });
         });

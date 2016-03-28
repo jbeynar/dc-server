@@ -16,13 +16,14 @@
         }).catch(db.exceptionHandler);
     }
 
-    function saveJsonDocument(type, json)
+    function saveJsonDocument(type, obj)
     {
         return db.connect().then(function (client)
         {
+            var json = JSON.stringify(obj);
             var data = {
                 type: type,
-                body: json, // todo end here incorrect json
+                body: json,
                 length: json.length || '0'
             };
             var query = squel.insert().into('repo.document_json').setFields(data).toParam();
