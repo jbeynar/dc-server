@@ -4,14 +4,14 @@
 
     const rfr = require('rfr');
     const db = rfr('libs/db');
-    const DocumentDAO = rfr('libs/repository/DocumentDAO');
+    const DocumentDAO = rfr('libs/repo/DocumentDAO');
     const _ = require('lodash');
     const promise = require('bluebird');
 
     const Curl = require('node-libcurl').Curl;
 
     const defaultOptions = {
-        downloadDelay: 3000,
+        downloadDelay: 500,
         silent: false
     };
 

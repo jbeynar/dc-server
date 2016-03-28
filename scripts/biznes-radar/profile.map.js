@@ -83,5 +83,9 @@ module.exports = {
     value: {
         selector: '.ratings tr:nth-child(3) .pv:nth-child(1)',
         process: filterNumeric
+    },
+    price:{
+        selector: '.profile_quotation .q_ch_act',
+        process: filterNumeric
     }
 };

@@ -34,7 +34,7 @@ CREATE TABLE document_http (
 CREATE TABLE document_json (
     id bigint DEFAULT nextval('document_json_id_seq'::regclass) NOT NULL,
     type character varying(64),
-    body text,
+    body jsonb,
     length bigint,
     ts timestamp without time zone DEFAULT now()
 );
