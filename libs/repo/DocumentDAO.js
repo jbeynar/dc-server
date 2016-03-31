@@ -31,21 +31,45 @@
         }).catch(db.exceptionHandler);
     }
 
-    function getJsonDocuments(){
+    function getJsonDocuments()
+    {
         return db.connect().then(function (client)
         {
-            var query = squel.select().from('repo.document_json').order('id').toString();
-            query='SELECT * FROM repo.document_json WHERE id IN (1956);';
-            return client.query(query).then(function (results)
+            var query = squel.select().from('repo.document_json').order('id').where('id>?',1580);
+            query.field('id');
+            query.field('json_build_object(\'symbol\', body->>\'symbol\')','body');
+            return client.query(query.toString()).then(function (results)
             {
                 var maxPropsDoc = {};
                 _.forEach(results.rows, function (item)
                 {
-                    _.assign(maxPropsDoc,item.body);
+                    _.assign(maxPropsDoc, item.body);
                 });
-                var keys = _.keys(maxPropsDoc);
-                // sort
-                return maxPropsDoc;
+
+                maxPropsDoc = _.zipObject(_.sortBy(_.keys(maxPropsDoc)), undefined);
+
+                _.forEach(results.rows, function (item)
+                {
+                    item.body = _.assignIn({}, maxPropsDoc, item.body);
+                });
+
+                var a = {
+                    crazy: undefined,
+                    work: undefined,
+                    done: undefined
+                };
+
+                var b = {
+                    crazy:12,
+                    none:34
+                };
+
+                return _.map(a, function (item)
+                {
+                    return item;
+                });
+
+                //return results.rows;
             }).finally(client.done);
         });
     }

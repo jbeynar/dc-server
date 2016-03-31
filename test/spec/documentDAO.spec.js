@@ -6,7 +6,6 @@ const utils = rfr('test/utils');
 
 describe('DocumentDAO', () =>
 {
-    var htmlDocument;
     const DocumentDAO = rfr('libs/repo/DocumentDAO');
 
     before(function ()

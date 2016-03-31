@@ -25,6 +25,7 @@ function merge()
                 return client.query(q2.text, q2.values).then(function (documentSW)
                 {
                     if (documentSW.rows && _.isObject(documentSW.rows[0])) {
+                        // todo avoid collision of having properties with sames key name
                         _.assign(valuationDocument, documentSW.rows[0].body);
                     }
                     return DocumentDAO.saveJsonDocument('valuation', valuationDocument);
