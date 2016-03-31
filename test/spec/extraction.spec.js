@@ -11,7 +11,7 @@ describe('Extraction library', () =>
 
     before(function ()
     {
-        utils.getFixture('document1.html').then((fixture)=>
+        return utils.getFixture('document1.html').then((fixture)=>
         {
             htmlDocument = fixture;
         });

@@ -4,7 +4,7 @@
 
     const rfr = require('rfr');
     const squel = require('squel').useFlavour('postgres');
-    const db = rfr('libs/db');
+    var db = require('../db');
     const _ = require('lodash');
 
     function saveHttpDocument(data)
@@ -31,22 +31,40 @@
         }).catch(db.exceptionHandler);
     }
 
-    function getJsonDocuments(){
-        return db.connect().then(function (client)
+    function getJsonDocuments(whiteList, blackList)
+    {
+        var query = squel.select().from('repo.document_json').order('id').where('id>?', 3053);
+        return db.query(query.toString()).then(function (rows)
         {
-            var query = squel.select().from('repo.document_json').order('id').toString();
-            query='SELECT * FROM repo.document_json WHERE id IN (1956);';
-            return client.query(query).then(function (results)
-            {
-                var maxPropsDoc = {};
-                _.forEach(results.rows, function (item)
+            var keys;
+            if (_.isEmpty(whiteList)) {
+                keys = {};
+                _.forEach(rows, function (record)
                 {
-                    _.assign(maxPropsDoc,item.body);
+                    _.assign(keys, record.body);
                 });
-                var keys = _.keys(maxPropsDoc);
-                // sort
-                return maxPropsDoc;
-            }).finally(client.done);
+                keys = _.keys(keys);
+                if (!_.isEmpty(blackList)) {
+                    keys = _.filter(keys, function (key)
+                    {
+                        return blackList.indexOf(key) === -1;
+                    });
+                }
+                keys = _.sortBy(keys);
+            } else {
+                keys = whiteList;
+            }
+
+            _.forEach(rows, function (record)
+            {
+                var sortedBody = {};
+                _.forEach(keys, function (key)
+                {
+                    sortedBody[key] = record.body[key];
+                });
+                record.body = sortedBody;
+            });
+            return rows;
         });
     }
 
