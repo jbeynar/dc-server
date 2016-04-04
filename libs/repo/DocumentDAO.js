@@ -33,17 +33,17 @@
 
     function getJsonDocuments(whiteList, blackList)
     {
-        var query = squel.select().from('repo.document_json').order('id').where('id>?', 3053);
+        var query = squel.select().from('repo.document_json').order('id');
         return db.query(query.toString()).then(function (rows)
         {
-            var keys;
+            var keys, allProps = {};
+            _.forEach(rows, function (record)
+            {
+                _.assign(allProps, record.body);
+            });
+            allProps = _.keys(allProps);
             if (_.isEmpty(whiteList)) {
-                keys = {};
-                _.forEach(rows, function (record)
-                {
-                    _.assign(keys, record.body);
-                });
-                keys = _.keys(keys);
+                keys = allProps;
                 if (!_.isEmpty(blackList)) {
                     keys = _.filter(keys, function (key)
                     {
@@ -54,17 +54,16 @@
             } else {
                 keys = whiteList;
             }
-
             _.forEach(rows, function (record)
             {
                 var sortedBody = {};
                 _.forEach(keys, function (key)
                 {
-                    sortedBody[key] = record.body[key];
+                    sortedBody[key] = record.body[key] || null;
                 });
                 record.body = sortedBody;
             });
-            return rows;
+            return {properties:allProps, results:rows};
         });
     }
 

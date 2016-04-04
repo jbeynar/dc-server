@@ -61,17 +61,17 @@ describe('DocumentDAO', function ()
 
     it('getDocuments accept whitelist', (done) =>
     {
-        return DocumentDAO.getJsonDocuments(['symbol', 'cz']).then(function (results)
+        return DocumentDAO.getJsonDocuments(['symbol', 'cz']).then(function (data)
         {
-            expect(results[0].body).to.eql({
+            expect(data.results[0].body).to.eql({
                 symbol: 'ETA',
-                cz: undefined
+                cz: null
             });
-            expect(results[1].body).to.eql({
+            expect(data.results[1].body).to.eql({
                 symbol: 'ABS',
-                cz: undefined
+                cz: null
             });
-            expect(results[2].body).to.eql({
+            expect(data.results[2].body).to.eql({
                 symbol: 'ABM',
                 cz: 12
             });
@@ -81,21 +81,22 @@ describe('DocumentDAO', function ()
 
     it('getDocuments accept blacklist', (done) =>
     {
-        return DocumentDAO.getJsonDocuments([], ['cwk']).then(function (results)
+        return DocumentDAO.getJsonDocuments([], ['cwk']).then(function (data)
         {
-            expect(results[0].body).to.eql({
-                cz: undefined,
+            console.log(data.results[0]);
+            expect(data.results[0].body).to.eql({
+                cz: null,
                 symbol: 'ETA',
                 price: 23,
                 value_1: 30,
                 value_2: 30
             });
-            expect(results[1].body).to.eql({
-                cz: undefined,
+            expect(data.results[1].body).to.eql({
+                cz: null,
                 symbol: 'ABS',
                 price: 23,
-                value_2: undefined,
-                value_1: undefined
+                value_2: null,
+                value_1: null
             });
             done();
         });
