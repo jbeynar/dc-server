@@ -1,7 +1,7 @@
 'use strict';
 
 const Hapi = require('hapi');
-const documentHandler = require('./api/document.handler');
+const documentJsonHandler = require('./api/documentJson.handler');
 
 const server = new Hapi.Server();
 server.connection({
@@ -13,8 +13,14 @@ server.connection({
 
 server.route({
     method: 'POST',
-    path: '/document/json',
-    handler: documentHandler.getDocuments
+    path: '/document/json/{type}',
+    handler: documentJsonHandler.getDocuments
+});
+
+server.route({
+    method: 'POST',
+    path: '/document/json/types',
+    handler: documentJsonHandler.getTypes
 });
 
 server.start((err) =>

@@ -4,7 +4,7 @@
   "description": "Command line utility for shares valuation in term of fundamental analysis",
   "main": "index.js",
   "scripts": {
-    "start": "echo \"Just run one of scripts\" && exit 1",
+    "start": "nodemon index.js",
     "test": "./node_modules/.bin/mocha --recursive",
     "seed": "node -e \"require('./scripts/seed.js')();\"",
     "import-biznes-radar": "node ./scripts/valuation/biznes-radar/downloadProfiles.js && node ./scripts/valuation/biznes-radar/importValuations",

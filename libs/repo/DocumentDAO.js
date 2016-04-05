@@ -31,10 +31,15 @@
         }).catch(db.exceptionHandler);
     }
 
-    function getJsonDocuments(whiteList, blackList)
+    function getJsonDocuments(config)
     {
-        var query = squel.select().from('repo.document_json').order('id');
-        return db.query(query.toString()).then(function (rows)
+        var query = _.cloneDeep(config);
+        console.log(query);
+        var stmt = squel.select().from('repo.document_json').order('id');
+        if (query.type) {
+            stmt.where('type=?', query.type);
+        }
+        return db.query(stmt.toString()).then(function (rows)
         {
             var keys, allProps = {};
             _.forEach(rows, function (record)
@@ -42,17 +47,17 @@
                 _.assign(allProps, record.body);
             });
             allProps = _.keys(allProps);
-            if (_.isEmpty(whiteList)) {
+            if (_.isEmpty(query.whitelist)) {
                 keys = allProps;
-                if (!_.isEmpty(blackList)) {
+                if (!_.isEmpty(query.blacklist)) {
                     keys = _.filter(keys, function (key)
                     {
-                        return blackList.indexOf(key) === -1;
+                        return query.blacklist.indexOf(key) === -1;
                     });
                 }
                 keys = _.sortBy(keys);
             } else {
-                keys = whiteList;
+                keys = query.whitelist;
             }
             _.forEach(rows, function (record)
             {
@@ -63,14 +68,24 @@
                 });
                 record.body = sortedBody;
             });
-            return {properties:allProps, results:rows};
+            return {
+                properties: allProps,
+                results: rows
+            };
         });
+    }
+
+    function getJsonDocumentsTypes()
+    {
+        var query = 'SELECT type, COUNT(*) as count, MAX(ts) as last_change FROM repo.document_json GROUP BY type';
+        return db.query(query);
     }
 
     module.exports = {
         saveHttpDocument: saveHttpDocument,
         saveJsonDocument: saveJsonDocument,
-        getJsonDocuments: getJsonDocuments
+        getJsonDocuments: getJsonDocuments,
+        getJsonDocumentsTypes: getJsonDocumentsTypes
     };
 
 })();
