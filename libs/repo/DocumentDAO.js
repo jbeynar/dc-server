@@ -34,7 +34,6 @@
     function getJsonDocuments(config)
     {
         var query = _.cloneDeep(config);
-        console.log(query);
         var stmt = squel.select().from('repo.document_json').order('id');
         if (query.type) {
             stmt.where('type=?', query.type);

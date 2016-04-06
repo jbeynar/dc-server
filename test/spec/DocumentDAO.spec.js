@@ -1,73 +1,87 @@
 'use strict';
 
 const expect = require('chai').expect;
-const rfr = require('rfr');
-const utils = rfr('test/utils');
 const proxyquire = require('proxyquire');
 const promise = require('bluebird');
 const _ = require('lodash');
 
-describe.only('DocumentDAO', function ()
-{
-    var mockDocumentsSet = [
-        {
-            id: 1,
-            type: 'valuation',
-            body: {
-                symbol: 'ETA',
-                price: 23,
-                value_1: 30,
-                value_2: 30
-            },
-            length: 256,
-            ts: new Date()
+var mockDocumentsSet = [
+    {
+        id: 1,
+        type: 'valuation',
+        body: {
+            symbol: 'ETA',
+            price: 23,
+            value_1: 30,
+            value_2: 30
         },
-        {
-            id: 2,
-            type: 'valuation',
-            body: {
-                symbol: 'ABS',
-                price: 23
-            },
-            length: 512,
-            ts: new Date()
+        length: 256,
+        ts: new Date()
+    },
+    {
+        id: 2,
+        type: 'valuation',
+        body: {
+            symbol: 'ABS',
+            price: 23
         },
-        {
-            id: 3,
-            type: 'valuation',
-            body: {
-                symbol: 'ABM',
-                cz: 12,
-                cwk: 23,
-                value_2: 44
-            },
-            length: 1024,
-            ts: new Date()
-        }
-    ];
+        length: 512,
+        ts: new Date()
+    },
+    {
+        id: 3,
+        type: 'valuation',
+        body: {
+            symbol: 'ABM',
+            cz: 12,
+            cwk: 23,
+            value_2: 44
+        },
+        length: 1024,
+        ts: new Date()
+    }
+];
 
-    // todo how to check order?
-    // todo needs more tests
-    // combine multiple expect to return at once, DON'T USE DONE CB
+var mockTypesSet = [
+    {
+        type: 'valuation',
+        count: 476,
+        last_update: new Date('2016-03-29 10:59:06.564129')
+    },
+    {
+        type: 'valuation.biznesradar',
+        count: 476,
+        last_update: new Date('2016-03-30 07:38:22.03407')
+    },
+    {
+        type: 'valuation.stockwatch',
+        count: 117,
+        last_update: new Date('2016-04-04 22:19:52.356274')
+    }
+];
+
+describe('DocumentDAO', function ()
+{
+    // todo check order on getDocuments
 
     describe('getDocuments', function ()
     {
         let DocumentDAO;
+
         before(function ()
         {
-            var dbStub = {
-                query: function (query)
+            var stub = {
+                query: function ()
                 {
                     return promise.resolve(_.cloneDeep(mockDocumentsSet));
                 }
             };
-            proxyquire('../../libs/repo/DocumentDAO', {'../db': dbStub});
-            DocumentDAO = rfr('libs/repo/DocumentDAO');
+            DocumentDAO = proxyquire('../../libs/repo/DocumentDAO', {'../db': stub});
         });
 
-        it('accept whitelist', (done) =>
+        it('accept whitelist', () =>
         {
-            return DocumentDAO.getJsonDocuments(['symbol', 'cz']).then(function (data)
+            return DocumentDAO.getJsonDocuments({whitelist: ['symbol', 'cz']}).then(function (data)
             {
                 expect(data.results[0].body).to.eql({
                     symbol: 'ETA',
@@ -77,17 +91,16 @@ describe.only('DocumentDAO', function ()
                     symbol: 'ABS',
                     cz: null
                 });
-                expect(data.results[2].body).to.eql({
+                return expect(data.results[2].body).to.eql({
                     symbol: 'ABM',
                     cz: 12
                 });
-                done();
             });
         });
 
-        it('accept blacklist', (done) =>
+        it('accept blacklist', () =>
         {
-            return DocumentDAO.getJsonDocuments([], ['cwk']).then(function (data)
+            return DocumentDAO.getJsonDocuments({blacklist: ['cwk']}).then(function (data)
             {
                 expect(data.results[0].body).to.eql({
                     cz: null,
@@ -96,14 +109,13 @@ describe.only('DocumentDAO', function ()
                     value_1: 30,
                     value_2: 30
                 });
-                expect(data.results[1].body).to.eql({
+                return expect(data.results[1].body).to.eql({
                     cz: null,
                     symbol: 'ABS',
                     price: 23,
                     value_2: null,
                     value_1: null
                 });
-                done();
             });
         });
     });
@@ -115,17 +127,22 @@ describe.only('DocumentDAO', function ()
 
         before(function ()
         {
-            DocumentDAO = rfr('libs/repo/DocumentDAO');
+            var stub = {
+                query: function ()
+                {
+                    return promise.resolve(_.cloneDeep(mockTypesSet));
+                }
+            };
+            DocumentDAO = proxyquire('../../libs/repo/DocumentDAO', {'../db': stub});
         });
 
-        it('works', function ()
+        it('should return types stats', function ()
         {
             return DocumentDAO.getJsonDocumentsTypes().then(function (data)
             {
-                console.log('data:', data);
-                return expect(true).to.equal(true);
+                expect(data).to.be.an('array');
+                return expect(data).to.eql(mockTypesSet);
             });
         });
-    })
-
+    });
 });
