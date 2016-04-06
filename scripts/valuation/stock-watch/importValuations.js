@@ -32,10 +32,12 @@ function convertValuationSW()
             {
                 promise.each(json, function (doc)
                 {
-                    var query = squel.select('symbol_long').from('stock').where('symbol_long=?', [doc.Spolka]).toParam();
+                    var query = squel.select().from('stock').where('symbol_long=?', [doc.Spolka]).toParam();
                     return client.query(query.text, query.values).then((results)=>
                     {
-                        doc.symbol = _.get(results, 'rows[0].symbol') || 'unmatched symbol';
+                        doc.symbol = _.get(results, 'rows[0].symbol');
+                        doc.sector = _.get(results, 'rows[0].sector');
+                        doc.description = _.get(results, 'rows[0].description');
                         return DocumentDAO.saveJsonDocument('valuation.stockwatch', doc);
                     });
                 }).then(()=>

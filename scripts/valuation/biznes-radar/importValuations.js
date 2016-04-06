@@ -18,6 +18,7 @@ return db.connect().then(function (client)
     {
         console.log('Processing documents...');
         var whiteList = ['symbol',
+                         'name',
                          'value',
                          'price',
                          'cwk',
