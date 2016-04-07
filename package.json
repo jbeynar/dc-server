@@ -1,5 +1,5 @@
 {
-  "name": "gpw-command",
+  "name": "jbl-repo-server",
   "version": "0.0.3",
   "description": "Command line utility for shares valuation in term of fundamental analysis",
   "main": "index.js",
