@@ -80,6 +80,23 @@ describe('Extraction library', () =>
         });
     });
 
+    it('Pull out element and apply process as aregular expression', () =>
+    {
+        var mapping = {
+            title: {
+                selector: 'h2',
+                process: '[a-z0-9]{3}'
+            }
+        };
+        var expected = {
+            title: 'xyz'
+        };
+        return extraction.extract(htmlDocument, mapping).then((data)=>
+        {
+            expect(data).to.eql(expected);
+        });
+    });
+
     it('Should not crash whole extraction if one process function fail', ()=>
     {
         var mapping = {

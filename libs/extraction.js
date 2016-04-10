@@ -23,29 +23,32 @@ function extract(doc, map, props)
 
             var selector = _.isString(def) ? def : def.selector;
 
-            var match = $(selector).text();
-            if (_.isObject(def) && def.process && def.process instanceof Function) {
+            var value = $(selector).text();
+
+            if (_.isFunction(_.get(def, 'process'))) {
                 try {
-                    match = def.process(match);
+                    value = def.process(value);
                 } catch (err) {
-                    console.error('Process function fail at `' + key + '` mapping cause:', err);
+                    console.error('Process function fails at `' + key + '` cause:', err);
+                }
+            } else if (_.isString(_.get(def, 'process')) && _.isString(value)) {
+                try {
+                    value = _.head(value.match(new RegExp(def.process)));
+                } catch (err) {
+                    console.log('Process regular expression fails at `' + key, '` cause:', err);
                 }
             }
-            extracted[key] = match;
+            extracted[key] = value;
         }
 
         if (_.isEmpty(doc)) {
             return reject(new Error(errorCode.docEmpty));
         }
-
         if (!_.isObject(map)) {
             return reject(new Error(errorCode.mapInvalid));
         }
-
         $ = cheerio.load(doc);
-
         _.forEach(map, extractOnce);
-
         return resolve(extracted);
     });
 }
