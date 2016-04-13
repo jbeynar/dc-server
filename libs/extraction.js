@@ -9,7 +9,7 @@ const errorCode = {
     mapInvalid: 'ERR_MAP_INVALID'
 };
 
-function extract(doc, map, props)
+function extract(doc, map, whitelist)
 {
     return new Promise((resolve, reject) =>
     {
@@ -17,13 +17,12 @@ function extract(doc, map, props)
 
         function extractOnce(def, key)
         {
-            if (_.isArray(props) && -1 === _.indexOf(props, key)) {
+            if (_.isArray(whitelist) && -1 === _.indexOf(whitelist, key)) {
                 return;
             }
 
             var selector = _.isString(def) ? def : def.selector;
-
-            var value = $(selector).text();
+            var value = def.attribute ? $(selector).attr(def.attribute) : $(selector).text();
 
             if (_.isFunction(_.get(def, 'process'))) {
                 try {

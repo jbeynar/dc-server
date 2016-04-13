@@ -17,127 +17,157 @@ describe('Extraction library', () =>
         });
     });
 
-    it('Rejects with appropriate error when called with empty document', () =>
+    describe('Extracts DOM element inner text based on CSS selector mapping', ()=>
     {
-        return extraction.extract(undefined, {}).catch((err)=>
+        it('Rejects with appropriate error when called with empty document', () =>
         {
-            expect(err.message.toString()).to.equal(extraction.errorCodes.docEmpty);
+            return extraction.extract(undefined, {}).catch((err)=>
+            {
+                return expect(err.message.toString()).to.equal(extraction.errorCodes.docEmpty);
+            });
         });
-    });
 
-    it('Rejects with appropriate error when called with map of non-object type', () =>
-    {
-        return extraction.extract(htmlDocument, 'map').catch((err)=>
+        it('Rejects with appropriate error when called with map of non-object type', () =>
         {
-            expect(err.message.toString()).to.equal(extraction.errorCodes.mapInvalid);
+            return extraction.extract(htmlDocument, 'map').catch((err)=>
+            {
+                return expect(err.message.toString()).to.equal(extraction.errorCodes.mapInvalid);
+            });
         });
-    });
 
-    it('Pull out element based on simple map notation', () =>
-    {
-        var expected = {
-            title: 'Employee list'
-        };
-        return extraction.extract(htmlDocument, {title: 'h1'}).then((data)=>
+        it('Pull out element based on simple map notation', () =>
         {
-            expect(data).to.eql(expected);
+            var expected = {
+                title: 'Employee list'
+            };
+            return extraction.extract(htmlDocument, {title: 'h1'}).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
         });
-    });
 
-    it('Pull out element based on objective map notation', () =>
-    {
-        var mapping = {
-            title: {
-                selector: 'h1'
-            }
-        };
-        var expected = {
-            title: 'Employee list'
-        };
-        return extraction.extract(htmlDocument, mapping).then((data)=>
+        it('Pull out element based on objective map notation', () =>
         {
-            expect(data).to.eql(expected);
-        });
-    });
-
-    it('Pull out element and apply synchronous process function', () =>
-    {
-        var mapping = {
-            title: {
-                selector: 'h1',
-                process: function (element)
-                {
-                    return element.toUpperCase();
+            var mapping = {
+                title: {
+                    selector: 'h1'
                 }
-            }
-        };
-        var expected = {
-            title: 'EMPLOYEE LIST'
-        };
-        return extraction.extract(htmlDocument, mapping).then((data)=>
-        {
-            expect(data).to.eql(expected);
+            };
+            var expected = {
+                title: 'Employee list'
+            };
+            return extraction.extract(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
         });
     });
 
-    it('Pull out element and apply process as aregular expression', () =>
+    describe('Run process function against extracted value', function ()
     {
-        var mapping = {
-            title: {
-                selector: 'h2',
-                process: '[a-z0-9]{3}'
-            }
-        };
-        var expected = {
-            title: 'xyz'
-        };
-        return extraction.extract(htmlDocument, mapping).then((data)=>
+        it('Pull out element and apply synchronous process function', () =>
         {
-            expect(data).to.eql(expected);
-        });
-    });
-
-    it('Should not crash whole extraction if one process function fail', ()=>
-    {
-        var mapping = {
-            title: {
-                selector: 'h1',
-                process: function (element)
-                {
-                    return element.match(/\((.*)\)/)[2];
+            var mapping = {
+                title: {
+                    selector: 'h1',
+                    process: function (element)
+                    {
+                        return element.toUpperCase();
+                    }
                 }
-            },
-            subtitle: 'h2'
-        };
-        var expected = {
-            title: 'Employee list',
-            subtitle: 'An xyz company'
-        };
+            };
+            var expected = {
+                title: 'EMPLOYEE LIST'
+            };
+            return extraction.extract(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
+        });
 
-        return extraction.extract(htmlDocument, mapping).then((data)=>
+        it('Pull out element and apply process as aregular expression', () =>
         {
-            expect(data).to.eql(expected);
+            var mapping = {
+                title: {
+                    selector: 'h2',
+                    process: '[a-z0-9]{3}'
+                }
+            };
+            var expected = {
+                title: 'xyz'
+            };
+            return extraction.extract(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
+        });
+
+        it('Should not crash whole extraction if one process function fail', ()=>
+        {
+            var mapping = {
+                title: {
+                    selector: 'h1',
+                    process: function (element)
+                    {
+                        return element.match(/\((.*)\)/)[2];
+                    }
+                },
+                subtitle: 'h2'
+            };
+            var expected = {
+                title: 'Employee list',
+                subtitle: 'An xyz company'
+            };
+
+            return extraction.extract(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
         });
     });
 
-    it('Should only extract elements passed as props param', ()=>
+    describe('Accept mapwhitelist', function ()
     {
-        var mapping = {
-            title: 'h1',
-            subtitle: 'h4',
-            leading: 'p',
-            author: 'strong'
-        };
-
-        var expected = {
-            title: 'Employee list',
-            author: 'Authored by jbeynar'
-        };
-
-        return extraction.extract(htmlDocument, mapping, ['title', 'author']).then((data)=>
+        it('Should only extract elements passed as props param', ()=>
         {
-            expect(data).to.eql(expected);
+            var mapping = {
+                title: 'h1',
+                subtitle: 'h4',
+                leading: 'p',
+                author: 'strong'
+            };
+
+            var expected = {
+                title: 'Employee list',
+                author: 'Authored by jbeynar'
+            };
+
+            return extraction.extract(htmlDocument, mapping, ['title', 'author']).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
         });
     });
 
+    describe('Extracts DOM element attribute value', function ()
+    {
+        it('Extract element attribute', ()=>
+        {
+            var mapping = {
+                charset: {
+                    selector: 'meta',
+                    attribute: 'charset'
+                }
+            };
+
+            var expected = {
+                charset: 'UTF-8'
+            };
+
+            return extraction.extract(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
+        });
+    });
 });
