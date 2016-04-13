@@ -39,6 +39,7 @@
                     // todo, how host and path can be captured?
                     curl.on('end', function (statusCode, body, headers)
                     {
+                        // todo how to download compressed data?
                         let data = {
                             type: curl.getInfo(Curl.info.CONTENT_TYPE),
                             url: url,
