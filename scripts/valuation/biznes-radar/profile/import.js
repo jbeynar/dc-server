@@ -8,10 +8,11 @@ const db = rfr('libs/db');
 const DocumentDAO = rfr('libs/repo/DocumentDAO');
 const profileMap = require('./map.js');
 
-var whiteList = ['symbol',
+var whiteList = ['oid',
+                 'symbol',
                  'name',
-                 'value',
                  'price',
+                 'value',
                  'cwk',
                  'cwk_rel',
                  'cz',
@@ -21,7 +22,8 @@ var whiteList = ['symbol',
                  'roe_rel',
                  'roa_rel'];
 
-module.exports = function ()
+
+function importDocuments()
 {
     return db.connect().then(function (client)
     {
@@ -48,4 +50,6 @@ module.exports = function ()
             });
         }).finally(client.done);
     }).catch(db.exceptionHandler);
-};
+}
+
+module.exports = importDocuments;

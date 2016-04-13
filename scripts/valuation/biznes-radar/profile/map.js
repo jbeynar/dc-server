@@ -9,11 +9,12 @@ function filterNumeric(number)
     return _.toNumber(number.match(/-?\d+.?\d+/));
 }
 
-// description: map.push(jsonDoc.description.replace(/'/g, '`'));
-
 module.exports = {
-    website: '#left-content table.profileSummary.hidden tr:last-child td>a',
-    description: '#left-content .profileDesc .hidden',
+    oid: {
+        selector: '#forecast-container > div.buttons > a.btn-up',
+        attribute: 'onclick',
+        process: '\\d+'
+    },
     symbol: {
         selector: 'h1',
         process: function (h1)
@@ -30,6 +31,8 @@ module.exports = {
             return symbolLong && 2 === symbolLong.length ? symbolLong[1] : symbol;
         }
     },
+    website: '#left-content table.profileSummary.hidden tr:last-child td>a',
+    description: '#left-content .profileDesc .hidden',
     name: 'h2',
     sector: '.box-left[itemtype] table.profileSummary tr:nth-child(5) td a[title]',
     cwk: {
@@ -84,7 +87,7 @@ module.exports = {
         selector: '.ratings tr:nth-child(3) .pv:nth-child(1)',
         process: filterNumeric
     },
-    price:{
+    price: {
         selector: '.profile_quotation .q_ch_act',
         process: filterNumeric
     }

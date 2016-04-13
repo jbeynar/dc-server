@@ -34,6 +34,4 @@ function importDocuments()
     }).catch(db.exceptionHandler);
 }
 
-importDocuments();
-
 module.exports = importDocuments;

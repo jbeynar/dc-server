@@ -151,19 +151,19 @@ describe('Extraction library', () =>
 
     describe('Extracts DOM element attribute value', function ()
     {
-        it('Extract element attribute', ()=>
+        it('Extract element attribute and apply process regexp', ()=>
         {
             var mapping = {
                 charset: {
                     selector: 'meta',
-                    attribute: 'charset'
+                    attribute: 'charset',
+                    process: '\\d+'
                 }
             };
 
             var expected = {
-                charset: 'UTF-8'
+                charset: '8'
             };
-
             return extraction.extract(htmlDocument, mapping).then((data)=>
             {
                 return expect(data).to.eql(expected);
