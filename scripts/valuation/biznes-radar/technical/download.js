@@ -6,26 +6,21 @@ const squel = require('squel').useFlavour('postgres');
 const downloader = rfr('libs/downloader');
 const _ = require('lodash');
 
+const pattern = 'http://www.biznesradar.pl/analiza-techniczna-wskazniki/$SYMBOL$#';
+
 function getSourceURLs()
 {
-    const pattern = 'http://www.biznesradar.pl/notowania/$SYMBOL_LONG$#1m_lin_lin';
     var query = squel.select().from('stock').field('symbol').order('symbol').toString();
     return db.query(query).then(symbols =>
     {
         return _.map(symbols, item =>
         {
-            return pattern.replace('$SYMBOL_LONG$', item.symbol);
+            return pattern.replace('$SYMBOL$', item.symbol);
         });
     });
 }
 
-getSourceURLs().then(downloader.downloadHttpDocuments).then(()=>
+module.exports = function ()
 {
-    console.log('DONE');
-    process.exit();
-}).catch(function (err)
-{
-    console.log('Unrecognized error');
-    console.log(err);
-    process.exit(1);
-});
+    return getSourceURLs().then(downloader.downloadHttpDocuments);
+};
