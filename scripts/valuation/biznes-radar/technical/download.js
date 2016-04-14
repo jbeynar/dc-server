@@ -22,7 +22,12 @@ function getSourceURLs()
 
 function downloadDocuments()
 {
-    return getSourceURLs().then(downloader.downloadHttpDocuments);
+    return getSourceURLs().then(urls=>
+    {
+        return downloader.downloadHttpDocuments(urls, ['X-Requested-With: XMLHttpRequest']);
+    });
 }
+
 downloadDocuments();
+
 module.exports = downloadDocuments;

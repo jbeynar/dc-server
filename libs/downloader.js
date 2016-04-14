@@ -15,7 +15,7 @@
         silent: false
     };
 
-    function downloadHttpDocuments(urls, saveFn)
+    function downloadHttpDocuments(urls, httpHeaders)
     {
         if (!_.isArray(urls)) {
             throw new Error('urls param must be an array');
@@ -35,11 +35,13 @@
                     curl.setOpt(Curl.option.URL, url);
                     curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
                     curl.setOpt(Curl.option.TIMEOUT, 30);
+                    if (!_.isEmpty(httpHeaders)) {
+                        curl.setOpt(Curl.option.HTTPHEADER, httpHeaders);
+                    }
 
                     // todo, how host and path can be captured?
                     curl.on('end', function (statusCode, body, headers)
                     {
-                        // todo how to download compressed data?
                         let data = {
                             type: curl.getInfo(Curl.info.CONTENT_TYPE),
                             url: url,
@@ -50,11 +52,7 @@
                             body: body,
                             length: body.length
                         };
-                        if (_.isFunction(saveFn)) {
-                            saveFn(data).then(resolve);
-                        } else {
-                            DocumentDAO.saveHttpDocument(data).then(resolve);
-                        }
+                        DocumentDAO.saveHttpDocument(data).then(resolve);
                         this.close();
                     });
 
