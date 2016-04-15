@@ -28,6 +28,4 @@ function downloadDocuments()
     });
 }
 
-downloadDocuments();
-
 module.exports = downloadDocuments;

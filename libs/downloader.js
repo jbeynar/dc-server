@@ -7,6 +7,7 @@
     const DocumentDAO = rfr('libs/repo/DocumentDAO');
     const _ = require('lodash');
     const promise = require('bluebird');
+    const urlInfoService = require('url');
 
     const Curl = require('node-libcurl').Curl;
 
@@ -35,18 +36,20 @@
                     curl.setOpt(Curl.option.URL, url);
                     curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
                     curl.setOpt(Curl.option.TIMEOUT, 30);
+
                     if (!_.isEmpty(httpHeaders)) {
                         curl.setOpt(Curl.option.HTTPHEADER, httpHeaders);
                     }
 
-                    // todo, how host and path can be captured?
                     curl.on('end', function (statusCode, body, headers)
                     {
+                        let urlInfo = urlInfoService.parse(url);
                         let data = {
                             type: curl.getInfo(Curl.info.CONTENT_TYPE),
                             url: url,
-                            //host: '',
-                            //path: '',
+                            host: urlInfo.hostname,
+                            path: urlInfo.pathname,
+                            query: urlInfo.query,
                             code: statusCode,
                             headers: JSON.stringify(headers),
                             body: body,
@@ -60,7 +63,6 @@
                     {
                         console.log('Downloader error');
                         console.log(error);
-
                     });
 
                     curl.perform();
