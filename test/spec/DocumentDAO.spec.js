@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 const proxyquire = require('proxyquire');
 const promise = require('bluebird');
 const _ = require('lodash');
+const rfr = require('rfr');
 
 var mockDocumentsSet = [
     {
@@ -143,6 +144,26 @@ describe('DocumentDAO', function ()
                 expect(data).to.be.an('array');
                 return expect(data).to.eql(mockTypesSet);
             });
+        });
+    });
+
+    describe.only('mergeDocuments', ()=>
+    {
+
+        // proxyquire db.query for many times response with diffrent data - how?
+        let DocumentDAO = rfr('libs/repo/DocumentDAO');
+
+        it('should merge two document types', ()=>
+        {
+            var type1Cfg = {
+                type: 'valuation.biznesradar',
+                id: 'symbol'
+            };
+            var type2Cfg = {
+                type: 'valuation.stockwatch',
+                id: 'symbol'
+            };
+            return DocumentDAO.mergeDocuments(type1Cfg, type2Cfg, 'merged');
         });
     });
 });

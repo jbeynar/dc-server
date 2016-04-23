@@ -6,6 +6,7 @@
     const squel = require('squel').useFlavour('postgres');
     var db = require('../db');
     const _ = require('lodash');
+    const promise = require('bluebird');
 
     function saveHttpDocument(data)
     {
@@ -80,11 +81,46 @@
         return db.query(query);
     }
 
+    /**
+     * Type config:
+     * {
+     *      type: 'string'
+     *      id:   'string'
+     * }
+     */
+    function mergeDocuments(type1Config, type2Config, destinationType)
+    {
+        if (!_.isObject(type1Config) || !_.isObject(type2Config)) {
+            throw new Error('Types configs must by of Objects type');
+        }
+        if (!(_.isString(destinationType) && !_.isEmpty(destinationType))) {
+            throw new Error('Destination type must be not empty string');
+        }
+        var stmt1 = squel.select().from('repo.document_json').where('type=?', type1Config.type).toString();
+        return db.query(stmt1).then(function (results1)
+        {
+            return promise.map(results1, function (doc1)
+            {
+                var mergeId = _.get(doc1.body, type1Config.id);
+                var stmt2 = squel.select()
+                    .from('repo.document_json')
+                    .where('type=?', type2Config.type)
+                    .where('body->>\'' + type2Config.id + '\'=?', mergeId)
+                    .toString();
+                return db.query(stmt2).then(function (results2)
+                {
+                    return saveJsonDocument(destinationType, _.assign({}, doc1.body, _.get(results2, '[0].body')));
+                });
+            });
+        });
+    }
+
     module.exports = {
         saveHttpDocument: saveHttpDocument,
         saveJsonDocument: saveJsonDocument,
         getJsonDocuments: getJsonDocuments,
-        getJsonDocumentsTypes: getJsonDocumentsTypes
+        getJsonDocumentsTypes: getJsonDocumentsTypes,
+        mergeDocuments: mergeDocuments
     };
 
 })();
