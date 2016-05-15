@@ -65,7 +65,7 @@ describe('DocumentDAO', function ()
 {
     // todo check order on getDocuments
 
-    describe('getDocuments', function ()
+    describe('getJsonDocuments', function ()
     {
         let DocumentDAO;
 
@@ -147,7 +147,7 @@ describe('DocumentDAO', function ()
         });
     });
 
-    describe.only('mergeDocuments', ()=>
+    describe('mergeDocuments', ()=>
     {
 
         // proxyquire db.query for many times response with diffrent data - how?

@@ -2,7 +2,6 @@
 {
     'use strict';
 
-    const rfr = require('rfr');
     const squel = require('squel').useFlavour('postgres');
     var db = require('../db');
     const _ = require('lodash');
@@ -109,6 +108,7 @@
                     .toString();
                 return db.query(stmt2).then(function (results2)
                 {
+                    // todo avoid collision of having properties with sames key name
                     return saveJsonDocument(destinationType, _.assign({}, doc1.body, _.get(results2, '[0].body')));
                 });
             });
