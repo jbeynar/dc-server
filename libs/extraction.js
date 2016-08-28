@@ -22,11 +22,12 @@ function extract(doc, map, whitelist)
             }
 
             var selector = _.isString(def) ? def : def.selector;
-            var value = def.attribute ? $(selector).attr(def.attribute) : $(selector).text();
+            var element = $(selector);
+            var value = def.attribute ? element.attr(def.attribute) : element.text();
 
             if (_.isFunction(_.get(def, 'process'))) {
                 try {
-                    value = def.process(value);
+                    value = def.process(value, element);
                 } catch (err) {
                     console.error('Process function fails at `' + key + '` cause:', err);
                 }
