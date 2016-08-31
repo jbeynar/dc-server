@@ -8,15 +8,16 @@
     "test": "./node_modules/.bin/mocha --recursive",
     "seed": "node -e \"require('./scripts/seed.js')();\"",
     "import-biznes-radar": "node ./scripts/valuation/biznes-radar/profile",
-    "import-stock-watch": "node ./scripts/valuation/stock-watch/importValuations.js",
-    "merge": "node ./scripts/valuation/merge.js"
+    "import-stock-watch": "node ./scripts/valuation/stock-watch",
+    "import-valuation": "node ./scripts/valuation/index.js"
   },
   "dependencies": {
     "bluebird": "2.10.2",
     "cheerio": "0.20.0",
     "csvtojson": "0.5.2",
     "hapi": "13.3.0",
-    "lodash": "4.4.0",
+    "lodash": "^4.4.0",
+    "mongodb": "^2.1.20",
     "node-libcurl": "0.8.0",
     "pg": "4.4.4",
     "proxyquire": "1.7.4",
