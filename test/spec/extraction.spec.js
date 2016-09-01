@@ -170,4 +170,23 @@ describe('Extraction library', () =>
             });
         });
     });
+
+    describe('Extracts array of values', ()=>
+    {
+        it('Take it how ya wanna take it', ()=>
+        {
+            var mapping = {
+                heading: {
+                    selector: 'th'
+                }
+            };
+            var expected = {
+                heading: ['ID', 'First name', 'Last name', 'Email']
+            };
+            return extraction.extractArray(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
+        });
+    });
 });

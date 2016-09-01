@@ -9,7 +9,7 @@ const errorCode = {
     mapInvalid: 'ERR_MAP_INVALID'
 };
 
-function extract(doc, map, whitelist)
+function extractArray(doc, map, whitelist)
 {
     return new Promise((resolve, reject) =>
     {
@@ -22,23 +22,27 @@ function extract(doc, map, whitelist)
             }
 
             var selector = _.isString(def) ? def : def.selector;
-            var element = $(selector);
-            var value = def.attribute ? element.attr(def.attribute) : element.text();
+            var elements = $(selector);
+            extracted[key] = _.map(elements, function (element)
+            {
+                element = $(element);
+                var value = def.attribute ? element.attr(def.attribute) : element.text();
 
-            if (_.isFunction(_.get(def, 'process'))) {
-                try {
-                    value = def.process(value, element);
-                } catch (err) {
-                    console.error('Process function fails at `' + key + '` cause:', err);
+                if (_.isFunction(_.get(def, 'process'))) {
+                    try {
+                        value = def.process(value, element);
+                    } catch (err) {
+                        console.error('Process function fails at `' + key + '` cause:', err);
+                    }
+                } else if (_.isString(_.get(def, 'process')) && _.isString(value)) {
+                    try {
+                        value = _.head(value.match(new RegExp(def.process)));
+                    } catch (err) {
+                        console.log('Process regular expression fails at `' + key, '` cause:', err);
+                    }
                 }
-            } else if (_.isString(_.get(def, 'process')) && _.isString(value)) {
-                try {
-                    value = _.head(value.match(new RegExp(def.process)));
-                } catch (err) {
-                    console.log('Process regular expression fails at `' + key, '` cause:', err);
-                }
-            }
-            extracted[key] = value;
+                return value;
+            });
         }
 
         if (_.isEmpty(doc)) {
@@ -53,7 +57,19 @@ function extract(doc, map, whitelist)
     });
 }
 
+function extract(doc, map, whitelist)
+{
+    return extractArray(doc, map, whitelist).then((extractions)=>
+    {
+        return _.mapValues(extractions, function (value)
+        {
+            return _.first(value);
+        });
+    });
+}
+
 module.exports = {
     extract: extract,
+    extractArray: extractArray,
     errorCodes: errorCode
 };
