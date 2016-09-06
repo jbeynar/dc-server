@@ -3,11 +3,9 @@
 const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
-const extraction = rfr('libs/extraction');
 const db = rfr('libs/db');
 const DocumentDAO = rfr('libs/repo/DocumentDAO');
 const _ = require('lodash');
-const cheerio = require('cheerio');
 const striptags = require('striptags');
 
 
