@@ -29,7 +29,7 @@
             var i = 0;
             return promise.each(urls, function (url)
             {
-                console.log('%s/%s %s', ++i, urls.length, url);
+                process.stdout.write(++i + '/' + urls.length + ' ' + url);
                 return new promise(function (resolve)
                 {
                     var curl = new Curl();
@@ -55,6 +55,7 @@
                             body: body,
                             length: body.length
                         };
+                        process.stdout.write(' [' + data.code + ']\n');
                         DocumentDAO.saveHttpDocument(data).then(resolve);
                         this.close();
                     });
