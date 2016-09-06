@@ -12,7 +12,7 @@ describe('Extract data from static page', ()=>
 
     before(() =>
     {
-        return utils.getFixture('tesco.html').then((document)=>
+        return utils.getFixture('tescoProduct.html').then((document)=>
         {
             pageSource = document;
         });
