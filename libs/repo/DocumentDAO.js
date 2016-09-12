@@ -63,7 +63,7 @@
                 var sortedBody = {};
                 _.forEach(keys, function (key)
                 {
-                    sortedBody[key] = record.body[key] || null;
+                    sortedBody[key] = record.body[key];
                 });
                 record.body = sortedBody;
             });
