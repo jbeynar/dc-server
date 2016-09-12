@@ -5,7 +5,7 @@ const documentJsonHandler = require('./api/documentJson.handler');
 
 const server = new Hapi.Server();
 server.connection({
-    port: 3000,
+    port: 3003,
     routes: {
         cors: true
     }
