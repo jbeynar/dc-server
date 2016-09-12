@@ -6,10 +6,7 @@
   "scripts": {
     "start": "nodemon index.js",
     "test": "./node_modules/.bin/mocha --recursive",
-    "seed": "node -e \"require('./scripts/seed.js')();\"",
-    "import-biznes-radar": "node ./scripts/valuation/biznes-radar/profile",
-    "import-stock-watch": "node ./scripts/valuation/stock-watch",
-    "import-valuation": "node ./scripts/valuation/index.js"
+    "seed": "node -e \"require('./scripts/seed.js')();\""
   },
   "dependencies": {
     "bluebird": "2.10.2",
@@ -22,7 +19,8 @@
     "pg": "4.4.4",
     "proxyquire": "1.7.4",
     "rfr": "1.2.3",
-    "squel": "4.2.3"
+    "squel": "4.2.3",
+    "striptags": "2.1.1"
   },
   "author": "jbeynar",
   "devDependencies": {
