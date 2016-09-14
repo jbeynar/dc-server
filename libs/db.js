@@ -38,7 +38,7 @@
         console.log(err.stack, highlightEnd);
     }
 
-    module.exports.query = function (query, bindings)
+    function query(query, bindings)
     {
         return connect().then((client)=>
         {
@@ -49,7 +49,9 @@
         }).catch(exceptionHandler);
     };
 
-    module.exports.connect = connect;
-    module.exports.exceptionHandler = exceptionHandler;
-
+    module.exports = {
+        query: query,
+        connect: connect,
+        exceptionHandler: exceptionHandler
+    };
 })();

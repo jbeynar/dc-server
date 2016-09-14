@@ -86,11 +86,11 @@ describe('DocumentDAO', function ()
             {
                 expect(data.results[0].body).to.eql({
                     symbol: 'ETA',
-                    cz: null
+                    cz: undefined
                 });
                 expect(data.results[1].body).to.eql({
                     symbol: 'ABS',
-                    cz: null
+                    cz: undefined
                 });
                 return expect(data.results[2].body).to.eql({
                     symbol: 'ABM',
@@ -104,18 +104,18 @@ describe('DocumentDAO', function ()
             return DocumentDAO.getJsonDocuments({blacklist: ['cwk']}).then(function (data)
             {
                 expect(data.results[0].body).to.eql({
-                    cz: null,
+                    cz: undefined,
                     symbol: 'ETA',
                     price: 23,
                     value_1: 30,
                     value_2: 30
                 });
                 return expect(data.results[1].body).to.eql({
-                    cz: null,
+                    cz: undefined,
                     symbol: 'ABS',
                     price: 23,
-                    value_2: null,
-                    value_1: null
+                    value_2: undefined,
+                    value_1: undefined
                 });
             });
         });
