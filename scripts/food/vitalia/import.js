@@ -8,7 +8,7 @@ const db = rfr('libs/db');
 const DocumentDAO = rfr('libs/repo/DocumentDAO');
 const _ = require('lodash');
 
-var harmMap = {
+const harmityMap = {
     'Bezpieczny': 0,
     'Należy unikać': 1,
     'Zalecana ostrożność': 1,
@@ -55,7 +55,7 @@ var map = {
         selector: 'table.sortabless tr:nth-child(2) td:nth-child(3)',
         process: function (text)
         {
-            return harmMap[text];
+            return harmityMap[text];
         }
     }
 };

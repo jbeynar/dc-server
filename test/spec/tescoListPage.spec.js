@@ -50,7 +50,6 @@ describe('Extract data from static page', ()=>
 
         return extraction.extractArray(pageSource, map).then((data)=>
         {
-            console.log(data);
             return expect(data).to.be.an('object');
         });
     });
