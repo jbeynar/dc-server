@@ -9,7 +9,7 @@ var baseUrl = 'http://vitalia.pl/index.php/mid/90/fid/1047/kalorie/diety/product
 
 var urls = _.times(818, function (i)
 {
-    return [baseUrl, '/', i, '/'].join('');
+    return [baseUrl, '/', i].join('');
 });
 
 var headers = ['User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'];

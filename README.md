@@ -25,3 +25,13 @@ You can also use custom format, it's probably even lighter.
 pg_restore -h localhost -U gpwcmd -W -n public -t document -a -v --format=tar dump.document.tar.gz -d gpwcmd
 ```
 
+### Issue on OS X
+
+If you encounter issue like this:
+```
+Reason: Incompatible library version: node_libcurl.node requires version 9.0.0 or later, but libcurl.4.dylib provides version 7.0.0
+```
+Try this:
+```
+npm install node-libcurl --build-from-source
+```

@@ -2,7 +2,7 @@
 
 module.exports = {
     db: {
-        connectionUrl: 'postgres://gpwcmd:gpwcmd@localhost/gpwcmd',
+        connectionUrl: 'postgres://jbeynar:jbeynar@localhost/jbl-data-center',
         driverOptions: {
             poolIdleTimeout: 2000
         }
