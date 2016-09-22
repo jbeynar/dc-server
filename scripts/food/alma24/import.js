@@ -8,7 +8,6 @@ const DocumentDAO = rfr('libs/repo/DocumentDAO');
 const _ = require('lodash');
 const striptags = require('striptags');
 
-
 function importDocuments()
 {
     return db.connect().then(function (client)
@@ -24,13 +23,13 @@ function importDocuments()
             {
                 var body = JSON.parse(doc.body);
                 var obj = {
-                    ean: body.product.code,
-                    productName: body.name,
+                    ean: _.get(body, 'product.code'),
+                    productName: _.get(body, 'name'),
                     name: _.get(body, 'product.name'),
                     size: _.get(body, 'product.sizeWithUnitString'),
                     brand: _.get(body, 'brandView.name'),
-                    slug: body.slug,
-                    ingredients: striptags(_.chain(body.descriptionAttributeSets)
+                    slug: _.get(body, 'slug'),
+                    ingredients: striptags(_.chain(_.get(body, 'descriptionAttributeSets'))
                         .filter(['name', 'Opisy'])
                         .first()
                         .get('descriptionAttributes')
