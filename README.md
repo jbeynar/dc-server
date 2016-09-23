@@ -6,23 +6,23 @@ Before start, make sure you've got at least PgSQL 9.4 in your system, it's confi
 md5 authentication (refer to `pg_hba.conf`).
 
 Command below must be run from postgres system user (switch to root user then switch to postgres by su postgres). When prompted for password, enter 
-`gpwcmd`.
+`jbl-dc`.
 
 ```
-createuser gpwcmd -P && createdb gpwcmd -O gpwcmd && psql -d gpwcmd -c 'ALTER SCHEMA public OWNER TO gpwcmd;'
+createuser jbl-dc -P && createdb jbl-dc -O jbl-dc && psql -d jbl-dc -c 'ALTER SCHEMA public OWNER TO jbl-dc;'
 ```
 
 ### Document table backup
 
 ```
-pg_dump -h localhost -U gpwcmd -W -h localhost -a -n public -t document -v --format=tar -f dump.document.tar.gz gpwcmd
+pg_dump -h localhost -U jbl-dc -W -h localhost -a -n public -t document -v --format=tar -f dump.document.tar.gz jbl-dc
 ```
 You can also use custom format, it's probably even lighter.
 
 ### Document table restore
 
 ```
-pg_restore -h localhost -U gpwcmd -W -n public -t document -a -v --format=tar dump.document.tar.gz -d gpwcmd
+pg_restore -h localhost -U jbl-dc -W -n public -t document -a -v --format=tar dump.document.tar.gz -d jbl-dc
 ```
 
 ### Issue on OS X
