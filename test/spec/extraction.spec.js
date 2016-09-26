@@ -85,7 +85,7 @@ describe('Extraction library', () =>
             });
         });
 
-        it('Pull out element and apply process as aregular expression', () =>
+        it('Pull out element and apply process as a regular expression', () =>
         {
             var mapping = {
                 title: {
