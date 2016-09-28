@@ -3,7 +3,7 @@
 const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const db = rfr('libs/db');
 const repo = rfr('libs/repo');
 
@@ -25,7 +25,7 @@ function importDocuments()
             console.log('Processing documents...');
             return promise.each(documents, (doc)=>
             {
-                return extraction.extract(doc.body, map).then((extractedData)=>
+                return extractor.extract(doc.body, map).then((extractedData)=>
                 {
                     return repo.saveJsonDocument(type, extractedData);
                 });

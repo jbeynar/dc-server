@@ -3,7 +3,7 @@
 const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const db = rfr('libs/db');
 const repo = rfr('libs/repo');
 const _ = require('lodash');
@@ -76,7 +76,7 @@ function importDocuments()
             var components = [];
             return promise.each(documents, (doc)=>
             {
-                return extraction.extract(doc.body, map).then(function (extracted)
+                return extractor.extract(doc.body, map).then(function (extracted)
                 {
                     if (!extracted.primaryNames.name) {
                         console.log('Excluded', doc.url);

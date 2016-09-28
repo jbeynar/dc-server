@@ -6,6 +6,7 @@
   "scripts": {
     "start": "nodemon webapi.js",
     "test": "./node_modules/.bin/mocha --recursive",
+    "testing": "./node_modules/.bin/mocha --recursive --watch",
     "seed": "node -e \"require('./scripts/seed.js')();\""
   },
   "dependencies": {
@@ -27,6 +28,6 @@
   "author": "jbeynar",
   "devDependencies": {
     "chai": "^3.5.0",
-    "mocha": "2.4.5"
+    "mocha": "3.1.0"
   }
 }

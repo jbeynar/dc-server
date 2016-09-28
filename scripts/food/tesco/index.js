@@ -2,7 +2,7 @@
 
 const rfr = require('rfr');
 const _ = require('lodash');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const downloader = rfr('libs/downloader');
 
 
@@ -19,7 +19,7 @@ downloader.fetchHttpDocuments(['https://ezakupy.tesco.pl/groceries/']).then(func
             }
         }
     };
-    return extraction.extractArray(sites[0].body, map).catch(function (err)
+    return extractor.extractArray(sites[0].body, map).catch(function (err)
     {
         console.log('Extraction failure');
         console.error(err);
