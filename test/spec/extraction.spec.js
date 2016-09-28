@@ -85,12 +85,29 @@ describe('Extraction library', () =>
             });
         });
 
-        it('Pull out element and apply process as a regular expression', () =>
+        it('Pull out element and apply process as a regular expression given as string', () =>
         {
             var mapping = {
                 title: {
                     selector: 'h2',
                     process: '[a-z0-9]{3}'
+                }
+            };
+            var expected = {
+                title: 'xyz'
+            };
+            return extraction.extract(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
+        });
+
+        it('Pull out element and apply process as a regular expression', () =>
+        {
+            var mapping = {
+                title: {
+                    selector: 'h2',
+                    process: /[a-z0-9]{3}/
                 }
             };
             var expected = {
@@ -151,13 +168,31 @@ describe('Extraction library', () =>
 
     describe('Extracts DOM element attribute value', function ()
     {
-        it('Extract element attribute and apply process regexp', ()=>
+        it('Extract element attribute and apply process regexp given as string', ()=>
         {
             var mapping = {
                 charset: {
                     selector: 'meta',
                     attribute: 'charset',
                     process: '\\d+'
+                }
+            };
+
+            var expected = {
+                charset: '8'
+            };
+            return extraction.extract(htmlDocument, mapping).then((data)=>
+            {
+                return expect(data).to.eql(expected);
+            });
+        });
+        it('Extract element attribute and apply process regexp', ()=>
+        {
+            var mapping = {
+                charset: {
+                    selector: 'meta',
+                    attribute: 'charset',
+                    process: /\d+/
                 }
             };
 

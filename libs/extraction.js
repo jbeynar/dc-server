@@ -17,7 +17,7 @@ function extractArray(doc, map, whitelist)
 
         function extractOnce(def, key)
         {
-            if (_.isArray(whitelist) && -1 === _.indexOf(whitelist, key)) {
+            if (_.isArray(whitelist) && !_.includes(whitelist, key)) {
                 return;
             }
 
@@ -28,15 +28,21 @@ function extractArray(doc, map, whitelist)
                 element = $(element);
                 var value = def.attribute ? element.attr(def.attribute) : element.text();
 
-                if (_.isFunction(_.get(def, 'process'))) {
+                if (_.isFunction(def.process)) {
                     try {
                         value = def.process(value, element);
                     } catch (err) {
                         console.error('Process function fails at `' + key + '` cause:', err);
                     }
-                } else if (_.isString(_.get(def, 'process')) && _.isString(value)) {
+                } else if (_.isString(def.process) && _.isString(value)) {
                     try {
                         value = _.head(value.match(new RegExp(def.process)));
+                    } catch (err) {
+                        console.log('Process regular expression string fails at `' + key, '` cause:', err);
+                    }
+                } else if (_.isRegExp(def.process) && _.isString(value)) {
+                    try {
+                        value = _.head(value.match(def.process));
                     } catch (err) {
                         console.log('Process regular expression fails at `' + key, '` cause:', err);
                     }
