@@ -8,6 +8,7 @@ const DocumentDAO = rfr('libs/repo/DocumentDAO');
 const _ = require('lodash');
 const striptags = require('striptags');
 
+const typeName = 'product';
 function importDocuments()
 {
     return db.connect().then(function (client)
@@ -19,10 +20,11 @@ function importDocuments()
         }).then((documents)=>
         {
             console.log('Processing documents...');
+            var obj, body;
             return promise.each(documents, (doc)=>
             {
-                var body = JSON.parse(doc.body);
-                var obj = {
+                body = JSON.parse(doc.body);
+                obj = {
                     ean: _.get(body, 'product.code'),
                     productName: _.get(body, 'name'),
                     name: _.get(body, 'product.name'),
@@ -37,9 +39,20 @@ function importDocuments()
                         .first()
                         .get('value')
                         .value()),
+                    components: [],
                     imageSlug: _.get(body, 'defaultImage.name')
                 };
-                return DocumentDAO.saveJsonDocument('alma24', obj);
+                return DocumentDAO.saveJsonDocument(typeName, obj);
+            }).then(()=> {
+                obj = {
+                    ean: 123456789,
+                    productName: 'Reference product',
+                    name: 'Reference product',
+                    brand: 'JBL',
+                    ingredients: 'Żółcień naturalna 3, Mydłoka, E967, Laktitol, Sóll aspartaamu-acesulfamu',
+                    components: []
+                };
+                return DocumentDAO.saveJsonDocument(typeName, obj);
             });
         }).finally(client.done);
     }).catch(db.exceptionHandler);
