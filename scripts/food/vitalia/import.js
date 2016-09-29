@@ -71,7 +71,7 @@ function importDocuments()
         }).then((documents)=>
         {
             console.log('Processing documents...');
-            var componentsE = [], componentsNonE = [];
+            var components = [];
             return promise.each(documents, (doc)=>
             {
                 return extraction.extract(doc.body, map).then(function (extracted)
@@ -90,16 +90,16 @@ function importDocuments()
                     delete extracted.secondaryNames;
 
                     if ('E' === extracted.code[0]) {
-                        componentsE.push(extracted);
+                        components.push(extracted);
                     }
                 });
             }).then(function ()
             {
-                var sorted = _.sortBy(componentsE, 'code');
+                var sorted = _.sortBy(components, 'code');
                 console.log('Saving', sorted.length, 'documents');
                 return promise.map(sorted, function (component)
                 {
-                    return DocumentDAO.saveJsonDocument('vitalia', component);
+                    return DocumentDAO.saveJsonDocument('ingredient', component);
                 }, {concurrency: 1});
             });
         }).finally(client.done);
