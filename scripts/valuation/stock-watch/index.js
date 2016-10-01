@@ -7,7 +7,7 @@ const squel = require('squel').useFlavour('postgres');
 const rfr = require('rfr');
 const db = rfr('libs/db');
 const _ = require('lodash');
-const DocumentDAO = rfr('libs/repo/DocumentDAO');
+const repo = rfr('libs/repo');
 
 const valuationSwFilename = 'assets/stockwatch.pl-Wyceny-2016-03-06.csv';
 
@@ -38,7 +38,7 @@ function convertValuationSW()
                         doc.symbol = _.get(results, 'rows[0].symbol');
                         doc.sector = _.get(results, 'rows[0].sector');
                         doc.description = _.get(results, 'rows[0].description');
-                        return DocumentDAO.saveJsonDocument('valuation.stockwatch', doc);
+                        return repo.saveJsonDocument('valuation.stockwatch', doc);
                     });
                 }).then(()=>
                 {

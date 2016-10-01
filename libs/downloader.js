@@ -2,10 +2,9 @@
 {
     'use strict';
 
-    const rfr = require('rfr');
-    const db = rfr('libs/db');
-    const DocumentDAO = rfr('libs/repo/DocumentDAO');
     const _ = require('lodash');
+    const db = require('./db');
+    const DocumentDAO = require('./repo');
     const promise = require('bluebird');
     const urlInfoService = require('url');
 

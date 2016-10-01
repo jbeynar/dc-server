@@ -5,7 +5,7 @@ const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
 const extraction = rfr('libs/extraction');
 const db = rfr('libs/db');
-const DocumentDAO = rfr('libs/repo/DocumentDAO');
+const repo = rfr('libs/repo');
 const profileMap = require('./map.js');
 
 var whiteList = ['oid',
@@ -44,7 +44,7 @@ function importDocuments()
                         console.log('Wrong document format', doc.url);
                         return promise.resolve();
                     } else {
-                        return DocumentDAO.saveJsonDocument('valuation.biznesradar', extractedData);
+                        return repo.saveJsonDocument('valuation.biznesradar', extractedData);
                     }
                 });
             });

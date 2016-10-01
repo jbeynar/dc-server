@@ -17,18 +17,19 @@ const querySearchingredientsInProducts = `SELECT id, body FROM repo.document_jso
 const queryUpdateProducts = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
 
 pool.stream(queryFetchIngredients)
-    .map((record)=> {
-        record.body.searchVector = _.chain(record.body.names)
+    .map((ingredient)=> {
+        ingredient.body.searchVector = _.chain(ingredient.body.names)
             .map((name) => {
                 return name.replace(/[ ]+/g, ' & ')
             })
             .join(' | ')
             .value();
-        return record.body;
+        return ingredient.body;
     })
     .flatMap((component) => {
         return db.query(querySearchingredientsInProducts, [component.searchVector]).then((products)=> {
-            return { component: component.code, products: _.map(products, 'id') };
+            process.stdout.write('.');
+            return { component: component, products: _.map(products, 'id') };
         });
     })
     .reduce((acc, x)=> {

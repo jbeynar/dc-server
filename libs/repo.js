@@ -3,9 +3,17 @@
     'use strict';
 
     const squel = require('squel').useFlavour('postgres');
-    var db = require('../db');
+    var db = require('./db');
     const _ = require('lodash');
     const promise = require('bluebird');
+
+    function removeJsonDocuments(type){
+        return db.connect().then(function (client)
+        {
+            var query = squel.delete().from('repo.document_json').where('type=?', type).toParam();
+            return client.query(query.text, query.values).finally(client.done);
+        }).catch(db.exceptionHandler);
+    }
 
     function saveHttpDocument(data)
     {
@@ -116,6 +124,7 @@
     }
 
     module.exports = {
+        removeJsonDocuments: removeJsonDocuments,
         saveHttpDocument: saveHttpDocument,
         saveJsonDocument: saveJsonDocument,
         getJsonDocuments: getJsonDocuments,

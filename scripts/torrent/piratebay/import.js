@@ -5,7 +5,7 @@ const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
 const extraction = rfr('libs/extraction');
 const db = rfr('libs/db');
-const DocumentDAO = rfr('libs/repo/DocumentDAO');
+const repo = rfr('libs/repo');
 const _ = require('lodash');
 
 const host = 'thepiratebay.org';
@@ -43,7 +43,7 @@ function importDocuments()
                 console.log('Saving', sorted.length, 'rows');
                 return promise.map(sorted, function (component)
                 {
-                    return DocumentDAO.saveJsonDocument(typeName, component);
+                    return repo.saveJsonDocument(typeName, component);
                 }, {concurrency: 1});
             });
         }).finally(client.done);

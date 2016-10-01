@@ -9,13 +9,6 @@ const rfr = require('rfr');
 
 const config = rfr('config');
 
-var exportConfig = {
-    sourcePostgresqlUrl: config.db.connectionUrl,
-    sourceTypeName: 'product',
-    targetMongoDbUrl: 'mongodb://localhost:27017/food-scanner',
-    targetCollectionName: 'ingredient'
-};
-
 function handleError(err) {
     if (err) {
         console.log('MongoDb Exception');
@@ -23,9 +16,9 @@ function handleError(err) {
     }
 }
 
-function dropCollections(collectionNames) {
+function dropMongoCollections(targetMongoDbUrl, collectionNames) {
     return new Promise((resolve,reject)=>{
-        mongo.connect(exportConfig.targetMongoDbUrl, function (err, client) {
+        mongo.connect(targetMongoDbUrl, function (err, client) {
             return Promise.map(collectionNames, function (collectionName) {
                 return new Promise(function (resolve, reject) {
                     client.collection(collectionName).drop(function (err) {
@@ -50,12 +43,13 @@ function dropCollections(collectionNames) {
 
 function exportIntoMongo(exportConfig) {
     return new Promise((resolve)=> {
+        var i = 0;
         mongo.connect(exportConfig.targetMongoDbUrl, function (err, client) {
             handleError(err);
             const pool = pg.Pool(exportConfig.sourcePostgresqlUrl, { debug: false });
             const query = squel.select()
                 .from('repo.document_json')
-                .field('id', 'source_id')
+                .field('id')
                 .field('body')
                 .where('type=?', exportConfig.sourceTypeName)
                 .toString();
@@ -73,20 +67,22 @@ function exportIntoMongo(exportConfig) {
                         });
 
                         targetCollection.insertMany(_.map(documentsSet, (sourceDoc)=> {
-                                sourceDoc.body._source_id = sourceDoc._id;
+                                sourceDoc.body._source_id = sourceDoc.id;
                                 return sourceDoc.body;
                             }),
                             {},
                             function (err) {
                                 handleError(err);
                                 process.stdout.write('.');
+                                i += documentsSet.length;
                                 resolve();
                             });
                     });
                 })
                 .subscribe(()=> {}, () => {},
                     (data) => {
-                        console.log('\nSuccess');
+                        console.log('\nSuccessfully exported', i, 'documents');
+                        client.close();
                         return resolve();
                     }
                 );
@@ -94,6 +90,7 @@ function exportIntoMongo(exportConfig) {
     });
 }
 
-dropCollections([exportConfig.targetCollectionName]).then(()=> {exportIntoMongo(exportConfig)});
-
-
+module.exports = {
+    dropMongoCollections: dropMongoCollections,
+    exportIntoMongo: exportIntoMongo
+};

@@ -5,7 +5,7 @@ const fs = require('fs');
 const _ = require('lodash');
 const downloader = rfr('libs/downloader');
 
-var products = JSON.parse(fs.readFileSync('product-view.json').toString());
+var products = JSON.parse(fs.readFileSync('slug-list.json').toString());
 
 var urls = _.map(products.content, function (p)
 {

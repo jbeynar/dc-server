@@ -3,7 +3,7 @@
 const _ = require('lodash');
 const rfr = require('rfr');
 const downloader = rfr('libs/downloader');
-// const DocumentDAO = rfr('libs/DocumentDAO');
+// const repo = rfr('libs/repo');
 
 var baseUrl = 'http://vitalia.pl/index.php/mid/90/fid/1047/kalorie/diety/product_id';
 

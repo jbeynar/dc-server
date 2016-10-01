@@ -5,7 +5,7 @@ const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
 const extraction = rfr('libs/extraction');
 const db = rfr('libs/db');
-const DocumentDAO = rfr('libs/repo/DocumentDAO');
+const repo = rfr('libs/repo');
 
 var map = require('./map.js');
 var type = 'biznesradar.technical';
@@ -27,7 +27,7 @@ function importDocuments()
             {
                 return extraction.extract(doc.body, map).then((extractedData)=>
                 {
-                    return DocumentDAO.saveJsonDocument(type, extractedData);
+                    return repo.saveJsonDocument(type, extractedData);
                 });
             });
         }).finally(client.done);

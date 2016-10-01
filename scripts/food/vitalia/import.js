@@ -5,8 +5,10 @@ const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
 const extraction = rfr('libs/extraction');
 const db = rfr('libs/db');
-const DocumentDAO = rfr('libs/repo/DocumentDAO');
+const repo = rfr('libs/repo');
 const _ = require('lodash');
+
+const targetType = 'ingredient';
 
 const harmityMap = {
     'Bezpieczny': 0,
@@ -99,11 +101,15 @@ function importDocuments()
                 console.log('Saving', sorted.length, 'documents');
                 return promise.map(sorted, function (component)
                 {
-                    return DocumentDAO.saveJsonDocument('ingredient', component);
+                    return repo.saveJsonDocument(targetType, component).then(function () {
+                        process.stdout.write('.');
+                    });
                 }, {concurrency: 1});
             });
         }).finally(client.done);
     }).catch(db.exceptionHandler);
 }
 
-importDocuments();
+return repo.removeJsonDocuments(targetType).then(importDocuments).then(()=>{
+    console.log('\nSuccess');
+});
