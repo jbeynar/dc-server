@@ -1,8 +1,8 @@
 'use strict';
 
+const _ = require('lodash');
 const promise = require('bluebird');
 const cheerio = require('cheerio');
-const _ = require('lodash');
 
 const errorCode = {
     docEmpty: 'ERR_DOC_EMPTY',
