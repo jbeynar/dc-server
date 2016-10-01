@@ -2,6 +2,7 @@
 
 const rfr = require('rfr');
 const exporter = rfr('libs/exporter');
+const config = rfr('config');
 
 var exportConfig = {
     sourcePostgresqlUrl: config.db.connectionUrl,
@@ -10,6 +11,6 @@ var exportConfig = {
     targetCollectionName: 'products'
 };
 
-exporter.dropMongoCollections([exportConfig.targetCollectionName]).then(()=> {
-    exporter.exportIntoMongo(exportConfig)
+return exporter.dropMongoCollections(exportConfig.targetMongoDbUrl, [exportConfig.targetCollectionName]).then(()=> {
+    return exporter.exportIntoMongo(exportConfig);
 });

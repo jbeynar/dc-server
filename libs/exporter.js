@@ -34,7 +34,8 @@ function dropMongoCollections(targetMongoDbUrl, collectionNames) {
                 throw err;
                 reject();
             }).finally(()=>{
-                console.log('Collection removed');
+                console.log('Collections removed: ', collectionNames);
+                client.close();
                 resolve();
             });
         });
@@ -44,7 +45,7 @@ function dropMongoCollections(targetMongoDbUrl, collectionNames) {
 function exportIntoMongo(exportConfig) {
     return new Promise((resolve)=> {
         var i = 0;
-        mongo.connect(exportConfig.targetMongoDbUrl, function (err, client) {
+        return mongo.connect(exportConfig.targetMongoDbUrl, function (err, client) {
             handleError(err);
             const pool = pg.Pool(exportConfig.sourcePostgresqlUrl, { debug: false });
             const query = squel.select()
@@ -58,7 +59,7 @@ function exportIntoMongo(exportConfig) {
                 exportConfig.sourcePostgresqlUrl, 'into', exportConfig.targetMongoDbUrl, 'as',
                 exportConfig.sourceTypeName);
 
-            pool.stream(query)
+            return pool.stream(query)
                 .bufferWithCount(100)
                 .flatMap((documentsSet) => {
                     return new Promise((resolve, reject)=> {
