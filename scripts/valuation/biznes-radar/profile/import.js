@@ -3,7 +3,7 @@
 const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const db = rfr('libs/db');
 const repo = rfr('libs/repo');
 const profileMap = require('./map.js');
@@ -36,7 +36,7 @@ function importDocuments()
             console.log('Processing documents...');
             return promise.each(documents, (doc)=>
             {
-                return extraction.extract(doc.body, profileMap, whiteList).then((extractedData)=>
+                return extractor.extract(doc.body, profileMap, whiteList).then((extractedData)=>
                 {
                     //TODO: How we can validate raw documents?
                     // Map constraint like length or selector might be approach

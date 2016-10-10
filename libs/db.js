@@ -41,7 +41,7 @@ function query(query, bindings) {
             return res.rows;
         }).finally(client.done);
     }).catch(exceptionHandler);
-};
+}
 
 module.exports = {
     query: query,

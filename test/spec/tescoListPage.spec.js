@@ -3,7 +3,7 @@
 const expect = require('chai').expect;
 const rfr = require('rfr');
 const utils = rfr('test/utils');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const _ = require('lodash');
 
 describe('Extract data from static page', ()=>
@@ -29,7 +29,7 @@ describe('Extract data from static page', ()=>
 
         // var expected = {};
 
-        return extraction.extractArray(pageSource, map).then((data)=>
+        return extractor.extract(pageSource, map).then((data)=>
         {
             return expect(data).to.be.an('object');
         });
@@ -48,7 +48,7 @@ describe('Extract data from static page', ()=>
 
         var expected = {};
 
-        return extraction.extractArray(pageSource, map).then((data)=>
+        return extractor.extract(pageSource, map).then((data)=>
         {
             return expect(data).to.be.an('object');
         });

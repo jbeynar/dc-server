@@ -3,22 +3,32 @@
 const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const db = rfr('libs/db');
 const repo = rfr('libs/repo');
 const _ = require('lodash');
 
 const host = 'thepiratebay.org';
 const typeName = 'piratebay';
-const map = {
-    name: '#searchResult .detName a',
-    href: {
-        selector: '#searchResult .detName a',
-        attribute: 'href'
+const mapping = {
+    scope: 'table#searchResult tr',
+    map: {
+        name: {
+            selector: '.detName a'
+        },
+        href: {
+            multiple: true,
+            selector: '.detName a',
+            attribute: 'href'
+        },
+        magnet: {
+            selector: '[href^="magnet"]',
+            attribute: 'href'
+        }
     },
-    magnet: {
-        selector: '[href^="magnet"]',
-        attribute: 'href'
+    process: (extracted) =>
+    {
+        return extracted.slice(1);
     }
 };
 
@@ -33,7 +43,7 @@ function importDocuments()
             var extracted = [];
             return promise.each(rows, (row)=>
             {
-                return extraction.extractArray(row.body, map).then(function (document)
+                return extractor.extractArray(row.body, map).then(function (document)
                 {
                     extracted.push(document);
                 });
