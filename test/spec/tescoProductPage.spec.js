@@ -6,7 +6,7 @@ const utils = rfr('test/utils');
 const extractor = rfr('libs/extractor');
 const _ = require('lodash');
 
-describe('Extract data from static page', ()=>
+describe('Tesco product page case study', ()=>
 {
     var pageSource;
 

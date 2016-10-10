@@ -110,7 +110,7 @@ function extractFromRepo(extractionJob)
             query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
         });
         query = query.toParam();
-        
+
         return db.query(query.text, query.values).then((rows)=>
         {
             console.log(`Extracting ${rows.length} rows...`);

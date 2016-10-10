@@ -61,7 +61,7 @@ var mockTypesSet = [
     }
 ];
 
-describe('Repository access library', function ()
+describe('Repo library', function ()
 {
     describe('getJsonDocuments', function ()
     {

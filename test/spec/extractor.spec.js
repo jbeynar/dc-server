@@ -11,7 +11,7 @@ describe('Extractor library', () =>
 {
     var extractor;
     var htmlDocument;
-    var mockRepoSavedDocuments = {};
+    var mockRepoSavedJsonDocuments = {};
 
     function setupMocks() {
         const mockDocumentsSet = [
@@ -36,8 +36,8 @@ describe('Extractor library', () =>
         };
         const repoMock = {
             saveJsonDocument: (type, obj) => {
-                mockRepoSavedDocuments[type] = mockRepoSavedDocuments[type] || [];
-                mockRepoSavedDocuments[type].push({ body: obj });
+                mockRepoSavedJsonDocuments[type] = mockRepoSavedJsonDocuments[type] || [];
+                mockRepoSavedJsonDocuments[type].push({ body: obj });
                 return Promise.resolve();
             },
             removeJsonDocuments: (type)=> {
@@ -374,9 +374,9 @@ describe('Extractor library', () =>
                 ];
             return extractor.extractFromRepo(extractionJob.extract).then(() =>
             {
-                expect(mockRepoSavedDocuments.device[0].body).to.be.eql(expectedExtractions[0]);
-                expect(mockRepoSavedDocuments.device[1].body).to.be.eql(expectedExtractions[1]);
-                expect(mockRepoSavedDocuments.device[2].body).to.be.eql(expectedExtractions[2]);
+                expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expectedExtractions[0]);
+                expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expectedExtractions[1]);
+                expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expectedExtractions[2]);
             });
         });
     });
