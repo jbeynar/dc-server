@@ -3,7 +3,8 @@
         "module": true,
         "describe": true,
         "it": true,
-        "before": true
+        "before": true,
+        "afterEach": true
     },
     "bitwise": true,
     "browser": true,
