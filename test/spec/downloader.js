@@ -57,7 +57,6 @@ describe('Downloader library', () => {
                 expect(_.omit(mockRepoSavedHttpDocuments[1], 'body', 'headers')).to.eql(expectedHttpDocuments[1]);
             });
         });
-
         it('based on urls synchronous function', ()=> {
             const downloadJob = {
                 urls: function () {

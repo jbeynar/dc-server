@@ -114,15 +114,20 @@ function extractFromRepo(extractionJob)
         return db.query(query.text, query.values).then((rows)=>
         {
             console.log(`Extracting ${rows.length} rows...`);
+            var i = 0;
             return Promise.each(rows, (row)=>
             {
                 return extract(row.body, extractionJob).then(document =>
                 {
                     if (_.isArray(document)) {
-                        return Promise.map(document, (doc) => repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, doc));
+                        return Promise.map(document, (doc) => {
+                            return repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, doc).then(()=>i++);
+                        });
                     }
-                    return repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, document);
+                    return repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, document).then(()=>i++);
                 });
+            }).finally(()=>{
+                console.log(`Saved ${i} JSON documents`);
             });
         });
     });
