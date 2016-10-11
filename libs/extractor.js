@@ -121,7 +121,7 @@ function extractFromRepo(extractionJob)
                     if (_.isArray(document)) {
                         return Promise.map(document, (doc) => repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, doc));
                     }
-                    return repo.saveJsonDocument(extractionJob.target.typeName, document);
+                    return repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, document);
                 });
             });
         });
