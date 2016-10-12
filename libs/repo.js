@@ -13,14 +13,6 @@ function removeJsonDocuments(type) {
     }).catch(db.exceptionHandler);
 }
 
-function saveHttpDocument(data) {
-    return db.connect().then(function (client)
-    {
-        var query = squel.insert().into('repo.document_http').setFields(data).toParam();
-        return client.query(query.text, query.values).finally(client.done);
-    }).catch(db.exceptionHandler);
-}
-
 function saveJsonDocument(type, obj) {
     return db.connect().then(function (client)
     {
@@ -113,11 +105,35 @@ function mergeDocuments(type1Config, type2Config, destinationType) {
     });
 }
 
+function saveHttpDocument(data) {
+    return db.connect().then(function (client) {
+        var query = squel.insert().into('repo.document_http').setFields(data).toParam();
+        return client.query(query.text, query.values).finally(client.done);
+    }).catch(db.exceptionHandler);
+}
+
+function getHttpDocumentsSummary() {
+    const query = 'SELECT host, COUNT(*) as count, AVG(length)::bigint as avg_size, MAX(ts) as latest ' +
+        'FROM repo.document_http GROUP BY host';
+    return db.query(query).then((results)=> {
+        return results;
+    });
+}
+
+function removeHttpDocumentsByHost(host) {
+    const query = 'DELETE FROM repo.document_http WHERE host LIKE $1';
+    return db.query(query, [host]).then((results)=> {
+        return results;
+    });
+}
+
 module.exports = {
     removeJsonDocuments: removeJsonDocuments,
-    saveHttpDocument: saveHttpDocument,
     saveJsonDocument: saveJsonDocument,
     getJsonDocuments: getJsonDocuments,
     getJsonDocumentsTypes: getJsonDocumentsTypes,
-    mergeDocuments: mergeDocuments
+    mergeDocuments: mergeDocuments,
+    saveHttpDocument: saveHttpDocument,
+    getHttpDocumentsSummary: getHttpDocumentsSummary,
+    removeHttpDocumentsByHost: removeHttpDocumentsByHost
 };

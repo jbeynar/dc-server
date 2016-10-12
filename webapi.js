@@ -5,7 +5,7 @@ const rfr = require('rfr');
 const repo = rfr('./libs/repo');
 
 const api = {
-    getDocuments: function (request, reply) {
+    getJsonDocuments: function (request, reply) {
         var query = {
             type: request.params.type,
             blacklist: request.payload.blacklist,
@@ -15,40 +15,35 @@ const api = {
             reply({ data: result });
         });
     },
-    getTypes: function (request, reply) {
+    getJsonTypes: function (request, reply) {
         return repo.getJsonDocumentsTypes().then((result)=> {
             reply({ data: result });
         });
     },
-    removeType: function (request, reply) {
+    removeJsonType: function (request, reply) {
         return repo.removeJsonDocuments(request.params.type).then((result)=> {
+            reply({ data: result });
+        });
+    },
+    getHttpDocumentsSummary: function (request, reply) {
+        return repo.getHttpDocumentsSummary().then((result)=> {
+            reply({ data: result });
+        });
+    },
+    removeHttpDocumentsByHost: function (request, reply) {
+        return repo.removeHttpDocumentsByHost(request.params.host).then((result)=> {
             reply({ data: result });
         });
     }
 };
 
 const server = new Hapi.Server();
-server.connection({
-    port: 3003,
-    routes: {
-        cors: true
-    }
-});
-server.route({
-    method: 'GET',
-    path: '/repo/json/types',
-    handler: api.getTypes
-});
-server.route({
-    method: 'POST',
-    path: '/repo/json/{type}',
-    handler: api.getDocuments
-});
-server.route({
-    method: 'DELETE',
-    path: '/repo/json/{type}',
-    handler: api.removeType
-});
+server.connection({ port: 3003, routes: { cors: true } });
+server.route({ method: 'GET', path: '/repo/json/types', handler: api.getJsonTypes });
+server.route({ method: 'POST', path: '/repo/json/{type}', handler: api.getJsonDocuments });
+server.route({ method: 'DELETE', path: '/repo/json/{type}', handler: api.removeJsonType });
+server.route({ method: 'GET', path: '/repo/http/summary', handler: api.getHttpDocumentsSummary });
+server.route({ method: 'DELETE', path: '/repo/http/{host}', handler: api.removeHttpDocumentsByHost });
 
 server.start((err) =>
 {
