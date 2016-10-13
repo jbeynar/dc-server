@@ -66,13 +66,13 @@ describe('Extractor library', () =>
             it('when called with empty document', () =>
             {
                 return extractor.extract(undefined, {}).catch((err)=> {
-                    return expect(err.message.toString()).to.equal(extractor.errorCodes.docEmpty);
+                    return expect(err.message.toString()).to.equal(extractor.errorCodes.documentMalformedStructure);
                 });
             });
 
             it('when called with map of non-object type', () => {
-                return extractor.extract(htmlDocument, 'map').catch((err)=> {
-                    return expect(err.message.toString()).to.equal(extractor.errorCodes.mapInvalid);
+                return extractor.extract({body:htmlDocument}, 'map').catch((err)=> {
+                    return expect(err.message.toString()).to.equal(extractor.errorCodes.taskMalformedStructure);
                 });
             });
         });
@@ -93,7 +93,7 @@ describe('Extractor library', () =>
                         }
                     }
                 };
-                return extractor.extract(htmlDocument, extractionJob.extract).then((data)=> {
+                return extractor.extract({body: htmlDocument}, extractionJob.extract).then((data)=> {
                     return expect(data).to.eql(expected);
                 });
             });
@@ -110,7 +110,7 @@ describe('Extractor library', () =>
                 var expected = {
                     title: 'Employee list'
                 };
-                return extractor.extract(htmlDocument, mapping).then((data)=> {
+                return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                     return expect(data).to.eql(expected);
                 });
             });
@@ -126,7 +126,7 @@ describe('Extractor library', () =>
                 var expected = {
                     heading: ['ID', 'First name', 'Last name', 'Email']
                 };
-                return extractor.extract(htmlDocument, mapping).then((data)=> {
+                return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                     return expect(data).to.eql(expected);
                 });
             });
@@ -149,7 +149,7 @@ describe('Extractor library', () =>
             var expected = {
                 charset: '8'
             };
-            return extractor.extract(htmlDocument, mapping).then((data)=> {
+            return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                 return expect(data).to.eql(expected);
             });
         });
@@ -169,7 +169,7 @@ describe('Extractor library', () =>
             var expected = {
                 charset: '8'
             };
-            return extractor.extract(htmlDocument, mapping).then((data)=> {
+            return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                 return expect(data).to.eql(expected);
             });
         });
@@ -192,7 +192,7 @@ describe('Extractor library', () =>
                 var expected = {
                     title: 'EMPLOYEE LIST'
                 };
-                return extractor.extract(htmlDocument, mapping).then((data)=> {
+                return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                     return expect(data).to.eql(expected);
                 });
             });
@@ -210,7 +210,7 @@ describe('Extractor library', () =>
                 var expected = {
                     title: 'xyz'
                 };
-                return extractor.extract(htmlDocument, mapping).then((data)=> {
+                return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                     return expect(data).to.eql(expected);
                 });
             });
@@ -229,7 +229,7 @@ describe('Extractor library', () =>
                 var expected = {
                     title: 'xyz'
                 };
-                return extractor.extract(htmlDocument, mapping).then((data)=> {
+                return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                     return expect(data).to.eql(expected);
                 });
             });
@@ -258,7 +258,7 @@ describe('Extractor library', () =>
                 subtitle: 'An xyz company'
             };
 
-            return extractor.extract(htmlDocument, mapping).then((data)=>
+            return extractor.extract({body: htmlDocument}, mapping).then((data)=>
             {
                 return expect(data).to.eql(expected);
             });
@@ -295,7 +295,7 @@ describe('Extractor library', () =>
                 author: 'Authored by jbeynar'
             };
 
-            return extractor.extract(htmlDocument, mapping, ['title', 'author']).then((data)=>
+            return extractor.extract({body:htmlDocument}, mapping, ['title', 'author']).then((data)=>
             {
                 return expect(data).to.eql(expected);
             });

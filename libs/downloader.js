@@ -9,7 +9,7 @@ const urlInfoService = require('url');
 const Curl = require('node-libcurl').Curl;
 
 const defaultOptions = {
-    downloadDelay: 500
+    intervalTime: 500
 };
 
 function downloadHttpDocuments(downloadJob) {
@@ -62,7 +62,7 @@ function downloadHttpDocuments(downloadJob) {
 
                     curl.perform();
 
-                }).delay(options.downloadDelay);
+                }).delay(_.get(downloadJob, 'options.intervalTime', options.intervalTime));
             }).finally(client.done);
         }).catch(db.exceptionHandler);
     });

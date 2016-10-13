@@ -49,7 +49,7 @@ describe('Tesco product page case study', ()=>
             ingredients: 'woda, olej rzepakowy, glukoza, musztarda (woda, gorczyca, ocet, sól, cukier, przyprawy, aromat), żółtko jaja, substancje zagęszczające (skrobia modyfikowana, guma guar), ocet, sól, regulatory kwasowości (E 338, kwas mlekowy, kwas cytrynowy), cukier, substancja konserwująca (E 202), przyprawy, przeciwutleniacz (E 385), aromat'
         };
 
-        return extractor.extract(pageSource, mapping).then((data)=>
+        return extractor.extract({body:pageSource}, mapping).then((data)=>
         {
             expect(data.imgAddress).to.eql(expected.imgAddress);
             expect(data.description).to.eql(expected.description);

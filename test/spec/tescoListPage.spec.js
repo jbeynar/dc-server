@@ -27,28 +27,22 @@ describe('Tesco list page case study', ()=>
             }
         };
 
-        // var expected = {};
-
-        return extractor.extract(pageSource, map).then((data)=>
+        return extractor.extract({ body: pageSource }, map).then((data)=>
         {
             return expect(data).to.be.an('object');
         });
 
     });
 
-
     it('Extracts categories from page', ()=>
     {
-
         var map = {
             selector: 'html',
             attribute: 'data-props',
             process: 'Cat[0-9]+'
         };
 
-        var expected = {};
-
-        return extractor.extract(pageSource, map).then((data)=>
+        return extractor.extract({ body: pageSource }, map).then((data)=>
         {
             return expect(data).to.be.an('object');
         });

@@ -6,12 +6,14 @@ const cheerio = require('cheerio');
 const db = require('./db');
 const squel = require('squel').useFlavour('postgres');
 const repo = require('./repo');
+
 const errorCodes = {
-    docEmpty: 'ERR_DOC_EMPTY',
-    mapInvalid: 'ERR_MAP_INVALID'
+    documentMalformedStructure: 'ERR_DOCUMENT_MALFORMED_STRUCTURE',
+    documentBodyEmpty: 'ERR_DOCUMENT_BODY_EMPTY',
+    taskMalformedStructure: 'ERR_TASK_MALFORMED_STRUCTURE'
 };
 
-function extract(doc, extractionJob, whitelist)
+function extract(document, extractionTask, whitelist)
 {
     return new Promise((resolve, reject) =>
     {
@@ -73,23 +75,26 @@ function extract(doc, extractionJob, whitelist)
             return extracted;
         }
 
-        if (_.isEmpty(doc)) {
-            return reject(new Error(errorCodes.docEmpty));
+        if (!_.isObject(document) || _.isEmpty(document)) {
+            return reject(new Error(errorCodes.documentMalformedStructure));
         }
-        if (!_.isObject(extractionJob)) {
-            return reject(new Error(errorCodes.mapInvalid));
+        if (_.isEmpty(document.body)) {
+            return reject(new Error(errorCodes.documentBodyEmpty));
+        }
+        if (_.isEmpty(extractionTask)) {
+            return reject(new Error(errorCodes.taskMalformedStructure));
         }
 
-        $ = cheerio.load(doc);
+        $ = cheerio.load(document.body);
 
-        if (extractionJob.scope) {
-            resolve(_.map($(extractionJob.scope), scope => extractAll($(scope), extractionJob.map)));
+        if (extractionTask.scope) {
+            resolve(_.map($(extractionTask.scope), scope => extractAll($(scope), extractionTask.map)));
         } else {
-            resolve(extractAll($('html'), extractionJob.map));
+            resolve(extractAll($('html'), extractionTask.map));
         }
     }).then((extracted) =>
     {
-        return _.isFunction(extractionJob.process) ? extractionJob.process(extracted, doc) : extracted;
+        return _.isFunction(extractionTask.process) ? extractionTask.process(extracted, document) : extracted;
     });
 }
 
@@ -116,7 +121,7 @@ function extractFromRepo(extractionJob)
             var i = 0;
             return Promise.each(rows, (row)=>
             {
-                return extract(row.body, extractionJob).then(document =>
+                return extract(row, extractionJob).then(document =>
                 {
                     if (null == document || _.isEmpty(document)) {
                         return Promise.resolve();
