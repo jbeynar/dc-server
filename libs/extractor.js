@@ -123,9 +123,9 @@ function extractFromRepo(extractionTask)
 
         return db.query(query.text, query.values).then((rows)=>
         {
-            logger.log(`Extracting ${rows.length} rows...`);
+            logger.log(`Extracting ${rows.length} rows...`, 1);
             var i = 0;
-            return Promise.each(rows, (row)=>
+            return Promise.map(rows, (row)=>
             {
                 return extract(row, extractionTask).then(document =>
                 {
@@ -138,8 +138,8 @@ function extractFromRepo(extractionTask)
                     }
                     return repo.saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document).then(()=>i++);
                 });
-            }).finally(()=>{
-                logger.log(`Saved ${i} JSON documents`);
+            }, { concurrency: 1 }).finally(()=> {
+                logger.log(`Saved ${i} JSON documents`, 1);
             });
         });
     });

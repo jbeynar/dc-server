@@ -4,7 +4,7 @@ function log(buffer, nl) {
     if (!process.env.LOGGER_SILENT) {
         process.stdout.write(buffer);
         if (nl) {
-            process.stdout.write('\n').repeat(Number(nl));
+            process.stdout.write('\n'.repeat(Number(nl)));
         }
     }
 }
