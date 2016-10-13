@@ -304,7 +304,7 @@ describe('Extractor library', () =>
 
     describe('Extract from database document html and save as document json', function ()
     {
-        var extractionJob = {
+        const extractionJob = {
             download: {
                 urls: () => {
                 },
@@ -353,6 +353,11 @@ describe('Extractor library', () =>
                 }
             }
         };
+
+        afterEach(()=> {
+            mockRepoSavedJsonDocuments = {};
+        });
+
         it('Should read from storage using sourceConditions then extract, process and finally save as targetType',
             ()=> {
                 var expectedExtractions = [
@@ -372,12 +377,37 @@ describe('Extractor library', () =>
                         price: '16$'
                     }
                 ];
-            return extractor.extractFromRepo(extractionJob.extract).then(() =>
+                return extractor.extractFromRepo(_.cloneDeep(extractionJob.extract)).then(() =>
             {
                 expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expectedExtractions[0]);
                 expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expectedExtractions[1]);
                 expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expectedExtractions[2]);
             });
         });
+
+        it('Doesn\'t save document if extracted value is null', ()=> {
+            const extraction = _.cloneDeep(extractionJob.extract);
+            extraction.process = ()=> { return null; };
+            return extractor.extractFromRepo(extraction).then(() => {
+                expect(mockRepoSavedJsonDocuments).to.be.eql({});
+            });
+        });
+
+        it('Doesn\'t save document if extracted value is empty array', ()=> {
+            const extraction = _.cloneDeep(extractionJob.extract);
+            extraction.process = ()=> { return []; };
+            return extractor.extractFromRepo(extraction).then(() => {
+                expect(mockRepoSavedJsonDocuments).to.be.eql({});
+            });
+        });
+
+        it('Doesn\'t save document if extracted value is empty object', ()=> {
+            const extraction = _.cloneDeep(extractionJob.extract);
+            extraction.process = ()=> { return {}; };
+            return extractor.extractFromRepo(extraction).then(() => {
+                expect(mockRepoSavedJsonDocuments).to.be.eql({});
+            });
+        });
+
     });
 });

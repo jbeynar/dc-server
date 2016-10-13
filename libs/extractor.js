@@ -57,11 +57,11 @@ function extract(doc, extractionJob, whitelist)
             return def.singular ? _.first(res) : res;
         }
 
-        function extract($scope)
+        function extractAll($scope, map)
         {
             var extracted = {};
 
-            _.forEach(extractionJob.map, (def, key) =>
+            _.forEach(map, (def, key) =>
             {
                 var value = extractOnce($scope, def, key);
 
@@ -73,7 +73,6 @@ function extract(doc, extractionJob, whitelist)
             return extracted;
         }
 
-
         if (_.isEmpty(doc)) {
             return reject(new Error(errorCodes.docEmpty));
         }
@@ -84,10 +83,10 @@ function extract(doc, extractionJob, whitelist)
         $ = cheerio.load(doc);
 
         if (extractionJob.scope) {
-            return resolve(_.map($(extractionJob.scope), scope => extract($(scope))));
+            resolve(_.map($(extractionJob.scope), scope => extractAll($(scope), extractionJob.map)));
+        } else {
+            resolve(extractAll($('html'), extractionJob.map));
         }
-
-        return resolve(extract($('html')));
     }).then((extracted) =>
     {
         return _.isFunction(extractionJob.process) ? extractionJob.process(extracted) : extracted;
@@ -119,7 +118,9 @@ function extractFromRepo(extractionJob)
             {
                 return extract(row.body, extractionJob).then(document =>
                 {
-                    if (_.isArray(document)) {
+                    if (null == document || _.isEmpty(document)) {
+                        return Promise.resolve();
+                    } else if (_.isArray(document)) {
                         return Promise.map(document, (doc) => {
                             return repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, doc).then(()=>i++);
                         });
