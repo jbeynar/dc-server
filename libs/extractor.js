@@ -89,7 +89,7 @@ function extract(doc, extractionJob, whitelist)
         }
     }).then((extracted) =>
     {
-        return _.isFunction(extractionJob.process) ? extractionJob.process(extracted) : extracted;
+        return _.isFunction(extractionJob.process) ? extractionJob.process(extracted, doc) : extracted;
     });
 }
 
