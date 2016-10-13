@@ -6,7 +6,7 @@ const cheerio = require('cheerio');
 const db = require('./db');
 const squel = require('squel').useFlavour('postgres');
 const repo = require('./repo');
-
+const logger = require('./logger');
 const errorCodes = {
     documentMalformedStructure: 'ERR_DOCUMENT_MALFORMED_STRUCTURE',
     documentBodyEmpty: 'ERR_DOCUMENT_BODY_EMPTY',
@@ -43,13 +43,13 @@ function extract(document, extractionTask, whitelist)
                     try {
                         value = _.head(value.match(new RegExp(def.process)));
                     } catch (err) {
-                        console.log('Process regular expression string fails at `' + key, '` cause:', err);
+                        logger.error('Process regular expression string fails at `' + key, '` cause:', err);
                     }
                 } else if (_.isRegExp(def.process) && _.isString(value)) {
                     try {
                         value = _.head(value.match(def.process));
                     } catch (err) {
-                        console.log('Process regular expression fails at `' + key, '` cause:', err);
+                        logger.error('Process regular expression fails at `' + key, '` cause:', err);
                     }
                 }
 
@@ -98,18 +98,24 @@ function extract(document, extractionTask, whitelist)
     });
 }
 
-function extractFromRepo(extractionJob)
+function extractFromRepo(extractionTask)
 {
     return new Promise((resolve)=>
     {
-        if (extractionJob.targetJsonDocuments.autoRemove) {
-            return repo.removeJsonDocuments(extractionJob.targetJsonDocuments.typeName).then(resolve);
+        if (!_.get(extractionTask, 'targetJsonDocuments.typeName')) {
+            throw new Error('You must specify targetJsonDocuments');
+        }
+        if (extractionTask.targetJsonDocuments.autoRemove) {
+            return repo.removeJsonDocuments(extractionTask.targetJsonDocuments.typeName).then(resolve);
         }
         resolve();
     }).then(() =>
     {
+        if (!extractionTask.sourceHttpDocuments) {
+            throw new Error('You must specify sourceHttpDocuments');
+        }
         let query = squel.select().from('repo.document_http');
-        _.each(extractionJob.sourceHttpDocuments, (value, field) =>
+        _.each(extractionTask.sourceHttpDocuments, (value, field) =>
         {
             query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
         });
@@ -117,23 +123,23 @@ function extractFromRepo(extractionJob)
 
         return db.query(query.text, query.values).then((rows)=>
         {
-            console.log(`Extracting ${rows.length} rows...`);
+            logger.log(`Extracting ${rows.length} rows...`);
             var i = 0;
             return Promise.each(rows, (row)=>
             {
-                return extract(row, extractionJob).then(document =>
+                return extract(row, extractionTask).then(document =>
                 {
                     if (null == document || _.isEmpty(document)) {
                         return Promise.resolve();
                     } else if (_.isArray(document)) {
                         return Promise.map(document, (doc) => {
-                            return repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, doc).then(()=>i++);
+                            return repo.saveJsonDocument(extractionTask.targetJsonDocuments.typeName, doc).then(()=>i++);
                         });
                     }
-                    return repo.saveJsonDocument(extractionJob.targetJsonDocuments.typeName, document).then(()=>i++);
+                    return repo.saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document).then(()=>i++);
                 });
             }).finally(()=>{
-                console.log(`Saved ${i} JSON documents`);
+                logger.log(`Saved ${i} JSON documents`);
             });
         });
     });
