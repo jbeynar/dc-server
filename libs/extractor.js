@@ -102,18 +102,12 @@ function extractFromRepo(extractionTask)
 {
     return new Promise((resolve)=>
     {
-        if (!_.get(extractionTask, 'targetJsonDocuments.typeName')) {
-            throw new Error('You must specify targetJsonDocuments');
-        }
         if (extractionTask.targetJsonDocuments.autoRemove) {
             return repo.removeJsonDocuments(extractionTask.targetJsonDocuments.typeName).then(resolve);
         }
         resolve();
     }).then(() =>
     {
-        if (!extractionTask.sourceHttpDocuments) {
-            throw new Error('You must specify sourceHttpDocuments');
-        }
         let query = squel.select().from('repo.document_http');
         _.each(extractionTask.sourceHttpDocuments, (value, field) =>
         {
@@ -129,7 +123,7 @@ function extractFromRepo(extractionTask)
             {
                 return extract(row, extractionTask).then(document =>
                 {
-                    if (null == document || _.isEmpty(document)) {
+                    if (_.isEmpty(document)) {
                         return Promise.resolve();
                     } else if (_.isArray(document)) {
                         return Promise.map(document, (doc) => {

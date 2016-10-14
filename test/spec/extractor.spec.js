@@ -41,7 +41,7 @@ describe('Extractor library', () =>
                 return Promise.resolve();
             },
             removeJsonDocuments: (type)=> {
-                mockDocumentsSet[type] = [];
+                delete mockRepoSavedJsonDocuments[type];
                 return Promise.resolve();
             }
         };
@@ -305,14 +305,6 @@ describe('Extractor library', () =>
     describe('Extract from database document html and save as document json', function ()
     {
         const extractionJob = {
-            download: {
-                urls: () => {
-                },
-                options: {
-                    interval: 500,
-                    headers: []
-                }
-            },
             extract: {
                 sourceHttpDocuments: {
                     host: 'hakier.pl',
@@ -341,49 +333,77 @@ describe('Extractor library', () =>
                     _.each(extracted, (document) => document.parameters.sort());
                     return extracted;
                 }
-            },
-            export: {
-                sourceJsonDocuments: {
-                    typeName: 'device'
-                },
-                targetMongo: {
-                    url: '',
-                    collectionName: 'device',
-                    autoRemove: true
-                }
             }
         };
+        const expectedDevices = [
+            {
+                name: 'uPad',
+                parameters: ['CPU: 1GHz', 'RAM: 512MB', 'Storage: 8GB'],
+                price: '999$'
+            },
+            {
+                name: 'Nokia Lumia 735',
+                parameters: ['CPU: 1.2GHz', 'RAM: 1GB', 'Resolution: 1920x1050', 'Screen: 5"', 'Storage: 8GB'],
+                price: '128$'
+            },
+            {
+                name: 'Pendrive',
+                parameters: ['Capacity: 8GB', 'Manufacturer: Sandisk'],
+                price: '16$'
+            }
+        ];
 
         afterEach(()=> {
             mockRepoSavedJsonDocuments = {};
         });
 
-        it('Should read from storage using sourceConditions then extract, process and finally save as targetType',
-            ()=> {
-                var expectedExtractions = [
-                    {
-                        name: 'uPad',
-                        parameters: ['CPU: 1GHz', 'RAM: 512MB', 'Storage: 8GB'],
-                        price: '999$'
-                    },
-                    {
-                        name: 'Nokia Lumia 735',
-                        parameters: ['CPU: 1.2GHz', 'RAM: 1GB', 'Resolution: 1920x1050', 'Screen: 5"', 'Storage: 8GB'],
-                        price: '128$'
-                    },
-                    {
-                        name: 'Pendrive',
-                        parameters: ['Capacity: 8GB', 'Manufacturer: Sandisk'],
-                        price: '16$'
-                    }
-                ];
-                return extractor.extractFromRepo(_.cloneDeep(extractionJob.extract)).then(() =>
-            {
-                expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expectedExtractions[0]);
-                expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expectedExtractions[1]);
-                expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expectedExtractions[2]);
+        describe('When there are documents in storage with given type name', () => {
+            beforeEach(function () {
+                mockRepoSavedJsonDocuments = {
+                    device: [
+                        {
+                            body: {
+                                name: 'iWatch',
+                                parameters: ['CPU: 300Mhz', 'RAM: 64MB'],
+                                price: '512$'
+                            }
+                        }
+                    ]
+                };
+            });
+            describe('And targetJsonDocuments.autoRemove is truthy', () => {
+                it('Should clear documents in given type name before saving them', ()=> {
+                    const extraction = _.cloneDeep(extractionJob.extract);
+                    extraction.targetJsonDocuments.autoRemove = true;
+                    return extractor.extractFromRepo(extraction).then(() => {
+                        expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expectedDevices[0]);
+                        expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expectedDevices[1]);
+                        expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expectedDevices[2]);
+                    });
+                });
+            });
+            describe('When targetJsonDocuments.autoRemove is falsy', function () {
+                it('Should clear documents in given type name before saving them', ()=> {
+                    const extraction = _.cloneDeep(extractionJob.extract);
+                    delete extraction.targetJsonDocuments.autoRemove;
+                    const expected = [
+                        {
+                            name: 'iWatch',
+                            parameters: ['CPU: 300Mhz', 'RAM: 64MB'],
+                            price: '512$'
+                        }
+                    ].concat(expectedDevices);
+                    return extractor.extractFromRepo(extraction).then(() => {
+                        expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expected[0]);
+                        expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expected[1]);
+                        expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expected[2]);
+                        expect(mockRepoSavedJsonDocuments.device[3].body).to.be.eql(expected[3]);
+                    });
+                });
             });
         });
+
+        //TODO: when extracted array of documents
 
         it('Doesn\'t save document if extracted value is null', ()=> {
             const extraction = _.cloneDeep(extractionJob.extract);
