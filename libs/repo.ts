@@ -1,11 +1,13 @@
 'use strict';
 
-const _ = require('lodash');
-const squel = require('squel').useFlavour('postgres');
-var db = require('./db');
-const promise = require('bluebird');
+import _ = require('lodash');
+import Squel = require('squel');
+import db = require('./db');
+import Promise = require('bluebird');
 
-function removeJsonDocuments(type) {
+const squel = Squel.useFlavour('postgres');
+
+export function removeJsonDocuments(type) {
     return db.connect().then(function (client)
     {
         var query = squel.delete().from('repo.document_json').where('type=?', type).toParam();
@@ -13,7 +15,7 @@ function removeJsonDocuments(type) {
     }).catch(db.exceptionHandler);
 }
 
-function saveJsonDocument(type, obj) {
+export function saveJsonDocument(type, obj) {
     return db.connect().then(function (client)
     {
         var json = JSON.stringify(obj);
@@ -27,7 +29,7 @@ function saveJsonDocument(type, obj) {
     }).catch(db.exceptionHandler);
 }
 
-function getJsonDocuments(config) {
+export function getJsonDocuments(config) {
     var query = _.cloneDeep(config);
     var stmt = squel.select().from('repo.document_json').order('id');
     if (query.type) {
@@ -66,7 +68,7 @@ function getJsonDocuments(config) {
     });
 }
 
-function getJsonDocumentsTypes() {
+export function getJsonDocumentsTypes() {
     var query = 'SELECT type, COUNT(*) as count, MAX(ts) as last_change FROM repo.document_json GROUP BY type';
     return db.query(query);
 }
@@ -78,7 +80,7 @@ function getJsonDocumentsTypes() {
  *      id:   'string'
  * }
  */
-function mergeDocuments(type1Config, type2Config, destinationType) {
+export function mergeDocuments(type1Config, type2Config, destinationType) {
     if (!_.isObject(type1Config) || !_.isObject(type2Config)) {
         throw new Error('Types configs must by of Objects type');
     }
@@ -86,9 +88,9 @@ function mergeDocuments(type1Config, type2Config, destinationType) {
         throw new Error('Destination type must be not empty string');
     }
     var stmt1 = squel.select().from('repo.document_json').where('type=?', type1Config.type).toString();
-    return db.query(stmt1).then(function (results1)
+    return db.query(stmt1).then((results1)=>
     {
-        return promise.map(results1, function (doc1)
+        return Promise.map(results1, (doc1 : any) =>
         {
             var mergeId = _.get(doc1.body, type1Config.id);
             var stmt2 = squel.select()
@@ -105,14 +107,14 @@ function mergeDocuments(type1Config, type2Config, destinationType) {
     });
 }
 
-function saveHttpDocument(data) {
+export function saveHttpDocument(data) {
     return db.connect().then(function (client) {
         var query = squel.insert().into('repo.document_http').setFields(data).toParam();
         return client.query(query.text, query.values).finally(client.done);
     }).catch(db.exceptionHandler);
 }
 
-function getHttpDocumentsSummary() {
+export function getHttpDocumentsSummary() {
     const query = 'SELECT host, COUNT(*) as count, AVG(length)::bigint as avg_size, MAX(ts) as latest ' +
         'FROM repo.document_http GROUP BY host';
     return db.query(query).then((results)=> {
@@ -120,20 +122,20 @@ function getHttpDocumentsSummary() {
     });
 }
 
-function removeHttpDocumentsByHost(host) {
+export function removeHttpDocumentsByHost(host) {
     const query = 'DELETE FROM repo.document_http WHERE host LIKE $1';
     return db.query(query, [host]).then((results)=> {
         return results;
     });
 }
 
-module.exports = {
-    removeJsonDocuments: removeJsonDocuments,
-    saveJsonDocument: saveJsonDocument,
-    getJsonDocuments: getJsonDocuments,
-    getJsonDocumentsTypes: getJsonDocumentsTypes,
-    mergeDocuments: mergeDocuments,
-    saveHttpDocument: saveHttpDocument,
-    getHttpDocumentsSummary: getHttpDocumentsSummary,
-    removeHttpDocumentsByHost: removeHttpDocumentsByHost
-};
+// module.exports = {
+//     removeJsonDocuments: removeJsonDocuments,
+//     saveJsonDocument: saveJsonDocument,
+//     getJsonDocuments: getJsonDocuments,
+//     getJsonDocumentsTypes: getJsonDocumentsTypes,
+//     mergeDocuments: mergeDocuments,
+//     saveHttpDocument: saveHttpDocument,
+//     getHttpDocumentsSummary: getHttpDocumentsSummary,
+//     removeHttpDocumentsByHost: removeHttpDocumentsByHost
+// };

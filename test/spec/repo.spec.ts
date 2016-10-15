@@ -1,10 +1,12 @@
 'use strict';
 
-const expect = require('chai').expect;
-const proxyquire = require('proxyquire');
-const promise = require('bluebird');
-const _ = require('lodash');
-const rfr = require('rfr');
+import chai = require('chai');
+import proxyquire = require('proxyquire');
+import promise = require('bluebird');
+import _ = require('lodash');
+import rfr = require('rfr');
+
+const expect = chai.expect;
 
 var mockDocumentsSet = [
     {

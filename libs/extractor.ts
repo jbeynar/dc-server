@@ -1,19 +1,22 @@
 'use strict';
 
-const _ = require('lodash');
-const Promise = require('bluebird');
-const cheerio = require('cheerio');
-const db = require('./db');
-const squel = require('squel').useFlavour('postgres');
-const repo = require('./repo');
-const logger = require('./logger');
-const errorCodes = {
+import _ = require('lodash');
+import Promise = require('bluebird');
+import cheerio = require('cheerio');
+import db = require('./db');
+import Squel = require('squel');
+import repo = require('./repo');
+import logger = require('./logger');
+
+const squel = Squel.useFlavour('postgres');
+
+export const errorCodes = {
     documentMalformedStructure: 'ERR_DOCUMENT_MALFORMED_STRUCTURE',
     documentBodyEmpty: 'ERR_DOCUMENT_BODY_EMPTY',
     taskMalformedStructure: 'ERR_TASK_MALFORMED_STRUCTURE'
 };
 
-function extract(document, extractionTask, whitelist)
+export function extract(document, extractionTask, whitelist?)
 {
     return new Promise((resolve, reject) =>
     {
@@ -28,7 +31,7 @@ function extract(document, extractionTask, whitelist)
             var selector = _.isString(def) ? def : def.selector;
             var elements = $scope.find(selector);
 
-            var res = _.map(elements, (element) =>
+            var res = _.map(elements, (element : any) =>
             {
                 element = $(element);
                 var value = def.attribute ? element.attr(def.attribute) : element.text();
@@ -98,7 +101,7 @@ function extract(document, extractionTask, whitelist)
     });
 }
 
-function extractFromRepo(extractionTask)
+export function extractFromRepo(extractionTask)
 {
     return new Promise((resolve)=>
     {
@@ -138,9 +141,3 @@ function extractFromRepo(extractionTask)
         });
     });
 }
-
-module.exports = {
-    errorCodes,
-    extract,
-    extractFromRepo
-};

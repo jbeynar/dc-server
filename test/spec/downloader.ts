@@ -1,9 +1,11 @@
 'use strict';
 
-const _ = require('lodash');
-const Promise = require('bluebird');
-const expect = require('chai').expect;
-const proxyquire = require('proxyquire');
+import _ = require('lodash');
+import Promise = require('bluebird');
+import chai = require('chai');
+import proxyquire = require('proxyquire');
+
+const expect = chai.expect;
 
 describe('Downloader library', () => {
     var downloader;

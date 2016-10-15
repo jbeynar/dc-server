@@ -1,18 +1,21 @@
 'use strict';
 
-const _ = require('lodash');
-const db = require('./db');
-const repo = require('./repo');
-const Promise = require('bluebird');
-const urlInfoService = require('url');
+import _ = require('lodash');
+import db = require('./db');
+import repo = require('./repo');
+import Promise = require('bluebird');
+import urlInfoService = require('url');
+import LibCurl = require('node-libcurl');
 
-const Curl = require('node-libcurl').Curl;
+const Curl = LibCurl.Curl;
+// const Curl = require('node-libcurl').Curl;
+// import Curl from 'node-libcurl';
 
 const defaultOptions = {
     intervalTime: 500
 };
 
-function downloadHttpDocuments(downloadJob) {
+export function downloadHttpDocuments(downloadJob) {
 
     if (_.isFunction((downloadJob.urls))) {
         downloadJob.urls = downloadJob.urls();
@@ -25,7 +28,7 @@ function downloadHttpDocuments(downloadJob) {
     return Promise.resolve(downloadJob.urls).then((urls)=> {
         return db.connect().then(function (client) {
             var i = 0;
-            return Promise.each(urls, function (url) {
+            return Promise.each(urls, function (url : string) {
                 process.stdout.write(++i + '/' + urls.length + ' ' + url);
                 return new Promise(function (resolve) {
                     var curl = new Curl();
@@ -67,7 +70,3 @@ function downloadHttpDocuments(downloadJob) {
         }).catch(db.exceptionHandler);
     });
 }
-
-module.exports = {
-    downloadHttpDocuments: downloadHttpDocuments
-};

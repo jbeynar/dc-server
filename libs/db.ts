@@ -1,17 +1,17 @@
 'use strict';
 
-const pg = require('pg');
-const promise = require('bluebird');
-const config = require('../config');
+import pg = require('pg');
+import promise = require('bluebird');
+import config = require('../config');
 
 var highlighStart = '\x1b[31m';
 var highlightEnd = '\x1b[0m';
 
 pg.defaults.poolIdleTimeout = config.db.driverOptions.poolIdleTimeout;
 
-function connect(connectionUrl) {
+export function connect(connectionUrl?) {
     connectionUrl = connectionUrl || config.db.connectionUrl;
-    var pgConnect = promise.promisify(pg.connect, pg);
+    var pgConnect : any = promise.promisify(pg.connect, pg);
     return pgConnect(connectionUrl).then(function (connection)
     {
         var client = connection[0];
@@ -22,7 +22,7 @@ function connect(connectionUrl) {
     });
 }
 
-function exceptionHandler(err) {
+export function exceptionHandler(err) {
     console.error(highlighStart + 'SQL ' + err.toString());
     if (err.detail) {
         console.error('detail: ' + err.detail);
@@ -33,7 +33,7 @@ function exceptionHandler(err) {
     console.log(err.stack, highlightEnd);
 }
 
-function query(query, bindings) {
+export function query(query : string, bindings? : string[]) {
     return connect().then((client)=>
     {
         return client.query(query, bindings).then((res)=>
@@ -43,8 +43,3 @@ function query(query, bindings) {
     }).catch(exceptionHandler);
 }
 
-module.exports = {
-    query: query,
-    connect: connect,
-    exceptionHandler: exceptionHandler
-};

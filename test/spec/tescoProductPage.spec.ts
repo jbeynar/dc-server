@@ -1,10 +1,12 @@
 'use strict';
 
-const expect = require('chai').expect;
-const rfr = require('rfr');
+import chai = require('chai');
+import rfr = require('rfr');
+import _ = require('lodash');
+
 const utils = rfr('test/utils');
 const extractor = rfr('libs/extractor');
-const _ = require('lodash');
+const expect = chai.expect;
 
 describe('Tesco product page case study', ()=>
 {

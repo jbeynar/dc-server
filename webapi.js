@@ -1,8 +1,7 @@
 'use strict';
 
 const Hapi = require('hapi');
-const rfr = require('rfr');
-const repo = rfr('./libs/repo');
+const repo = require('./libs/repo');
 
 const api = {
     getJsonDocuments: function (request, reply) {

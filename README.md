@@ -1,5 +1,6 @@
 # Database
 
+
 ### Database setup
 
 Before start, make sure you've got at least PgSQL 9.4 in your system, it's configured to listen localhost connection (refer to `postgresql.conf`) and accept 
@@ -35,3 +36,11 @@ Try this:
 ```
 npm install node-libcurl --build-from-source
 ```
+
+# TypeScript
+### Watch and transpile TypeScript files
+```
+tsc -w --pretty
+```
+
+You can also configure Webstorm to transpile them using options from tsconfig.json (Open settings and search for "use tsconfig.json")

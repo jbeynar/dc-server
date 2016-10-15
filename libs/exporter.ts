@@ -1,13 +1,15 @@
 'use strict';
 
-const _ = require('lodash');
-const Promise = require('bluebird');
-const mongo = require('mongodb').MongoClient;
-const pg = require('pg-rxjs');
-const squel = require('squel').useFlavour('postgres');
-const rfr = require('rfr');
+import _ = require('lodash');
+import Promise = require('bluebird');
+import Mongo = require('mongodb');
+import pg = require('pg-rxjs');
+import Squel = require('squel')
 
-const config = rfr('config');
+const squel = Squel.useFlavour('postgres');
+const mongo = Mongo.MongoClient;
+const config = require('../config');
+//TODO: check whether config file work appropriate
 
 function handleError(err) {
     if (err) {
@@ -16,7 +18,7 @@ function handleError(err) {
     }
 }
 
-function dropMongoCollections(targetMongoDbUrl, collectionNames) {
+export function dropMongoCollections(targetMongoDbUrl, collectionNames) {
     return new Promise((resolve,reject)=>{
         mongo.connect(targetMongoDbUrl, function (err, client) {
             return Promise.map(collectionNames, function (collectionName) {
@@ -42,7 +44,7 @@ function dropMongoCollections(targetMongoDbUrl, collectionNames) {
     });
 }
 
-function exportIntoMongo(exportTask) {
+export function exportIntoMongo(exportTask) {
     let autoRemovePromise;
     if (_.get(exportTask, 'targetMongo.autoRemove')) {
         autoRemovePromise = dropMongoCollections(_.get(exportTask, 'targetMongo.url'),
@@ -73,7 +75,7 @@ function exportIntoMongo(exportTask) {
                                 {},
                                 handleError);
 
-                            targetCollection.insertMany(_.map(documentsSet, (sourceDoc)=> {
+                            targetCollection.insertMany(_.map(documentsSet, (sourceDoc : any)=> {
                                     sourceDoc.body._source_id = sourceDoc.id;
                                     return sourceDoc.body;
                                 }),
@@ -96,8 +98,3 @@ function exportIntoMongo(exportTask) {
         });
     });
 }
-
-module.exports = {
-    dropMongoCollections,
-    exportIntoMongo
-};

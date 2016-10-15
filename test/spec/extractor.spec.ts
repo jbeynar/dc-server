@@ -1,17 +1,19 @@
 'use strict';
 
-const _ = require('lodash');
-const Promise = require('bluebird');
-const expect = require('chai').expect;
-const rfr = require('rfr');
-const utils = rfr('test/utils');
-const proxyquire = require('proxyquire');
+import _ = require('lodash');
+import Promise = require('bluebird');
+import chai = require('chai')
+import rfr = require('rfr');
+import utils = require('../utils');
+import proxyquire = require('proxyquire');
+
+const expect = chai.expect;
 
 describe('Extractor library', () =>
 {
     var extractor;
     var htmlDocument;
-    var mockRepoSavedJsonDocuments = {};
+    var mockRepoSavedJsonDocuments : any = {};
 
     function setupMocks() {
         const mockDocumentsSet = [

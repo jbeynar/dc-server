@@ -1,13 +1,14 @@
 'use strict';
 
-const _ = require('lodash');
-const Promise = require('bluebird');
-const jobsPath = './../jobs';
-const extractor = require('./extractor');
-const downloader = require('./downloader');
-const exporter = require('./exporter');
+import _ = require('lodash');
+import Promise = require('bluebird');
+import extractor = require('./extractor');
+import downloader = require('./downloader');
+import exporter = require('./exporter');
 
-function log(buffer, nl) {
+const jobsPath = './../jobs';
+
+function log(buffer, nl?) {
     process.stdout.write(buffer);
     if (nl) {
         process.stdout.write('\n');

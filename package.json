@@ -1,34 +1,39 @@
 {
-    "name": "jbl-repo-server",
-    "version": "0.1.0",
-    "description": "Command line utility for shares valuation in term of fundamental analysis",
-    "main": "index.js",
-    "scripts": {
-        "start": "nodemon webapi.js",
-        "test": "./node_modules/.bin/mocha --recursive",
-        "testing": "./node_modules/.bin/mocha --recursive --watch",
-        "seed": "node -e \"require('./scripts/seed.js')();\"",
-        "dc": "node libs/launcher"
-    },
-    "dependencies": {
-        "bluebird": "2.10.2",
-        "cheerio": "0.20.0",
-        "csvtojson": "0.5.2",
-        "hapi": "13.3.0",
-        "lodash": "^4.4.0",
-        "mongodb": "^2.1.20",
-        "new-hapi-project": "0.0.4",
-        "node-libcurl": "1.0.0",
-        "pg": "4.4.4",
-        "pg-rxjs": "1.0.20",
-        "proxyquire": "1.7.4",
-        "rfr": "1.2.3",
-        "squel": "4.2.3",
-        "striptags": "2.1.1"
-    },
-    "author": "jbeynar",
-    "devDependencies": {
-        "chai": "^3.5.0",
-        "mocha": "3.1.0"
-    }
+  "name": "jbl-repo-server",
+  "version": "0.1.0",
+  "description": "Command line utility for shares valuation in term of fundamental analysis",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon webapi.js",
+    "test": "./node_modules/.bin/mocha --recursive",
+    "testing": "./node_modules/.bin/mocha --recursive --watch",
+    "seed": "node -e \"require('./scripts/seed.js')();\"",
+    "dc": "node libs/launcher"
+  },
+  "dependencies": {
+    "bluebird": "2.10.2",
+    "cheerio": "0.20.0",
+    "csvtojson": "0.5.2",
+    "hapi": "13.3.0",
+    "lodash": "^4.4.0",
+    "mongodb": "^2.1.20",
+    "new-hapi-project": "0.0.4",
+    "node-libcurl": "1.0.0",
+    "pg": "4.4.4",
+    "pg-rxjs": "1.0.20",
+    "proxyquire": "1.7.4",
+    "rfr": "1.2.3",
+    "squel": "4.2.3",
+    "striptags": "2.1.1"
+  },
+  "author": "jbeynar",
+  "devDependencies": {
+    "@types/bluebird": "^3.0.35",
+    "@types/chai": "^3.4.34",
+    "@types/lodash": "^4.14.37",
+    "@types/mocha": "^2.2.32",
+    "@types/node": "^4.0.30",
+    "chai": "^3.5.0",
+    "mocha": "3.1.0"
+  }
 }
