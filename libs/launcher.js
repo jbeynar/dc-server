@@ -5,6 +5,7 @@ const Promise = require('bluebird');
 const jobsPath = './../jobs';
 const extractor = require('./extractor');
 const downloader = require('./downloader');
+const exporter = require('./exporter');
 
 function log(buffer, nl) {
     process.stdout.write(buffer);
@@ -40,18 +41,28 @@ _.each(tasks, (task)=> {
 });
 
 function executeTask(task) {
-    // todo change into switch
-    if ('extract' === task.type) {
-        return extractor.extractFromRepo(task);
-    } else if ('download' === task.type) {
-        return downloader.downloadHttpDocuments(task);
-    } else {
-        throw new Error('Unrecognized task type');
+    switch (task.type) {
+        case 'extract':
+            return extractor.extractFromRepo(task);
+        case 'download':
+            return downloader.downloadHttpDocuments(task);
+        case 'script':
+            if (_.isFunction(task.script)) {
+                return task.script();
+            }
+            throw new Error('Script is not a function');
+        case 'export':
+            return exporter.exportIntoMongo(task);
+        default:
+            throw new Error('Unrecognized task type');
     }
 }
 
 Promise.map(tasks, (task)=> {
     log(`\nExecuting task ${task} type ${job[task].type}... `, 1);
+    if (!_.isObject(job[task])) {
+        throw new Error('Task must be an object');
+    }
     return executeTask(job[task]).then(()=> {
         log(`Task ${task} complete`, 1);
     });
