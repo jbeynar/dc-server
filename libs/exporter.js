@@ -31,8 +31,8 @@ function dropMongoCollections(targetMongoDbUrl, collectionNames) {
                 });
             }).catch((err)=>{
                 console.log('Can not remove some collection');
-                throw err;
                 reject();
+                throw err;
             }).finally(()=>{
                 console.log('Collections removed: ', collectionNames);
                 client.close();
@@ -42,56 +42,62 @@ function dropMongoCollections(targetMongoDbUrl, collectionNames) {
     });
 }
 
-function exportIntoMongo(exportConfig) {
-    return new Promise((resolve)=> {
-        var i = 0;
-        return mongo.connect(exportConfig.targetMongoDbUrl, function (err, client) {
-            handleError(err);
-            const pool = pg.Pool(exportConfig.sourcePostgresqlUrl, { debug: false });
-            const query = squel.select()
-                .from('repo.document_json')
-                .field('id')
-                .field('body')
-                .where('type=?', exportConfig.sourceTypeName)
-                .toString();
+function exportIntoMongo(exportTask) {
+    let autoRemovePromise;
+    if (_.get(exportTask, 'targetMongo.autoRemove')) {
+        autoRemovePromise = dropMongoCollections(_.get(exportTask, 'targetMongo.url'),
+            [_.get(exportTask, 'targetMongo.collectionName')]);
+    }
 
-            console.log('Streaming source repo documents', exportConfig.sourceTypeName, 'from',
-                exportConfig.sourcePostgresqlUrl, 'into', exportConfig.targetMongoDbUrl, 'as',
-                exportConfig.sourceTypeName);
+    return Promise.resolve(autoRemovePromise).then(() => {
+        return new Promise((resolve)=> {
+            var i = 0;
+            return mongo.connect(_.get(exportTask, 'targetMongo.url'), (err, client) => {
+                handleError(err);
+                const pool = pg.Pool(config.db.connectionUrl);
+                var query = squel.select()
+                    .from('repo.document_json')
+                    .field('id')
+                    .field('body')
+                    .where('type=?', _.get(exportTask, 'sourceJsonDocuments.typeName'));
 
-            return pool.stream(query)
-                .bufferWithCount(100)
-                .flatMap((documentsSet) => {
-                    return new Promise((resolve, reject)=> {
-                        var targetCollection = client.collection(exportConfig.targetCollectionName, {}, function (err) {
-                            handleError(err);
+                if (_.has(exportTask, 'sourceJsonDocuments.order')) {
+                    query = query.order(`body->>'${exportTask.sourceJsonDocuments.order}'`);
+                }
+
+                return pool.stream(query.toString())
+                    .bufferWithCount(50)
+                    .flatMap((documentsSet) => {
+                        return new Promise((resolve)=> {
+                            var targetCollection = client.collection(_.get(exportTask, 'targetMongo.collectionName'),
+                                {},
+                                handleError);
+
+                            targetCollection.insertMany(_.map(documentsSet, (sourceDoc)=> {
+                                    sourceDoc.body._source_id = sourceDoc.id;
+                                    return sourceDoc.body;
+                                }),
+                                {},
+                                (err) => {
+                                    handleError(err);
+                                    process.stdout.write('.');
+                                    i += documentsSet.length;
+                                    resolve();
+                                });
                         });
-
-                        targetCollection.insertMany(_.map(documentsSet, (sourceDoc)=> {
-                                sourceDoc.body._source_id = sourceDoc.id;
-                                return sourceDoc.body;
-                            }),
-                            {},
-                            function (err) {
-                                handleError(err);
-                                process.stdout.write('.');
-                                i += documentsSet.length;
-                                resolve();
-                            });
-                    });
-                })
-                .subscribe(()=> {}, () => {},
-                    (data) => {
-                        console.log('\nSuccessfully exported', i, 'documents');
-                        client.close();
-                        return resolve();
-                    }
-                );
+                    })
+                    .subscribe(() => {}, () => {}, () => {
+                            console.log('\nSuccessfully exported', i, 'documents');
+                            client.close();
+                            return resolve();
+                        }
+                    );
+            });
         });
     });
 }
 
 module.exports = {
-    dropMongoCollections: dropMongoCollections,
-    exportIntoMongo: exportIntoMongo
+    dropMongoCollections,
+    exportIntoMongo
 };
