@@ -373,9 +373,9 @@ describe('Extractor library', () =>
             });
             describe('And targetJsonDocuments.autoRemove is truthy', () => {
                 it('Should clear documents in given type name before saving them', ()=> {
-                    const extraction = _.cloneDeep(extractionJob.extract);
-                    extraction.targetJsonDocuments.autoRemove = true;
-                    return extractor.extractFromRepo(extraction).then(() => {
+                    const extractionTask = _.cloneDeep(extractionJob.extract);
+                    extractionTask.targetJsonDocuments.autoRemove = true;
+                    return extractor.extractFromRepo(extractionTask).then(() => {
                         expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expectedDevices[0]);
                         expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expectedDevices[1]);
                         expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expectedDevices[2]);
@@ -384,8 +384,8 @@ describe('Extractor library', () =>
             });
             describe('When targetJsonDocuments.autoRemove is falsy', function () {
                 it('Should clear documents in given type name before saving them', ()=> {
-                    const extraction = _.cloneDeep(extractionJob.extract);
-                    delete extraction.targetJsonDocuments.autoRemove;
+                    const extractionTask = _.cloneDeep(extractionJob.extract);
+                    delete extractionTask.targetJsonDocuments.autoRemove;
                     const expected = [
                         {
                             name: 'iWatch',
@@ -393,7 +393,7 @@ describe('Extractor library', () =>
                             price: '512$'
                         }
                     ].concat(expectedDevices);
-                    return extractor.extractFromRepo(extraction).then(() => {
+                    return extractor.extractFromRepo(extractionTask).then(() => {
                         expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expected[0]);
                         expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expected[1]);
                         expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expected[2]);
@@ -403,28 +403,128 @@ describe('Extractor library', () =>
             });
         });
 
-        //TODO: when extracted array of documents
+        describe('When scope is not given', () => {
+            it('Should extract flat documents and save them', () => {
+                const extractionTask = {
+                    sourceHttpDocuments: {
+                        host: 'hakier.pl',
+                        path: '/devices'
+                    },
+                    targetJsonDocuments: {
+                        typeName: 'headers',
+                        autoRemove: true
+                    },
+                    map: {
+                        h1: {
+                            singular: true,
+                            selector: 'h1'
+                        },
+                        h2: {
+                            singular: true,
+                            selector: 'h2'
+                        },
+                        h3: {
+                            singular: true,
+                            selector: 'h3'
+                        },
+                        h4: {
+                            singular: true,
+                            selector: 'h4'
+                        }
+                    }
+                };
+                const expected = {
+                    h1: 'Employee list',
+                    h2: 'An xyz company',
+                    h3: 'Leading text',
+                    h4: 'Here is an employee list'
+                };
+                return extractor.extractFromRepo(extractionTask).then(() => {
+                    expect(mockRepoSavedJsonDocuments.headers[0].body).to.be.eql(expected);
+                });
+            });
+        });
+        describe('When scope is given', () => {
+            it('Should extract array of documents and save them separately', () => {
+                const extractionTask = {
+                    sourceHttpDocuments: {
+                        host: 'hakier.pl',
+                        path: '/devices'
+                    },
+                    targetJsonDocuments: {
+                        typeName: 'employees',
+                        autoRemove: true
+                    },
+                    scope: 'table tr',
+                    map: {
+                        id: {
+                            singular: true,
+                            selector: 'td:nth-child(1)'
+                        },
+                        firstName: {
+                            singular: true,
+                            selector: 'td:nth-child(2)'
+                        },
+                        lastName: {
+                            singular: true,
+                            selector: 'td:nth-child(3)'
+                        },
+                        email: {
+                            singular: true,
+                            selector: 'td:nth-child(4)'
+                        }
+                    },
+                    process: (extracted) => {
+                        return _.filter(extracted, 'id');
+                    }
+                };
+                const expected = [
+                    {
+                        id: '1',
+                        firstName: 'James',
+                        lastName: 'Bond',
+                        email: 'james.bond@mi6.co.uk'
+                    },
+                    {
+                        id: '2',
+                        firstName: 'Johny',
+                        lastName: 'Depp',
+                        email: 'johny.depp@mi6.co.uk'
+                    }
+                ];
+                return extractor.extractFromRepo(extractionTask).then(() => {
+                    expect(mockRepoSavedJsonDocuments.employees[0].body).to.be.eql(expected[0]);
+                    expect(mockRepoSavedJsonDocuments.employees[1].body).to.be.eql(expected[1]);
+                });
+            });
+        });
 
         it('Doesn\'t save document if extracted value is null', ()=> {
-            const extraction = _.cloneDeep(extractionJob.extract);
-            extraction.process = ()=> { return null; };
-            return extractor.extractFromRepo(extraction).then(() => {
+            const extractionTask = _.cloneDeep(extractionJob.extract);
+            extractionTask.process = ()=> {
+                return null;
+            };
+            return extractor.extractFromRepo(extractionTask).then(() => {
                 expect(mockRepoSavedJsonDocuments).to.be.eql({});
             });
         });
 
         it('Doesn\'t save document if extracted value is empty array', ()=> {
-            const extraction = _.cloneDeep(extractionJob.extract);
-            extraction.process = ()=> { return []; };
-            return extractor.extractFromRepo(extraction).then(() => {
+            const extractionTask = _.cloneDeep(extractionJob.extract);
+            extractionTask.process = ()=> {
+                return [];
+            };
+            return extractor.extractFromRepo(extractionTask).then(() => {
                 expect(mockRepoSavedJsonDocuments).to.be.eql({});
             });
         });
 
         it('Doesn\'t save document if extracted value is empty object', ()=> {
-            const extraction = _.cloneDeep(extractionJob.extract);
-            extraction.process = ()=> { return {}; };
-            return extractor.extractFromRepo(extraction).then(() => {
+            const extractionTask = _.cloneDeep(extractionJob.extract);
+            extractionTask.process = ()=> {
+                return {};
+            };
+            return extractor.extractFromRepo(extractionTask).then(() => {
                 expect(mockRepoSavedJsonDocuments).to.be.eql({});
             });
         });
