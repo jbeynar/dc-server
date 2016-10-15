@@ -1,6 +1,10 @@
 'use strict';
 
 const _ = require('lodash');
+const rfr = require('rfr');
+const pg = require('pg-rxjs');
+const config = rfr('config');
+const db = rfr('libs/db');
 
 const baseUrl = 'http://vitalia.pl/index.php/mid/90/fid/1047/kalorie/diety/product_id';
 
@@ -15,7 +19,7 @@ const harmityMap = {
 };
 
 module.exports = {
-    download: {
+    downloadIngredients: {
         type: 'download',
         urls: ()=> {return _.times(818, i => [baseUrl, '/', i].join('')); },
         options: {
@@ -23,7 +27,7 @@ module.exports = {
             intervalTime: 500
         }
     },
-    extract: {
+    extractIngredients: {
         type: 'extract',
         sourceHttpDocuments: {
             host: 'vitalia.pl'
@@ -36,7 +40,7 @@ module.exports = {
             primaryNames: {
                 singular: true,
                 selector: '.widecolumn>h1',
-                process: function (text) {
+                process: (text) => {
                     text = text.replace('Informacje o dodatku: ', '');
                     var matches = text.match(/([^ ].*[^ ]) *\( ?([^ ].*[^ ]) ?\)/);
                     var names = {};
@@ -50,7 +54,7 @@ module.exports = {
             secondaryNames: {
                 singular: true,
                 selector: '.widecolumn>h2',
-                process: function (text) {
+                process: (text) => {
                     text = text.replace(/Inne nazwy: /, '');
                     var matches = text.match(/([^,()])+/g);
                     return _.map(matches, (match) => {
@@ -69,7 +73,7 @@ module.exports = {
             rating: {
                 singular: true,
                 selector: 'table.sortabless tr:nth-child(2) td:nth-child(3)',
-                process: function (text) {
+                process: (text) => {
                     return harmityMap[text];
                 }
             }
@@ -93,6 +97,72 @@ module.exports = {
             delete extracted.primaryNames;
             delete extracted.secondaryNames;
             return extracted;
+        }
+    },
+    produce: {
+        type: 'script',
+        script: ()=> {
+            return new Promise((resolve)=> {
+
+                const queryFetchIngredients = `SELECT * FROM repo.document_json WHERE type = 'ingredient'`;
+
+                const querySearchingredientsInProducts = `SELECT id, body FROM repo.document_json 
+                    WHERE type = 'product' AND to_tsvector(body->>'ingredients') @@ to_tsquery($1)`;
+
+                const queryUpdateProducts = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
+
+                pg.Pool(config.db.connectionUrl).stream(queryFetchIngredients)
+                    .map((ingredient)=> {
+                        ingredient.body.searchVector = _.chain(ingredient.body.names)
+                            .map((name) => {
+                                return name.replace(/[ ]+/g, ' & ');
+                            })
+                            .join(' | ')
+                            .value();
+                        return ingredient.body;
+                    })
+                    .flatMap((component) => {
+                        return db.query(querySearchingredientsInProducts, [component.searchVector]).then((products)=> {
+                            process.stdout.write('.');
+                            return { component: component, products: _.map(products, 'id') };
+                        });
+                    })
+                    .reduce((acc, x)=> {
+                        _.forEach(x.products, (p)=> {
+                            if (acc[p]) {
+                                acc[p].push(x.component);
+                            } else {
+                                acc[p] = [x.component];
+                            }
+                        });
+                        return acc;
+                    }, {})
+                    .flatMap((dictionary)=> {
+                        return _.map(dictionary, (components, productId) => {
+                            return { productId: productId, components: components };
+                        });
+                    })
+                    .flatMap((e)=> {
+                        return db.query('SELECT body FROM repo.document_json WHERE id=$1',
+                            [parseInt(e.productId)]).then((res)=> {
+                            res[0].body.components = e.components;
+                            return db.query(queryUpdateProducts, [JSON.stringify(res[0].body), e.productId]);
+                        });
+                    })
+                    .subscribe(()=> {}, () => {}, resolve);
+            });
+        }
+    },
+    exportProducts: {
+        type: 'export',
+        sourceJsonDocuments: {
+            typeName: 'product',
+            order: 'ean'
+        },
+        targetMongo: {
+            url: 'mongodb://localhost:27017/food-scanner',
+            collectionName: 'products',
+            autoRemove: true
         }
     }
 };
