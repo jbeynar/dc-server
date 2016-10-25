@@ -16,6 +16,27 @@ export const errorCodes = {
     taskMalformedStructure: 'ERR_TASK_MALFORMED_STRUCTURE'
 };
 
+export interface IMapProperty {
+    singular?: boolean;
+    selector: string;
+    process?: (text)=>any;
+}
+
+export interface ITaskExtract {
+    type: 'extract';
+    sourceHttpDocuments: {
+        host: string;
+    };
+    targetJsonDocuments: {
+        typeName: string;
+        autoRemove: boolean;
+    };
+    map: {
+        [propName: string]: IMapProperty;
+    };
+    process: (extracted : any, doc : any) => any;
+}
+
 export function extract(document, extractionTask, whitelist?)
 {
     return new Promise((resolve, reject) =>
@@ -101,7 +122,7 @@ export function extract(document, extractionTask, whitelist?)
     });
 }
 
-export function extractFromRepo(extractionTask)
+export function extractFromRepo(extractionTask : ITaskExtract)
 {
     return new Promise((resolve)=>
     {

@@ -33,7 +33,7 @@ export function exceptionHandler(err) {
     console.log(err.stack, highlightEnd);
 }
 
-export function query(query : string, bindings? : string[]) {
+export function query(query : string, bindings? : string[]|number[]) {
     return connect().then((client)=>
     {
         return client.query(query, bindings).then((res)=>

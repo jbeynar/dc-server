@@ -15,12 +15,21 @@ const defaultOptions = {
     intervalTime: 500
 };
 
-export function downloadHttpDocuments(downloadJob) {
+export interface ITaskDownload {
+    type: 'download';
+    urls: any;
+    options?: {
+        headers?: string[];
+        intervalTime?: number;
+    };
+}
+
+export function downloadHttpDocuments(downloadJob : ITaskDownload) {
 
     if (_.isFunction((downloadJob.urls))) {
         downloadJob.urls = downloadJob.urls();
     } else if (!_.isArray(downloadJob.urls)) {
-        throw new Error('downloadJob.urls param must be an array');
+        throw new Error('downloadJob.urls param must be a function');
     }
 
     var options = defaultOptions;

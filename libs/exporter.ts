@@ -18,6 +18,19 @@ function handleError(err) {
     }
 }
 
+export interface ITaskExport {
+    type: 'export';
+    sourceJsonDocuments: {
+        typeName: string;
+        order: string;
+    };
+    targetMongo: {
+        url: string;
+        collectionName: string;
+        autoRemove: boolean;
+    };
+}
+
 export function dropMongoCollections(targetMongoDbUrl, collectionNames) {
     return new Promise((resolve,reject)=>{
         mongo.connect(targetMongoDbUrl, function (err, client) {
@@ -44,7 +57,7 @@ export function dropMongoCollections(targetMongoDbUrl, collectionNames) {
     });
 }
 
-export function exportIntoMongo(exportTask) {
+export function exportIntoMongo(exportTask : ITaskExport) {
     let autoRemovePromise;
     if (_.get(exportTask, 'targetMongo.autoRemove')) {
         autoRemovePromise = dropMongoCollections(_.get(exportTask, 'targetMongo.url'),

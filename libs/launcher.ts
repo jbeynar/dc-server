@@ -41,6 +41,11 @@ _.each(tasks, (task)=> {
     }
 });
 
+export interface ITaskScript {
+    type: 'script';
+    script: () => Promise<any>;
+}
+
 function executeTask(task) {
     switch (task.type) {
         case 'extract':
