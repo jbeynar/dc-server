@@ -22,6 +22,21 @@ export interface IMapProperty {
     process?: (text)=>any;
 }
 
+interface IRepoDocumentHttp {
+    id: number;
+    type: string;
+    url: string;
+    host: string;
+    path: string;
+    query: string;
+    code: number;
+    headers: any;
+    body: string;
+    length: number;
+    retry_count: number;
+    ts: any
+}
+
 export interface ITaskExtract {
     type: 'extract';
     sourceHttpDocuments: {
@@ -31,10 +46,11 @@ export interface ITaskExtract {
         typeName: string;
         autoRemove: boolean;
     };
+    scope?: string;
     map: {
-        [propName: string]: IMapProperty;
+        [key: string]: string|IMapProperty;
     };
-    process: (extracted : any, doc : any) => any;
+    process: (extracted: any, doc: IRepoDocumentHttp) => any;
 }
 
 export function extract(document, extractionTask, whitelist?)
