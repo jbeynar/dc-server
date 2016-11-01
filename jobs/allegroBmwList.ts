@@ -23,6 +23,7 @@ export const extract: ITaskExtract = {
     },
     scope: '.offer',
     map: {
+        link: {attribute: 'href', selector: '.offer-title', singular: true},
         title: {selector: '.offer-title', singular: true},
         price: {selector: '.offer-price .statement', singular: true},
         attribsKeys: '.offer-attributes dt',
@@ -30,6 +31,7 @@ export const extract: ITaskExtract = {
     },
     process: (extracted)=> {
         _.forEach(extracted, (e)=> {
+            // todo .replace(/\[.*\]*/g, ' ')
             _.assign(e, _.zipObject(e.attribsKeys, e.attribsValues));
             delete e.attribsKeys;
             delete e.attribsValues;
