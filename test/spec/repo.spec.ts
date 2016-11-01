@@ -1,10 +1,12 @@
 'use strict';
 
-const expect = require('chai').expect;
-const proxyquire = require('proxyquire');
-const promise = require('bluebird');
-const _ = require('lodash');
-const rfr = require('rfr');
+import chai = require('chai');
+import proxyquire = require('proxyquire');
+import promise = require('bluebird');
+import _ = require('lodash');
+import rfr = require('rfr');
+
+const expect = chai.expect;
 
 var mockDocumentsSet = [
     {
@@ -61,13 +63,11 @@ var mockTypesSet = [
     }
 ];
 
-describe('DocumentDAO', function ()
+describe('Repo library', function ()
 {
-    // todo check order on getDocuments
-
     describe('getJsonDocuments', function ()
     {
-        let DocumentDAO;
+        let repo;
 
         before(function ()
         {
@@ -77,12 +77,12 @@ describe('DocumentDAO', function ()
                     return promise.resolve(_.cloneDeep(mockDocumentsSet));
                 }
             };
-            DocumentDAO = proxyquire('../../libs/repo/DocumentDAO', {'../db': stub});
+            repo = proxyquire('../../libs/repo', {'./db': stub});
         });
 
         it('accept whitelist', () =>
         {
-            return DocumentDAO.getJsonDocuments({whitelist: ['symbol', 'cz']}).then(function (data)
+            return repo.getJsonDocuments({whitelist: ['symbol', 'cz']}).then(function (data)
             {
                 expect(data.results[0].body).to.eql({
                     symbol: 'ETA',
@@ -101,7 +101,7 @@ describe('DocumentDAO', function ()
 
         it('accept blacklist', () =>
         {
-            return DocumentDAO.getJsonDocuments({blacklist: ['cwk']}).then(function (data)
+            return repo.getJsonDocuments({blacklist: ['cwk']}).then(function (data)
             {
                 expect(data.results[0].body).to.eql({
                     cz: undefined,
@@ -124,7 +124,7 @@ describe('DocumentDAO', function ()
 
     describe('getTypes', function ()
     {
-        let DocumentDAO;
+        let repo;
 
         before(function ()
         {
@@ -134,12 +134,12 @@ describe('DocumentDAO', function ()
                     return promise.resolve(_.cloneDeep(mockTypesSet));
                 }
             };
-            DocumentDAO = proxyquire('../../libs/repo/DocumentDAO', {'../db': stub});
+            repo = proxyquire('../../libs/repo', {'./db': stub});
         });
 
         it('should return types stats', function ()
         {
-            return DocumentDAO.getJsonDocumentsTypes().then(function (data)
+            return repo.getJsonDocumentsTypes().then(function (data)
             {
                 expect(data).to.be.an('array');
                 return expect(data).to.eql(mockTypesSet);
@@ -151,7 +151,7 @@ describe('DocumentDAO', function ()
     {
 
         // proxyquire db.query for many times response with diffrent data - how?
-        let DocumentDAO = rfr('libs/repo/DocumentDAO');
+        let repo = rfr('libs/repo');
 
         it('should merge two document types', ()=>
         {
@@ -163,7 +163,7 @@ describe('DocumentDAO', function ()
                 type: 'valuation.stockwatch',
                 id: 'symbol'
             };
-            return DocumentDAO.mergeDocuments(type1Cfg, type2Cfg, 'merged');
+            return repo.mergeDocuments(type1Cfg, type2Cfg, 'merged');
         });
     });
 });

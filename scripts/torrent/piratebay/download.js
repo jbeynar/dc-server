@@ -5,12 +5,8 @@ const fs = require('fs');
 const _ = require('lodash');
 const downloader = rfr('libs/downloader');
 
-var products = JSON.parse(fs.readFileSync('slug-list.json').toString());
-
-var urls = _.map(products.content, function (p)
-{
-    return 'http://www.alma24.pl/web/product-views/' + p.slug;
-});
+var paths = ['search/z%20nation/0/99/0', 'browse/200'];
+var urls = _.map(paths, path => `https://thepiratebay.org/${path}`);
 
 console.log(`Don't forget to provide valid cookie before run, otherwise every request returns 412.`);
 

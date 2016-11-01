@@ -3,10 +3,12 @@
 const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const db = rfr('libs/db');
-const DocumentDAO = rfr('libs/repo/DocumentDAO');
+const repo = rfr('libs/repo');
 const _ = require('lodash');
+
+const targetType = 'ingredient';
 
 const harmityMap = {
     'Bezpieczny': 0,
@@ -71,10 +73,10 @@ function importDocuments()
         }).then((documents)=>
         {
             console.log('Processing documents...');
-            var componentsE = [], componentsNonE = [];
+            var components = [];
             return promise.each(documents, (doc)=>
             {
-                return extraction.extract(doc.body, map).then(function (extracted)
+                return extractor.extract(doc.body, map).then(function (extracted)
                 {
                     if (!extracted.primaryNames.name) {
                         console.log('Excluded', doc.url);
@@ -90,20 +92,24 @@ function importDocuments()
                     delete extracted.secondaryNames;
 
                     if ('E' === extracted.code[0]) {
-                        componentsE.push(extracted);
+                        components.push(extracted);
                     }
                 });
             }).then(function ()
             {
-                var sorted = _.sortBy(componentsE, 'code');
+                var sorted = _.sortBy(components, 'code');
                 console.log('Saving', sorted.length, 'documents');
                 return promise.map(sorted, function (component)
                 {
-                    return DocumentDAO.saveJsonDocument('vitalia', component);
+                    return repo.saveJsonDocument(targetType, component).then(function () {
+                        process.stdout.write('.');
+                    });
                 }, {concurrency: 1});
             });
         }).finally(client.done);
     }).catch(db.exceptionHandler);
 }
 
-importDocuments();
+return repo.removeJsonDocuments(targetType).then(importDocuments).then(()=>{
+    console.log('\nSuccess');
+});

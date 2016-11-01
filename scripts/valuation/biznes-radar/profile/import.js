@@ -3,9 +3,9 @@
 const rfr = require('rfr');
 const squel = require('squel').useFlavour('postgres');
 const promise = require('bluebird');
-const extraction = rfr('libs/extraction');
+const extractor = rfr('libs/extractor');
 const db = rfr('libs/db');
-const DocumentDAO = rfr('libs/repo/DocumentDAO');
+const repo = rfr('libs/repo');
 const profileMap = require('./map.js');
 
 var whiteList = ['oid',
@@ -36,7 +36,7 @@ function importDocuments()
             console.log('Processing documents...');
             return promise.each(documents, (doc)=>
             {
-                return extraction.extract(doc.body, profileMap, whiteList).then((extractedData)=>
+                return extractor.extract(doc.body, profileMap, whiteList).then((extractedData)=>
                 {
                     //TODO: How we can validate raw documents?
                     // Map constraint like length or selector might be approach
@@ -44,7 +44,7 @@ function importDocuments()
                         console.log('Wrong document format', doc.url);
                         return promise.resolve();
                     } else {
-                        return DocumentDAO.saveJsonDocument('valuation.biznesradar', extractedData);
+                        return repo.saveJsonDocument('valuation.biznesradar', extractedData);
                     }
                 });
             });
