@@ -17,6 +17,7 @@ export const errorCodes = {
 };
 
 export interface IMapProperty {
+    attribute?: string,
     singular?: boolean;
     selector: string;
     process?: (text)=>any;
