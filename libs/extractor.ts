@@ -51,7 +51,7 @@ export interface ITaskExtract {
     map: {
         [key: string]: string|IMapProperty;
     };
-    process: (extracted: any, doc: IRepoDocumentHttp) => any;
+    process?: (extracted: any, doc: IRepoDocumentHttp) => any;
 }
 
 export function extract(document, extractionTask, whitelist?)

@@ -1,9 +1,13 @@
 'use strict';
-exports.download = {
+import {ITaskDownload} from "../libs/downloader";
+import {ITaskExtract} from "../libs/extractor";
+
+export const download: ITaskDownload = {
     type: 'download',
     urls: ['http://www.tarnowiak.pl/']
 };
-exports.extract = {
+
+export const extract: ITaskExtract = {
     type: 'extract',
     sourceHttpDocuments: {
         host: 'www.tarnowiak.pl'
@@ -20,4 +24,3 @@ exports.extract = {
         }
     }
 };
-//# sourceMappingURL=tarnowiak.js.map
