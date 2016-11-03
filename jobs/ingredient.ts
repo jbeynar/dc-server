@@ -16,13 +16,16 @@ const harmityMap = {
     'Bezpieczny': 0,
     'Należy unikać': 1,
     'Zalecana ostrożność': 1,
+    'Niezakazane': 1,
+    'Dopuszczone z ograniczeniami': 1,
+    'Niedopuszczone': 2,
     'Niekorzystny': 2,
     'Wycofany z użycia': 3,
     'Niebezpieczny': 3,
     'Niebezpieczny, Wycofany z użycia': 3
 };
 
-export const downloadIngredients : ITaskDownload = {
+export const download: ITaskDownload = {
     type: 'download',
     urls: ()=> {return _.times(818, i => [baseUrl, '/', i].join('')); },
     options: {
@@ -31,7 +34,7 @@ export const downloadIngredients : ITaskDownload = {
     }
 };
 
-export const extractIngredients : ITaskExtract = {
+export const extract: ITaskExtract = {
     type: 'extract',
     sourceHttpDocuments: {
         host: 'vitalia.pl'
@@ -79,7 +82,8 @@ export const extractIngredients : ITaskExtract = {
             selector: 'table.sortabless tr:nth-child(2) td:nth-child(3)',
             process: (text) => {
                 return harmityMap[text];
-            }
+            },
+            default: 'zero'
         }
     },
     process: (extracted, doc)=> {
@@ -91,7 +95,6 @@ export const extractIngredients : ITaskExtract = {
             console.log(`Excluded cause invalid code ${doc.url}`);
             return;
         }
-        extracted.url = doc.url;
         extracted.name = extracted.primaryNames.name;
         extracted.code = extracted.primaryNames.code;
         extracted.names = [extracted.name, extracted.code];
@@ -109,7 +112,7 @@ export const produce : ITaskScript = {
     script: ()=> {
         return new Promise((resolve)=> {
 
-            const queryFetchIngredients = `SELECT * FROM repo.document_json WHERE type = 'ingredient'`;
+            const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
 
             const querySearchingredientsInProducts = `SELECT id, body FROM repo.document_json 
                 WHERE type = 'product' AND to_tsvector(body->>'ingredients') @@ to_tsquery($1)`;
@@ -118,18 +121,22 @@ export const produce : ITaskScript = {
 
             pg.Pool(config.db.connectionUrl).stream(queryFetchIngredients)
                 .map((ingredient)=> {
-                    ingredient.body.searchVector = _.chain(ingredient.body.names)
+                    return {
+                        data: {
+                            code: ingredient.body.code,
+                            name: ingredient.body.name,
+                            rating: ingredient.body.rating,
+                        },
+                        searchVector: _.chain(ingredient.body.names)
                         .map((name) => {
                             return name.replace(/[ ]+/g, ' & ');
-                        })
-                        .join(' | ')
-                        .value();
-                    return ingredient.body;
+                        }).join(' | ').value()
+                    }
                 })
                 .flatMap((component) => {
                     return db.query(querySearchingredientsInProducts, [component.searchVector]).then((products)=> {
                         process.stdout.write('.');
-                        return { component: component, products: _.map(products, 'id') };
+                        return {component: component.data, products: _.map(products, 'id')};
                     });
                 })
                 .reduce((acc, x)=> {
