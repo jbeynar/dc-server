@@ -20,7 +20,8 @@ export interface IMapProperty {
     attribute?: string,
     singular?: boolean;
     selector: string;
-    process?: (text)=>any;
+    process?: any;
+    default?: any;
 }
 
 interface IRepoDocumentHttp {
@@ -41,11 +42,12 @@ interface IRepoDocumentHttp {
 export interface ITaskExtract {
     type: 'extract';
     sourceHttpDocuments: {
-        host: string;
+        host?: string;
+        name?: string;
     };
     targetJsonDocuments: {
         typeName: string;
-        autoRemove: boolean;
+        autoRemove?: boolean;
     };
     scope?: string;
     map: {
@@ -102,15 +104,11 @@ export function extract(document, extractionTask, whitelist?)
 
         function extractAll($scope, map)
         {
-            var extracted = {};
-
+            var extracted = _.chain(map).keys().zipObject().value() || {};
             _.forEach(map, (def, key) =>
             {
-                var value = extractOnce($scope, def, key);
-
-                if (value !== null) {
-                    extracted[key] = value;
-                }
+                let extractedValue = extractOnce($scope, def, key);
+                extracted[key] = extractedValue != null ? extractedValue : def.default;
             });
 
             return extracted;
@@ -173,7 +171,7 @@ export function extractFromRepo(extractionTask : ITaskExtract)
                     }
                     return repo.saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document).then(()=>i++);
                 });
-            }, { concurrency: 1 }).finally(()=> {
+            }, {concurrency: 10}).finally(()=> {
                 logger.log(`Saved ${i} JSON documents`, 1);
             });
         });

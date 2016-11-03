@@ -41,9 +41,14 @@ _.each(tasks, (task)=> {
     }
 });
 
+if (_.isEmpty(tasks)) {
+    // todo preserve order?!
+    tasks = _.keys(job);
+}
+
 export interface ITaskScript {
     type: 'script';
-    script: () => Promise<any>;
+    script: any;
 }
 
 function executeTask(task) {

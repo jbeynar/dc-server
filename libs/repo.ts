@@ -29,7 +29,13 @@ export function saveJsonDocument(type, obj) {
     }).catch(db.exceptionHandler);
 }
 
-export function getJsonDocuments(config) {
+export interface IJsonSearchConfig {
+    type?: string;
+    whitelist?: [any];
+    blacklist?: [any];
+}
+
+export function getJsonDocuments(config: IJsonSearchConfig) {
     var query = _.cloneDeep(config);
     var stmt = squel.select().from('repo.document_json').order('id');
     if (query.type) {
@@ -128,14 +134,3 @@ export function removeHttpDocumentsByHost(host) {
         return results;
     });
 }
-
-// module.exports = {
-//     removeJsonDocuments: removeJsonDocuments,
-//     saveJsonDocument: saveJsonDocument,
-//     getJsonDocuments: getJsonDocuments,
-//     getJsonDocumentsTypes: getJsonDocumentsTypes,
-//     mergeDocuments: mergeDocuments,
-//     saveHttpDocument: saveHttpDocument,
-//     getHttpDocumentsSummary: getHttpDocumentsSummary,
-//     removeHttpDocumentsByHost: removeHttpDocumentsByHost
-// };
