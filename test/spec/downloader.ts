@@ -31,11 +31,13 @@ describe('Downloader library', () => {
     describe('downloads documents', ()=> {
         it('based on urls array', function () {
             const downloadJob = {
+                name: 'jqueryDownloadTask',
                 urls: ['https://code.jquery.com/jquery-3.1.1.js',
                     'https://code.jquery.com/jquery-2.2.4.js']
             };
             const expectedHttpDocuments = [
                 {
+                    name: 'jqueryDownloadTask',
                     type: 'application/javascript; charset=utf-8',
                     url: 'https://code.jquery.com/jquery-3.1.1.js',
                     host: 'code.jquery.com',
@@ -45,6 +47,7 @@ describe('Downloader library', () => {
                     length: 267194
                 },
                 {
+                    name: 'jqueryDownloadTask',
                     type: 'application/javascript; charset=utf-8',
                     url: 'https://code.jquery.com/jquery-2.2.4.js',
                     host: 'code.jquery.com',

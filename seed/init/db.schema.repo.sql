@@ -19,6 +19,7 @@ CREATE SEQUENCE document_json_id_seq
 
 CREATE TABLE document_http (
     id bigint DEFAULT nextval('document_http_id_seq'::regclass) NOT NULL,
+    name character varying(64),
     type character varying(64),
     url character varying(512),
     host character varying(256),

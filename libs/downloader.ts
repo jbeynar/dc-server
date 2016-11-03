@@ -17,6 +17,7 @@ const defaultOptions = {
 
 export interface ITaskDownload {
     type: 'download';
+    name?: string;
     urls: any;
     options?: {
         headers?: string[];
@@ -53,6 +54,7 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                         let urlInfo = urlInfoService.parse(url);
                         let data = {
                             type: curl.getInfo(Curl.info.CONTENT_TYPE),
+                            name: downloadJob.name,
                             url: url,
                             host: urlInfo.hostname,
                             path: urlInfo.pathname,
