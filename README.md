@@ -1,5 +1,6 @@
-# Database
+# JBL Data Center Server
 
+## Database
 
 ### Database setup
 
@@ -37,10 +38,26 @@ Try this:
 npm install node-libcurl --build-from-source
 ```
 
-# TypeScript
+## TypeScript
 ### Watch and transpile TypeScript files
 ```
 tsc -w --pretty
 ```
 
 You can also configure Webstorm to transpile them using options from tsconfig.json (Open settings and search for "use tsconfig.json")
+
+## JBL Data Center Launcher
+Listing job's tasks run:
+```
+npm run dc jobName listTasks
+```
+
+Executing specific task run:
+```
+npm run dc jobName specificTaskName
+```
+
+Executing all job's task:
+```
+npm run dc jobName
+```
