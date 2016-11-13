@@ -1,29 +1,20 @@
 'use strict';
 
 import pg = require('pg');
-import promise = require('bluebird');
 import config = require('../config');
 
-var highlighStart = '\x1b[31m';
+var highlightStart = '\x1b[31m';
 var highlightEnd = '\x1b[0m';
 
 pg.defaults.poolIdleTimeout = config.db.driverOptions.poolIdleTimeout;
 
 export function connect(connectionUrl?) {
     connectionUrl = connectionUrl || config.db.connectionUrl;
-    var pgConnect : any = promise.promisify(pg.connect, pg);
-    return pgConnect(connectionUrl).then(function (connection)
-    {
-        var client = connection[0];
-        return {
-            query: promise.promisify(client.query, client),
-            done: connection[1]
-        };
-    });
+    return pg.connect(connectionUrl);
 }
 
 export function exceptionHandler(err) {
-    console.error(highlighStart + 'SQL ' + err.toString());
+    console.error(highlightStart + 'SQL ' + err.toString());
     if (err.detail) {
         console.error('detail: ' + err.detail);
     }
@@ -39,7 +30,7 @@ export function query(query : string, bindings? : string[]|number[]) {
         return client.query(query, bindings).then((res)=>
         {
             return res.rows;
-        }).finally(client.done);
+        });
     }).catch(exceptionHandler);
 }
 
