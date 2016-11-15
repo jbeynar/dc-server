@@ -7,6 +7,22 @@ import Promise = require('bluebird');
 
 const squel = Squel.useFlavour('postgres');
 
+export interface IDocumentHttp {
+    id?: number;
+    name?: string;
+    type: string
+    url: string;
+    host: string;
+    path: string;
+    query: string;
+    code: number;
+    headers:string;
+    body:string;
+    length:number;
+    retry_count?:number;
+    ts?: Date;
+}
+
 export function removeJsonDocuments(type) {
     return db.connect().then(function (client)
     {
@@ -113,7 +129,7 @@ export function mergeDocuments(type1Config, type2Config, destinationType) {
     });
 }
 
-export function saveHttpDocument(data) {
+export function saveHttpDocument(data : IDocumentHttp) {
     return db.connect().then(function (client) {
         var query = squel.insert().into('repo.document_http').setFields(data).toParam();
         return client.query(query.text, query.values).finally(client.done);

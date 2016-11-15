@@ -6,6 +6,7 @@ import repo = require('./repo');
 import Promise = require('bluebird');
 import urlInfoService = require('url');
 import LibCurl = require('node-libcurl');
+import {log} from "./logger";
 
 const Curl = LibCurl.Curl;
 // const Curl = require('node-libcurl').Curl;
@@ -40,7 +41,7 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
             var i = 0;
             return Promise.each(urls, function (url : string) {
                 process.stdout.write(++i + '/' + urls.length + ' ' + url);
-                return new Promise(function (resolve) {
+                return new Promise((resolve) => {
                     var curl = new Curl();
                     curl.setOpt(Curl.option.URL, url);
                     curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
@@ -50,9 +51,9 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                         curl.setOpt(Curl.option.HTTPHEADER, downloadJob.options.headers);
                     }
 
-                    curl.on('end', function (statusCode, body, headers) {
+                    curl.on('end', (statusCode, body, headers) => {
                         let urlInfo = urlInfoService.parse(url);
-                        let data = {
+                        let documentHttp = {
                             type: curl.getInfo(Curl.info.CONTENT_TYPE),
                             name: downloadJob.name,
                             url: url,
@@ -64,8 +65,8 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                             body: body,
                             length: body.length
                         };
-                        process.stdout.write(' [' + data.code + ']\n');
-                        repo.saveHttpDocument(data).then(resolve);
+                        log(' [' + documentHttp.code + ']', 1);
+                        repo.saveHttpDocument(documentHttp).then(resolve);
                         this.close();
                     });
 
