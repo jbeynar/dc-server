@@ -11,8 +11,10 @@ export function log(buffer : string, nl? : number) {
     }
 }
 
-export function error(...args) {
+export function error(...args): void;
+export function error():void {
+    // todo somehow handle vararg signature
     if (!process.env.LOGGER_SILENT) {
-        console.error.apply(null, args);
+        console.error.apply(null, arguments);
     }
 }
