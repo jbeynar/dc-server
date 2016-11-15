@@ -78,7 +78,7 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                     curl.perform();
 
                 }).delay(_.get(downloadJob, 'options.intervalTime', options.intervalTime));
-            }).finally(client.done);
+            });
         }).catch(db.exceptionHandler);
     });
 }

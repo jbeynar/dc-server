@@ -1,10 +1,10 @@
 'use strict';
-var promise = require('bluebird');
-var fs = promise.promisifyAll(require('fs'));
+const promise = require('bluebird');
+const fs = promise.promisifyAll(require('fs'));
 // TODO handle relative path, this implementation only let run it from app root
-var fixturesPath = 'test/fixtures';
+const fixturesPath = 'test/fixtures';
 function getFixture(name) {
-    return fs.readFileAsync([fixturesPath, name].join('/')).then(function (file) {
+    return fs.readFileAsync([fixturesPath, name].join('/')).then((file) => {
         return file.toString();
     });
 }

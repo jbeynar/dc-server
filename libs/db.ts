@@ -1,16 +1,22 @@
 'use strict';
 
-import pg = require('pg');
+import * as pg from 'pg';
 import config = require('../config');
 
 var highlightStart = '\x1b[31m';
 var highlightEnd = '\x1b[0m';
 
-pg.defaults.poolIdleTimeout = config.db.driverOptions.poolIdleTimeout;
+const poolConfig: pg.PoolConfig = {
+    idleTimeoutMillis: config.db.driverOptions.poolIdleTimeout,
+    host: 'localhost',
+    user: 'jbl-dc',
+    password: 'jbl-dc',
+    database: 'jbl-dc',
+};
 
 export function connect(connectionUrl?) {
     connectionUrl = connectionUrl || config.db.connectionUrl;
-    return pg.connect(connectionUrl);
+    return new pg.Pool(poolConfig).connect();
 }
 
 export function exceptionHandler(err) {
@@ -24,11 +30,10 @@ export function exceptionHandler(err) {
     console.log(err.stack, highlightEnd);
 }
 
-export function query(query : string, bindings? : string[]|number[]) {
-    return connect().then((client)=>
-    {
-        return client.query(query, bindings).then((res)=>
-        {
+export function query(query: string, bindings?: string[]|number[]): Promise<any[]> {
+    return connect().then((client) => {
+        return client.query(query, bindings).then((res) => {
+            client.end();
             return res.rows;
         });
     }).catch(exceptionHandler);
