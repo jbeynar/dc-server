@@ -11,29 +11,30 @@
     "dc": "node libs/launcher"
   },
   "dependencies": {
-    "bluebird": "2.10.2",
+    "bluebird": "3.4.6",
     "cheerio": "0.20.0",
     "csvtojson": "0.5.2",
     "hapi": "13.3.0",
-    "lodash": "^4.4.0",
-    "mongodb": "^2.1.20",
+    "lodash": "4.16.6",
+    "mongodb": "2.2.11",
     "new-hapi-project": "0.0.4",
     "node-libcurl": "1.0.0",
-    "pg": "4.4.4",
+    "pg": "6.1.0",
     "pg-rxjs": "1.0.20",
     "proxyquire": "1.7.4",
     "rfr": "1.2.3",
     "squel": "4.2.3",
     "striptags": "2.1.1"
   },
-  "author": "jbeynar",
+  "author": "JBL Software",
   "devDependencies": {
     "@types/bluebird": "^3.0.35",
     "@types/chai": "^3.4.34",
     "@types/lodash": "^4.14.37",
     "@types/mocha": "^2.2.32",
     "@types/node": "^4.0.30",
-    "chai": "^3.5.0",
+    "@types/pg": "6.1.34",
+    "chai": "3.5.0",
     "mocha": "3.1.0"
   }
 }

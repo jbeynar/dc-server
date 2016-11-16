@@ -160,7 +160,7 @@ export function extractFromRepo(extractionTask : ITaskExtract)
             var i = 0;
             return Promise.map(rows, (row)=>
             {
-                return extract(row, extractionTask).then(document =>
+                return extract(row, extractionTask).then((document):Promise<any> =>
                 {
                     if (_.isEmpty(document)) {
                         return Promise.resolve();
@@ -171,7 +171,7 @@ export function extractFromRepo(extractionTask : ITaskExtract)
                     }
                     return repo.saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document).then(()=>i++);
                 });
-            }, {concurrency: 10}).finally(()=> {
+            }, {concurrency: 1}).finally(()=> {
                 logger.log(`Saved ${i} JSON documents`, 1);
             });
         });

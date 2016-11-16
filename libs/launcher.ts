@@ -22,17 +22,27 @@ var tasks = process.argv.slice(2);
 if (!_.first(tasks)) {
     throw new Error('Job config path not specified');
 }
-const jobConfigPath = jobsPath + '/' + _.first(tasks);
+const jobName = _.first(tasks);
+const jobConfigPath = jobsPath + '/' + jobName;
 tasks = tasks.slice(1);
 
 log(`Loading job config ${jobConfigPath}... `);
 
-var job = require(jobConfigPath);
+const job = require(jobConfigPath);
 
-if (_.isObject(job)) {
-    log('OK', 1);
-} else {
+if (!_.isObject(job)) {
     throw new Error('Job config format is malformed');
+}
+
+log('OK', 1);
+const tasksNames = _.keys(job);
+
+if (_.first(tasks) === 'listTasks') {
+    log(`Job ${jobName} has ${tasksNames.length} tasks:`, 1);
+    _.each(tasksNames, (taskName, index)=> {
+        log(`${index + 1}. ${taskName}`, 1);
+    });
+    process.exit();
 }
 
 _.each(tasks, (task)=> {
@@ -42,8 +52,7 @@ _.each(tasks, (task)=> {
 });
 
 if (_.isEmpty(tasks)) {
-    // todo preserve order?!
-    tasks = _.keys(job);
+    tasks = tasksNames;
 }
 
 export interface ITaskScript {
@@ -69,12 +78,12 @@ function executeTask(task) {
     }
 }
 
-Promise.map(tasks, (task)=> {
-    log(`\nExecuting task ${task} type ${job[task].type}... `, 1);
+Promise.mapSeries(tasks, (task)=> {
     if (!_.isObject(job[task])) {
         throw new Error('Task must be an object');
     }
+    log(`\nExecuting task ${task} type ${job[task].type}... `, 1);
     return executeTask(job[task]).then(()=> {
         log(`Task ${task} complete`, 1);
     });
-}, { concurrency: 1 });
+});

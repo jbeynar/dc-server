@@ -1,14 +1,13 @@
 'use strict';
 
+import {ITaskExtract} from "../libs/extractor";
+import {ITaskDownload} from "../libs/downloader";
+
 import _ = require('lodash');
 import Promise = require('bluebird');
 import pg = require('pg-rxjs');
 import config = require('../config');
 import db = require('../libs/db');
-import {ITaskExtract} from "../libs/extractor";
-import {ITaskDownload} from "../libs/downloader";
-import {ITaskExport} from "../libs/exporter";
-import {ITaskScript} from "../libs/launcher";
 
 const baseUrl = 'http://vitalia.pl/index.php/mid/90/fid/1047/kalorie/diety/product_id';
 
@@ -104,77 +103,5 @@ export const extract: ITaskExtract = {
         delete extracted.primaryNames;
         delete extracted.secondaryNames;
         return extracted;
-    }
-};
-
-export const produce : ITaskScript = {
-    type: 'script',
-    script: ()=> {
-        return new Promise((resolve)=> {
-
-            const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
-
-            const querySearchingredientsInProducts = `SELECT id, body FROM repo.document_json 
-                WHERE type = 'product' AND to_tsvector(body->>'ingredients') @@ to_tsquery($1)`;
-
-            const queryUpdateProducts = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
-
-            pg.Pool(config.db.connectionUrl).stream(queryFetchIngredients)
-                .map((ingredient)=> {
-                    return {
-                        data: {
-                            code: ingredient.body.code,
-                            name: ingredient.body.name,
-                            rating: ingredient.body.rating,
-                        },
-                        searchVector: _.chain(ingredient.body.names)
-                        .map((name) => {
-                            return name.replace(/[ ]+/g, ' & ');
-                        }).join(' | ').value()
-                    }
-                })
-                .flatMap((component) => {
-                    return db.query(querySearchingredientsInProducts, [component.searchVector]).then((products)=> {
-                        process.stdout.write('.');
-                        return {component: component.data, products: _.map(products, 'id')};
-                    });
-                })
-                .reduce((acc, x)=> {
-                    _.forEach(x.products, (p)=> {
-                        if (acc[p]) {
-                            acc[p].push(x.component);
-                        } else {
-                            acc[p] = [x.component];
-                        }
-                    });
-                    return acc;
-                }, {})
-                .flatMap((dictionary)=> {
-                    return _.map(dictionary, (components, productId) => {
-                        return { productId: productId, components: components };
-                    });
-                })
-                .flatMap((e)=> {
-                    return db.query('SELECT body FROM repo.document_json WHERE id=$1',
-                        [parseInt(e.productId)]).then((res)=> {
-                        res[0].body.components = e.components;
-                        return db.query(queryUpdateProducts, [JSON.stringify(res[0].body), e.productId]);
-                    });
-                })
-                .subscribe(()=> {}, () => {}, resolve);
-        });
-    }
-};
-
-export const exportProducts : ITaskExport = {
-    type: 'export',
-    sourceJsonDocuments: {
-        typeName: 'product',
-        order: 'ean'
-    },
-    targetMongo: {
-        url: 'mongodb://localhost:27017/food-scanner',
-        collectionName: 'products',
-        autoRemove: true
     }
 };

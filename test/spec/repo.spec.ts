@@ -52,12 +52,12 @@ var mockTypesSet = [
         last_update: new Date('2016-03-29 10:59:06.564129')
     },
     {
-        type: 'valuation.biznesradar',
+        type: 'valuation',
         count: 476,
         last_update: new Date('2016-03-30 07:38:22.03407')
     },
     {
-        type: 'valuation.stockwatch',
+        type: 'valuation',
         count: 117,
         last_update: new Date('2016-04-04 22:19:52.356274')
     }
