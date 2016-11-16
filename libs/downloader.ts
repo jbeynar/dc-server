@@ -51,7 +51,7 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                         curl.setOpt(Curl.option.HTTPHEADER, downloadJob.options.headers);
                     }
 
-                    curl.on('end', (statusCode, body, headers) => {
+                    curl.on('end', function (statusCode, body, headers) {
                         let urlInfo = urlInfoService.parse(url);
                         let documentHttp = {
                             type: curl.getInfo(Curl.info.CONTENT_TYPE),
