@@ -36,10 +36,9 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
 
     var options = defaultOptions;
 
-    return Promise.resolve(downloadJob.urls).then((urls)=> {
-        return db.connect().then(function (client) {
-            var i = 0;
-            return Promise.each(urls, function (url : string) {
+    return Promise.resolve(downloadJob.urls).then((urls) => {
+        var i = 0;
+            return Promise.mapSeries(urls, function (url: string) {
                 process.stdout.write(++i + '/' + urls.length + ' ' + url);
                 return new Promise((resolve) => {
                     var curl = new Curl();
@@ -66,7 +65,7 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                             length: body.length
                         };
                         log(' [' + documentHttp.code + ']', 1);
-                        repo.saveHttpDocument(documentHttp).then(resolve);
+                        resolve(repo.saveHttpDocument(documentHttp));
                         this.close();
                     });
 
@@ -75,10 +74,9 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                         console.log(error);
                     });
 
-                    curl.perform();
+                curl.perform();
 
-                }).delay(_.get(downloadJob, 'options.intervalTime', options.intervalTime));
-            });
+            }).delay(_.get(downloadJob, 'options.intervalTime', options.intervalTime));
         }).catch(db.exceptionHandler);
     });
 }

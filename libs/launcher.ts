@@ -34,7 +34,6 @@ if (!_.isObject(job)) {
     throw new Error('Job config format is malformed');
 }
 
-log('OK', 1);
 const tasksNames = _.keys(job);
 
 if (_.first(tasks) === 'listTasks') {

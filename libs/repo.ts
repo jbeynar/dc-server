@@ -38,9 +38,7 @@ export function saveJsonDocument(type, obj) {
     };
     var query = squel.insert().into('repo.document_json').setFields(data).toParam();
     //todo check wheteher it works without bluebird Promise wrapping
-    return Promise.resolve((resolve)=> {
-        db.query(query.text, query.values).then(resolve);
-    });
+    return db.query(query.text, query.values);
 }
 
 export interface IJsonSearchConfig {

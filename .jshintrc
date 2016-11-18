@@ -7,6 +7,7 @@
         "beforeEach": true,
         "afterEach": true
     },
+    "esversion": 6,
     "bitwise": true,
     "browser": true,
     "camelcase": false,

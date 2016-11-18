@@ -1,23 +1,24 @@
 'use strict';
 
 import * as pg from 'pg';
+import * as Promise from 'bluebird';
 import config = require('../config');
+import * as _ from 'lodash';
 
 var highlightStart = '\x1b[31m';
 var highlightEnd = '\x1b[0m';
 
 const poolConfig: pg.PoolConfig = {
-    idleTimeoutMillis: config.db.driverOptions.poolIdleTimeout,
+
+    max: 90, // max number of clients in the pool
+    idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
     host: 'localhost',
     user: 'jbl-dc',
     password: 'jbl-dc',
     database: 'jbl-dc',
 };
 
-export function connect(connectionUrl?) {
-    connectionUrl = connectionUrl || config.db.connectionUrl;
-    return new pg.Pool(poolConfig).connect();
-}
+var pool = new pg.Pool(poolConfig);
 
 export function exceptionHandler(err) {
     console.error(highlightStart + 'SQL ' + err.toString());
@@ -30,11 +31,13 @@ export function exceptionHandler(err) {
     console.log(err.stack, highlightEnd);
 }
 
-export function query(query: string, bindings?: string[]|number[]): Promise<any[]> {
-    return connect().then((client) => {
-        return client.query(query, bindings).then((res) => {
-            client.end();
-            return res.rows;
+export function query(query: string, bindings?: string[]|number[]): Promise<any> {
+    return new Promise((resolve) => {
+        return pool.connect().then(function (client) {
+            return client.query(query, bindings).then(function(res) {
+                client.release();
+                resolve(res.rows);
+            });
         });
     }).catch(exceptionHandler);
 }

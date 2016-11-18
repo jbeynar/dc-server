@@ -1,10 +1,13 @@
 'use strict';
+
 const promise = require('bluebird');
 const fs = promise.promisifyAll(require('fs'));
 const db = require('../libs/db');
 const _ = require('lodash');
+
 const SEED_DIR = 'seed/init';
-function seed() {
+
+export function seed() {
     return fs.readdirAsync(SEED_DIR).then((files) => {
         return promise.map(files, (file) => {
             return fs.readFileAsync(SEED_DIR + '/' + file).then((script) => {
@@ -26,6 +29,5 @@ function seed() {
         });
     });
 }
-exports.seed = seed;
+
 seed();
-//# sourceMappingURL=seed.js.map
