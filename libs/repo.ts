@@ -142,6 +142,12 @@ export function getHttpDocumentsSummary() {
 
 // todo(hakier) check with frontend
 export function removeHttpDocumentsByHost(host) {
+    throw new Error('This method is deprecated, use removeHttpDocumentsByName instead');
     const query = 'DELETE FROM repo.document_http WHERE host LIKE $1';
     return db.query(query, [host]);
+}
+
+export function removeHttpDocumentsByName(name) {
+    const query = 'DELETE FROM repo.document_http WHERE name LIKE $1';
+    return db.query(query, [name]);
 }

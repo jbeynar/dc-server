@@ -31,6 +31,7 @@ const tescoLinksSourcesUrls = {
 export const download: ITaskDownload = {
     type: 'download',
     name: 'tescoLinks',
+    autoRemove: true,
     urls: tescoLinksSourcesUrls.favorites
 };
 
@@ -77,9 +78,10 @@ export const save: ITaskScript = {
 export const downloadProducts: ITaskDownload = {
     type: 'download',
     name: 'tescoProduct',
+    autoRemove: true,
     urls: ()=> {
         return repo.getJsonDocuments({type: 'tescoProductsLinks'}).then((tescoProductsLinks)=> {
-            var links = [].concat(_.get(tescoProductsLinks, 'results[0].body.links'));
+            var links = _.get(tescoProductsLinks, 'results[0].body.links', []);
             return _.map(links, identity => 'https://ezakupy.tesco.pl/' + identity);
         });
     }
@@ -119,16 +121,17 @@ export const extractProducts: ITaskExtract = {
             process: /[0-9]{13}/
         }
     },
-    process: (extracted, doc)=> {
-        extracted.url = doc.url;
-        return extracted
+    process: function (extracted, doc) {
+        extracted.components = [];
+        extracted.ean = extracted.ean || doc.url;
+        return extracted;
     }
 };
 
 export const produce: ITaskScript = {
     type: 'script',
     script: ()=> {
-        return new Promise((resolve)=> {
+        return new Promise((resolve, reject) => {
 
             const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
 
@@ -137,7 +140,8 @@ export const produce: ITaskScript = {
 
             const queryUpdateProducts = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
 
-            pg.Pool(config.db.connectionUrl).stream(queryFetchIngredients)
+            const pool = pg.Pool(config.db.connectionUrl);
+            pool.stream(queryFetchIngredients)
                 .map((ingredient)=> {
                     return {
                         data: {
@@ -147,6 +151,7 @@ export const produce: ITaskScript = {
                         },
                         searchVector: _.chain(ingredient.body.names)
                             .map((name) => {
+                                //TODO: simplify regex / +/g
                                 return name.replace(/[ ]+/g, ' & ');
                             }).join(' | ').value()
                     }
@@ -155,6 +160,8 @@ export const produce: ITaskScript = {
                     return db.query(querySearchingredientsInProducts, [component.searchVector]).then((products)=> {
                         process.stdout.write('.');
                         return {component: component.data, products: _.map(products, 'id')};
+                    }).catch(() => {
+                        console.log('error');
                     });
                 })
                 .reduce((acc, x)=> {
@@ -164,10 +171,12 @@ export const produce: ITaskScript = {
                         } else {
                             acc[p] = [x.component];
                         }
+                        process.stdout.write('/');
                     });
                     return acc;
                 }, {})
                 .flatMap((dictionary)=> {
+                    console.log('ok');
                     return _.map(dictionary, (components, productId) => {
                         return {productId: productId, components: components};
                     });
@@ -176,11 +185,16 @@ export const produce: ITaskScript = {
                     return db.query('SELECT body FROM repo.document_json WHERE id=$1',
                         [parseInt(e.productId)]).then((res)=> {
                         res[0].body.components = e.components;
-                        return db.query(queryUpdateProducts, [JSON.stringify(res[0].body), e.productId]);
+                        process.stdout.write('+');
+                        return db.query(queryUpdateProducts, [JSON.stringify(res[0].body), e.productId]).then(() => {
+                            process.stdout.write('~');
+                        });
                     });
                 })
-                .subscribe(()=> {
-                }, () => {
+                .subscribe(function () {
+                }, function (error) {
+                    console.log('rx pipeline error');
+                    console.log(error);
                 }, resolve);
         });
     }
@@ -193,8 +207,8 @@ export const exportProducts: ITaskExport = {
         order: 'ean'
     },
     targetMongo: {
-        // url: 'mongodb://localhost:27017/food-scanner',
-        url: 'mongodb://heroku_qsjg9m7p:jklhg9edv91jg58aeah2shr4jk@ds055742.mlab.com:55742/heroku_qsjg9m7p',
+        url: 'mongodb://localhost:27017/food-scanner',
+        // url: 'mongodb://heroku_qsjg9m7p:jklhg9edv91jg58aeah2shr4jk@ds055742.mlab.com:55742/heroku_qsjg9m7p',
         collectionName: 'products',
         autoRemove: true
     }

@@ -9,16 +9,15 @@ import LibCurl = require('node-libcurl');
 import {log} from "./logger";
 
 const Curl = LibCurl.Curl;
-// const Curl = require('node-libcurl').Curl;
-// import Curl from 'node-libcurl';
 
 const defaultOptions = {
-    intervalTime: 500
+    intervalTime: 600
 };
 
 export interface ITaskDownload {
     type: 'download';
-    name?: string;
+    name: string;
+    autoRemove?: boolean;
     urls: any;
     options?: {
         headers?: string[];
@@ -36,8 +35,18 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
 
     var options = defaultOptions;
 
-    return Promise.resolve(downloadJob.urls).then((urls) => {
-        var i = 0;
+    function autoRemoveSeries() {
+        if (downloadJob.autoRemove) {
+            console.log(`Removing all http documents with name ${downloadJob.name}`);
+            return repo.removeHttpDocumentsByName(downloadJob.name);
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    function downloadSeries() {
+        return Promise.resolve(downloadJob.urls).then((urls) => {
+            var i = 0;
             return Promise.mapSeries(urls, function (url: string) {
                 process.stdout.write(++i + '/' + urls.length + ' ' + url);
                 return new Promise((resolve) => {
@@ -65,18 +74,25 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
                             length: body.length
                         };
                         log(' [' + documentHttp.code + ']', 1);
-                        resolve(repo.saveHttpDocument(documentHttp));
-                        this.close();
+                        resolve(repo.saveHttpDocument(documentHttp).then(() => {
+                            this.close
+                        }));
                     });
 
-                    curl.on('error', function (error) {
-                        console.log('Downloader error');
+                    curl.on('error', function (error, errCode) {
+                        console.log('Downloader error', errCode);
                         console.log(error);
+                        console.log('Ommiting', url);
+                        this.close();
+                        resolve();
                     });
 
-                curl.perform();
+                    curl.perform();
 
-            }).delay(_.get(downloadJob, 'options.intervalTime', options.intervalTime));
-        }).catch(db.exceptionHandler);
-    });
+                }).delay(_.get(downloadJob, 'options.intervalTime', options.intervalTime));
+            }).catch(db.exceptionHandler);
+        });
+    }
+
+    return autoRemoveSeries().then(downloadSeries);
 }
