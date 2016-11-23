@@ -4,6 +4,7 @@ import {ITaskExtract} from "../libs/extractor";
 
 export const download: ITaskDownload = {
     type: 'download',
+    name: 'tarnowiak',
     urls: ['http://www.tarnowiak.pl/']
 };
 

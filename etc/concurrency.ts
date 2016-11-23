@@ -2,6 +2,7 @@
 
 import * as Rx from 'rxjs';
 import * as _ from 'lodash';
+import Promise = require('bluebird');
 
 var io = require('socket.io')(3333);
 
@@ -48,12 +49,12 @@ io.on('connection', function (socket) {
         io.emit('public', task);
     }
 
-    source.mergeMap((x: any): Promise<number> => {
+    source.mergeMap((x: any): Promise<any> => {
         broadcast(x, 10);
         return new Promise((resolve) => {
             setTimeout(() => {
                 broadcast(x, 30);
-                return resolve(x);
+                resolve(x);
             }, 500 * x.size[0]);
         });
     }, 2).concat().mergeMap((x: any) => {

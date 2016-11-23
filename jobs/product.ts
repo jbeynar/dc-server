@@ -176,6 +176,7 @@ export const produce: ITaskScript = {
                     return acc;
                 }, {})
                 .flatMap((dictionary)=> {
+                    console.log(dictionary);
                     console.log('ok');
                     return _.map(dictionary, (components, productId) => {
                         return {productId: productId, components: components};

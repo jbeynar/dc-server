@@ -26,6 +26,7 @@ const harmityMap = {
 
 export const download: ITaskDownload = {
     type: 'download',
+    name: 'ingredientPage',
     urls: ()=> {return _.times(818, i => [baseUrl, '/', i].join('')); },
     options: {
         headers: ['User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'],

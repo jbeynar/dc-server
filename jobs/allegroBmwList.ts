@@ -5,6 +5,7 @@ import {ITaskExtract} from "../libs/extractor";
 
 export const download: ITaskDownload = {
     type: 'download',
+    name: 'bmwList',
     urls: ['http://allegro.pl/seria-3-f30-2012-146802'],
     options: {
         headers: ['User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'],

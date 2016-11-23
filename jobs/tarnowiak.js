@@ -1,6 +1,7 @@
 'use strict';
 exports.download = {
     type: 'download',
+    name: 'tarnowiak',
     urls: ['http://www.tarnowiak.pl/']
 };
 exports.extract = {
