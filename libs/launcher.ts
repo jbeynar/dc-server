@@ -1,28 +1,27 @@
 'use strict';
 
-import _ = require('lodash');
-import Promise = require('bluebird');
-import extractor = require('./extractor');
-import downloader = require('./downloader');
-import exporter = require('./exporter');
+import * as _ from 'lodash';
+import * as Promise from 'bluebird';
+import {log} from "./logger";
+import {extractFromRepo} from "./extractor";
+import {downloadHttpDocuments} from "./downloader";
+import {exportIntoMongo} from "./exporter";
+import {readdirSync} from "fs";
 
-const jobsPath = './../jobs';
-
-function log(buffer, nl?) {
-    process.stdout.write(buffer);
-    if (nl) {
-        process.stdout.write('\n');
-    }
-}
+const jobsPath = './jobs';
 
 log('JBL Data Center Launcher', 1);
 
-var tasks = process.argv.slice(2);
-
-if (!_.first(tasks)) {
-    throw new Error('Job config path not specified');
-}
+let tasks = process.argv.slice(2);
 const jobName = _.first(tasks);
+
+if (!jobName) {
+    const files = _.uniq(_.map(readdirSync(jobsPath), file => file.replace(/\..*/, '')));
+    const separator = '\n - ';
+    console.log(`\nYou did not provide task name, available tasks: ${separator}${files.join(separator)}`);
+    process.exit();
+}
+
 const jobConfigPath = jobsPath + '/' + jobName;
 tasks = tasks.slice(1);
 
@@ -36,7 +35,7 @@ if (!_.isObject(job)) {
 
 const tasksNames = _.keys(job);
 
-if (_.first(tasks) === 'listTasks') {
+if (jobName === 'listTasks') {
     log(`Job ${jobName} has ${tasksNames.length} tasks:`, 1);
     _.each(tasksNames, (taskName, index)=> {
         log(`${index + 1}. ${taskName}`, 1);
@@ -62,16 +61,16 @@ export interface ITaskScript {
 function executeTask(task) {
     switch (task.type) {
         case 'extract':
-            return extractor.extractFromRepo(task);
+            return extractFromRepo(task);
         case 'download':
-            return downloader.downloadHttpDocuments(task);
+            return downloadHttpDocuments(task);
         case 'script':
             if (_.isFunction(task.script)) {
                 return task.script();
             }
             throw new Error('Script is not a function');
         case 'export':
-            return exporter.exportIntoMongo(task);
+            return exportIntoMongo(task);
         default:
             throw new Error('Unrecognized task type');
     }

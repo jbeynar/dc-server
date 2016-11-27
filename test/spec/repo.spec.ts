@@ -153,6 +153,7 @@ describe('Repo library', function ()
         // proxyquire db.query for many times response with diffrent data - how?
         let repo = rfr('libs/repo');
 
+        //TODO: fix it to work without running DB
         it('should merge two document types', ()=>
         {
             var type1Cfg = {
