@@ -5,11 +5,13 @@ import {ITaskExtract} from "../libs/extractor";
 import {ITaskScript} from "../libs/launcher";
 import {ITaskExport} from "../libs/exporter";
 
-import Promise = require('bluebird');
+import * as Rx from 'rxjs';
+import * as _ from 'lodash';
+import promise = require('bluebird');
 import config = require('../config');
-import _ = require('lodash');
 import db = require('../libs/db');
-import pg = require('pg-rxjs');
+import * as pg from 'pg';
+import pgrx = require('pg-rxjs');
 import repo = require("../libs/repo");
 
 const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/warzywa-owoce/warzywa/Cat0000';
@@ -131,7 +133,7 @@ export const extractProducts: ITaskExtract = {
 export const produce: ITaskScript = {
     type: 'script',
     script: ()=> {
-        return new Promise((resolve, reject) => {
+        return new promise((resolve, reject) => {
 
             const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
 
@@ -140,7 +142,8 @@ export const produce: ITaskScript = {
 
             const queryUpdateProducts = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
 
-            const pool = pg.Pool(config.db.connectionUrl);
+            // move to regular rxjs
+            const pool = pgrx.Pool(config.db.connectionUrl);
             pool.stream(queryFetchIngredients)
                 .map((ingredient)=> {
                     return {
@@ -198,6 +201,83 @@ export const produce: ITaskScript = {
                     console.log(error);
                 }, resolve);
         });
+    }
+};
+
+export const produce2: ITaskScript = {
+    type: 'script',
+    script: () => {
+
+        const pool = db.getPool();
+
+        function createIngredientObservable(): Rx.Observable<any> {
+            const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
+
+            return Rx.Observable.create((subscriber) => {
+                pool.connect().then((client: pg.Client) => {
+                    const stream: pg.Query = client.query(queryFetchIngredients, () => {
+                    });
+
+                    stream.on('row', (row) => {
+                        subscriber.next(row);
+                    });
+
+                    stream.on('end', () => {
+                        subscriber.complete();
+                        client.release();
+                    });
+                });
+            });
+        }
+
+        function mapIngredient(ingredient) {
+            return {
+                meta: {
+                    code: ingredient.body.code,
+                    name: ingredient.body.name,
+                    rating: ingredient.body.rating,
+                },
+                searchVector: _.chain(ingredient.body.names)
+                    .map(name => name.replace(/ +/g, ' & '))
+                    .join(' | ').value()
+            }
+        }
+
+        function searchIngredientInProducts(ingredient) {
+            const querySearchIngredientsInProducts = `SELECT id, body FROM repo.document_json 
+                WHERE type = 'product' AND to_tsvector(body->>'ingredients') @@ to_tsquery($1)`;
+
+            console.log('pool/search');
+            return pool.connect().then((client) => {
+                console.log('client');
+                return client.query(querySearchIngredientsInProducts, [ingredient.searchVector]).then((products) => {
+                    console.log('done');
+                    client.release();
+                    return {ingredient: ingredient.meta, products: _.map(products.rows, 'id')};
+                }).catch((err) => {
+                    console.log('Some error');
+                    console.log(err);
+                    client.release();
+                });
+            }).catch((err) => {
+                console.log('SQL ERROR');
+                console.log(err);
+            });
+        }
+
+        const source = createIngredientObservable().map(mapIngredient).flatMap(searchIngredientInProducts,50);
+
+        return new promise((resolve) => {
+            source.subscribe((data) => {
+                process.stdout.write('.');
+                console.log(data);
+            }, () => {
+
+            }, () => {
+                resolve();
+            });
+        });
+
     }
 };
 

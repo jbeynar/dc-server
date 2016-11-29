@@ -7,18 +7,7 @@ import * as _ from 'lodash';
 
 var highlightStart = '\x1b[31m';
 var highlightEnd = '\x1b[0m';
-
-const poolConfig: pg.PoolConfig = {
-
-    max: 90, // max number of clients in the pool
-    idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
-    host: 'localhost',
-    user: 'jbl-dc',
-    password: 'jbl-dc',
-    database: 'jbl-dc',
-};
-
-var pool = new pg.Pool(poolConfig);
+var pool = new pg.Pool(config.db.poolConfig);
 
 export function exceptionHandler(err) {
     console.error(highlightStart + 'SQL ' + err.toString());
@@ -42,3 +31,6 @@ export function query(query: string, bindings?: string[]|number[]): Promise<any>
     }).catch(exceptionHandler);
 }
 
+export function getPool(){
+    return pool;
+}
