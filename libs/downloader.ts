@@ -7,6 +7,7 @@ import Promise = require('bluebird');
 import urlInfoService = require('url');
 import LibCurl = require('node-libcurl');
 import {log} from "./logger";
+import {TaskDownload} from "../shared/typings";
 
 const Curl = LibCurl.Curl;
 
@@ -14,25 +15,7 @@ const defaultOptions = {
     intervalTime: 600
 };
 
-export interface ITaskDownload {
-    type: 'download';
-    name: string;
-    autoRemove?: boolean;
-    urls: any;
-    options?: {
-        headers?: string[];
-        intervalTime?: number;
-    };
-}
-
-export function downloadHttpDocuments(downloadJob : ITaskDownload) {
-
-    if (_.isFunction((downloadJob.urls))) {
-        downloadJob.urls = downloadJob.urls();
-    } else if (!_.isArray(downloadJob.urls)) {
-        throw new Error('downloadJob.urls param must be a function');
-    }
-
+export function downloadHttpDocuments(downloadJob: TaskDownload): Promise<any> {
     var options = defaultOptions;
 
     function autoRemoveSeries() {
@@ -45,7 +28,7 @@ export function downloadHttpDocuments(downloadJob : ITaskDownload) {
     }
 
     function downloadSeries() {
-        return Promise.resolve(downloadJob.urls).then((urls) => {
+        return Promise.resolve(downloadJob.urls()).then((urls) => {
             var i = 0;
             return Promise.mapSeries(urls, function (url: string) {
                 process.stdout.write(++i + '/' + urls.length + ' ' + url);

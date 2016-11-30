@@ -7,6 +7,7 @@ import db = require('./db');
 import Squel = require('squel');
 import repo = require('./repo');
 import logger = require('./logger');
+import {TaskExtract} from "../shared/typings";
 
 const squel = Squel.useFlavour('postgres');
 
@@ -15,46 +16,6 @@ export const errorCodes = {
     documentBodyEmpty: 'ERR_DOCUMENT_BODY_EMPTY',
     taskMalformedStructure: 'ERR_TASK_MALFORMED_STRUCTURE'
 };
-
-export interface IMapProperty {
-    attribute?: string,
-    singular?: boolean;
-    selector: string;
-    process?: any;
-    default?: any;
-}
-
-interface IRepoDocumentHttp {
-    id: number;
-    type: string;
-    url: string;
-    host: string;
-    path: string;
-    query: string;
-    code: number;
-    headers: any;
-    body: string;
-    length: number;
-    retry_count: number;
-    ts: any
-}
-
-export interface ITaskExtract {
-    type: 'extract';
-    sourceHttpDocuments: {
-        host?: string;
-        name?: string;
-    };
-    targetJsonDocuments: {
-        typeName: string;
-        autoRemove?: boolean;
-    };
-    scope?: string;
-    map: {
-        [key: string]: string|IMapProperty;
-    };
-    process?: (extracted: any, doc: IRepoDocumentHttp) => any;
-}
 
 export function extract(document, extractionTask, whitelist?)
 {
@@ -137,7 +98,7 @@ export function extract(document, extractionTask, whitelist?)
     });
 }
 
-export function extractFromRepo(extractionTask : ITaskExtract)
+export function extractFromRepo(extractionTask : TaskExtract)
 {
     return new Promise((resolve)=>
     {

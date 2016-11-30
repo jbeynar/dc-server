@@ -53,11 +53,6 @@ if (_.isEmpty(tasks)) {
     tasks = tasksNames;
 }
 
-export interface ITaskScript {
-    type: 'script';
-    script: any;
-}
-
 function executeTask(task) {
     switch (task.type) {
         case 'extract':

@@ -26,3 +26,10 @@ export function getTasks() {
         }, {});
     });
 };
+
+export function run(jobName, jobTask){
+
+
+
+    
+}

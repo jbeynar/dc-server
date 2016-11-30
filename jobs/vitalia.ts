@@ -1,13 +1,11 @@
 'use strict';
 
-import {ITaskExtract} from "../libs/extractor";
-import {ITaskDownload} from "../libs/downloader";
-
 import _ = require('lodash');
 import Promise = require('bluebird');
 import pg = require('pg-rxjs');
 import config = require('../config');
 import db = require('../libs/db');
+import {TaskDownload, TaskExtract} from "../shared/typings";
 
 const baseUrl = 'http://vitalia.pl/index.php/mid/90/fid/1047/kalorie/diety/product_id';
 
@@ -24,26 +22,27 @@ const harmityMap = {
     'Niebezpieczny, Wycofany z użycia': 3
 };
 
-export const download: ITaskDownload = {
-    type: 'download',
-    name: 'ingredientPage',
-    urls: ()=> {return _.times(818, i => [baseUrl, '/', i].join('')); },
+export class download extends TaskDownload {
+    name = 'ingredientPage';
+
+    urls() {
+        return _.times(818, i => [baseUrl, '/', i].join(''));
+    };
     options: {
         headers: ['User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'],
         intervalTime: 500
     }
 };
 
-export const extract: ITaskExtract = {
-    type: 'extract',
-    sourceHttpDocuments: {
+export class extract extends TaskExtract {
+    sourceHttpDocuments = {
         host: 'vitalia.pl'
-    },
-    targetJsonDocuments: {
+    };
+    targetJsonDocuments = {
         typeName: 'ingredient',
         autoRemove: true
-    },
-    map: {
+    };
+    map = {
         primaryNames: {
             singular: true,
             selector: '.widecolumn>h1',
@@ -85,8 +84,9 @@ export const extract: ITaskExtract = {
             },
             default: 'zero'
         }
-    },
-    process: (extracted, doc)=> {
+    };
+
+    process(extracted, doc) {
         if (!_.get(extracted, 'primaryNames.name')) {
             console.log(`Excluded cause have no name ${doc.url}`);
             return;
@@ -104,5 +104,5 @@ export const extract: ITaskExtract = {
         delete extracted.primaryNames;
         delete extracted.secondaryNames;
         return extracted;
-    }
+    };
 };

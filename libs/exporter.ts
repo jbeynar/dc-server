@@ -5,6 +5,7 @@ import Promise = require('bluebird');
 import Mongo = require('mongodb');
 import pg = require('pg-rxjs');
 import Squel = require('squel')
+import {TaskExport} from "../shared/typings";
 
 const squel = Squel.useFlavour('postgres');
 const mongo = Mongo.MongoClient;
@@ -16,19 +17,6 @@ function handleError(err) {
         console.log('MongoDb Exception');
         throw err;
     }
-}
-
-export interface ITaskExport {
-    type: 'export';
-    sourceJsonDocuments: {
-        typeName: string;
-        order: string;
-    };
-    targetMongo: {
-        url: string;
-        collectionName: string;
-        autoRemove: boolean;
-    };
 }
 
 export function dropMongoCollections(targetMongoDbUrl, collectionNames) {
@@ -57,7 +45,7 @@ export function dropMongoCollections(targetMongoDbUrl, collectionNames) {
     });
 }
 
-export function exportIntoMongo(exportTask : ITaskExport) {
+export function exportIntoMongo(exportTask : TaskExport) {
     let autoRemovePromise;
     if (_.get(exportTask, 'targetMongo.autoRemove')) {
         autoRemovePromise = dropMongoCollections(_.get(exportTask, 'targetMongo.url'),

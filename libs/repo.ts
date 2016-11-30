@@ -4,24 +4,9 @@ import _ = require('lodash');
 import Squel = require('squel');
 import db = require('./db');
 import Promise = require('bluebird');
+import {IJsonSearchConfig, IDocumentHttp} from "../shared/typings";
 
 const squel = Squel.useFlavour('postgres');
-
-export interface IDocumentHttp {
-    id?: number;
-    name?: string;
-    type: string
-    url: string;
-    host: string;
-    path: string;
-    query: string;
-    code: number;
-    headers:string;
-    body:string;
-    length:number;
-    retry_count?:number;
-    ts?: Date;
-}
 
 // todo(hakier) check this with frontend
 export function removeJsonDocuments(type) {
@@ -39,12 +24,6 @@ export function saveJsonDocument(type, obj) {
     var query = squel.insert().into('repo.document_json').setFields(data).toParam();
     //todo check wheteher it works without bluebird Promise wrapping
     return db.query(query.text, query.values);
-}
-
-export interface IJsonSearchConfig {
-    type?: string;
-    whitelist?: [any];
-    blacklist?: [any];
 }
 
 export function getJsonDocuments(config: IJsonSearchConfig) {

@@ -1,10 +1,5 @@
 'use strict';
 
-import {ITaskDownload} from "../libs/downloader";
-import {ITaskExtract} from "../libs/extractor";
-import {ITaskScript} from "../libs/launcher";
-import {ITaskExport} from "../libs/exporter";
-
 import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import promise = require('bluebird');
@@ -13,6 +8,7 @@ import db = require('../libs/db');
 import * as pg from 'pg';
 import pgrx = require('pg-rxjs');
 import repo = require("../libs/repo");
+import {TaskDownload, TaskExtract, TaskScript, TaskExport, Task} from "../shared/typings";
 
 const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/warzywa-owoce/warzywa/Cat0000';
 
@@ -30,23 +26,24 @@ const tescoLinksSourcesUrls = {
     }
 };
 
-export const download: ITaskDownload = {
-    type: 'download',
-    name: 'tescoLinks',
-    autoRemove: true,
-    urls: tescoLinksSourcesUrls.favorites
-};
+export class download extends TaskDownload {
+    name = 'tescoLinks';
+    autoRemove = true;
 
-export const extract: ITaskExtract = {
-    type: 'extract',
-    sourceHttpDocuments: {
+    urls() {
+        return tescoLinksSourcesUrls.favorites;
+    }
+}
+
+export class extract extends TaskExtract {
+    sourceHttpDocuments = {
         name: 'tescoLinks'
-    },
-    targetJsonDocuments: {
+    };
+    targetJsonDocuments = {
         typeName: 'tescoLinks',
         autoRemove: true
-    },
-    map: {
+    };
+    map = {
         count: {
             selector: '.pagination-component p.results-count strong:last-child',
             process: /[0-9]{0,5}/,
@@ -56,16 +53,16 @@ export const extract: ITaskExtract = {
             attribute: 'href',
             selector: 'a.product-tile--title.product-tile--browsable'
         }
-    },
-    process: (extracted, doc)=> {
+    };
+
+    process(extracted, doc) {
         extracted.url = doc.url;
         return extracted
-    }
-};
+    };
+}
 
-export const save: ITaskScript = {
-    type: 'script',
-    script: (data)=> {
+export class save extends TaskScript {
+    script() {
         return repo.removeJsonDocuments('tescoProductsLinks').then(()=> {
             return repo.getJsonDocuments({type: 'tescoLinks'}).then((d)=> {
                 var linksSet = _.reduce(d.results, (acc, item)=> {
@@ -75,30 +72,29 @@ export const save: ITaskScript = {
             });
         });
     }
-};
+}
 
-export const downloadProducts: ITaskDownload = {
-    type: 'download',
-    name: 'tescoProduct',
-    autoRemove: true,
-    urls: ()=> {
+export class downloadProducts extends TaskDownload {
+    name = 'tescoProduct';
+    autoRemove = true;
+
+    urls() {
         return repo.getJsonDocuments({type: 'tescoProductsLinks'}).then((tescoProductsLinks)=> {
             var links = _.get(tescoProductsLinks, 'results[0].body.links', []);
             return _.map(links, identity => 'https://ezakupy.tesco.pl/' + identity);
         });
     }
-};
+}
 
-export const extractProducts: ITaskExtract = {
-    type: 'extract',
-    sourceHttpDocuments: {
+export class extractProducts extends TaskExtract {
+    sourceHttpDocuments = {
         name: 'tescoProduct'
-    },
-    targetJsonDocuments: {
+    };
+    targetJsonDocuments = {
         typeName: 'product',
         autoRemove: true
-    },
-    map: {
+    };
+    map = {
         name: {
             singular: true,
             selector: 'h1.product-title'
@@ -122,22 +118,22 @@ export const extractProducts: ITaskExtract = {
             attribute: 'src',
             process: /[0-9]{13}/
         }
-    },
-    process: function (extracted, doc) {
+    };
+
+    process(extracted, doc) {
         extracted.components = [];
         extracted.ean = extracted.ean || doc.url;
         return extracted;
-    }
-};
+    };
+}
 
-export const produce: ITaskScript = {
-    type: 'script',
-    script: ()=> {
+export class produce extends TaskScript {
+    script() {
         return new promise((resolve, reject) => {
 
             const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
 
-            const querySearchingredientsInProducts = `SELECT id, body FROM repo.document_json 
+            const querySearchingredientsInProducts = `SELECT id, body FROM repo.document_json
                 WHERE type = 'product' AND to_tsvector(body->>'ingredients') @@ to_tsquery($1)`;
 
             const queryUpdateProducts = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
@@ -202,11 +198,10 @@ export const produce: ITaskScript = {
                 }, resolve);
         });
     }
-};
+}
 
-export const produce2: ITaskScript = {
-    type: 'script',
-    script: () => {
+export class produce2 extends TaskScript {
+    script() {
 
         const pool = db.getPool();
 
@@ -279,18 +274,17 @@ export const produce2: ITaskScript = {
         });
 
     }
-};
+}
 
-export const exportProducts: ITaskExport = {
-    type: 'export',
-    sourceJsonDocuments: {
+export class exportProducts extends TaskExport {
+    sourceJsonDocuments = {
         typeName: 'product',
         order: 'ean'
-    },
-    targetMongo: {
+    };
+    targetMongo = {
         url: 'mongodb://localhost:27017/food-scanner',
         // url: 'mongodb://heroku_qsjg9m7p:jklhg9edv91jg58aeah2shr4jk@ds055742.mlab.com:55742/heroku_qsjg9m7p',
         collectionName: 'products',
         autoRemove: true
-    }
-};
+    };
+}
