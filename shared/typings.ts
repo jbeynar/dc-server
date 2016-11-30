@@ -25,7 +25,6 @@ export interface IJsonSearchConfig {
     blacklist?: [any];
 }
 
-
 export abstract class Task {
     abstract type: string;
 
