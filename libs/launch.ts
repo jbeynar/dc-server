@@ -7,7 +7,7 @@ import {readdirSync} from "fs";
 import {log} from './logger';
 import {Task} from "../shared/typings";
 
-const JOBS_PATH = './../jobs';
+const JOBS_PATH = fs.realpathSync('./jobs');
 
 export function getJobs() {
     return new Promise((resolve) => {
@@ -15,7 +15,7 @@ export function getJobs() {
             resolve(_.chain(data).filter(name => name.match(/.*js$/)).value());
         });
     });
-};
+}
 
 export function getTasks() {
     return this.getJobs().then((jobs) => {
@@ -28,7 +28,7 @@ export function getTasks() {
             return acc;
         }, {});
     });
-};
+}
 
 export function run(jobName, jobTask){
     if (!jobName) {
@@ -78,5 +78,4 @@ export function run(jobName, jobTask){
             log(`Task ${taskName} complete`, 1);
         });
     });
-
 }

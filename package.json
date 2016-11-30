@@ -4,7 +4,7 @@
   "description": "Command line utility for shares valuation in term of fundamental analysis",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon webapi.js",
+    "start": "nodemon --harmony webapi.js",
     "test": "./node_modules/.bin/mocha --recursive",
     "testing": "./node_modules/.bin/mocha --recursive --watch",
     "seed": "node scripts/seed.js",

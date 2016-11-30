@@ -49,7 +49,12 @@ const LaunchApi = {
         });
     },
     run: function (request, reply) {
-        reply({ job: request.params.job, task: request.params.task });
+        let tasks;
+        if (request.params.task) {
+            tasks = [request.params.task]
+        }
+        launch.run(request.params.job, tasks);
+        return reply({ a: 1 });
     }
 };
 
