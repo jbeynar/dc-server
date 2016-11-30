@@ -12,10 +12,7 @@
     },
     "include": [
         "./node_modules/@types/**/*.ts",
-        "./jobs/**/*.ts",
-        "./libs/**/*.ts",
-        "./scripts/**/*.ts",
-        "./test/**/*.ts",
+        "./{jobs,libs,scripts,test,shared}/**/*.ts",
         "./*.ts"
     ]
 }
