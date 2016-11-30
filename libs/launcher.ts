@@ -35,7 +35,7 @@ if (!_.isObject(job)) {
 
 const tasksNames = _.keys(job);
 
-if (jobName === 'listTasks') {
+if (_.first(tasks) === 'listTasks') {
     log(`Job ${jobName} has ${tasksNames.length} tasks:`, 1);
     _.each(tasksNames, (taskName, index)=> {
         log(`${index + 1}. ${taskName}`, 1);
