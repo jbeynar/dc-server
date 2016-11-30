@@ -7,6 +7,7 @@ import {extractFromRepo} from "./extractor";
 import {downloadHttpDocuments} from "./downloader";
 import {exportIntoMongo} from "./exporter";
 import {readdirSync} from "fs";
+import {Task} from "../shared/typings";
 
 const jobsPath = './../jobs';
 
@@ -53,30 +54,13 @@ if (_.isEmpty(tasks)) {
     tasks = tasksNames;
 }
 
-function executeTask(task) {
-    switch (task.type) {
-        case 'extract':
-            return extractFromRepo(task);
-        case 'download':
-            return downloadHttpDocuments(task);
-        case 'script':
-            if (_.isFunction(task.script)) {
-                return task.script();
-            }
-            throw new Error('Script is not a function');
-        case 'export':
-            return exportIntoMongo(task);
-        default:
-            throw new Error('Unrecognized task type');
-    }
-}
-
-Promise.mapSeries(tasks, (task)=> {
-    if (!_.isObject(job[task])) {
+Promise.mapSeries(tasks, (taskName: string) => {
+    if (!_.isObject(job[taskName])) {
         throw new Error('Task must be an object');
     }
-    log(`\nExecuting task ${task} type ${job[task].type}... `, 1);
-    return executeTask(job[task]).then(()=> {
-        log(`Task ${task} complete`, 1);
+    let task: Task = new job[taskName];
+    log(`\nExecuting task ${taskName} type ${task.type}... `, 1);
+    return task.execute().then(() => {
+        log(`Task ${taskName} complete`, 1);
     });
 });
