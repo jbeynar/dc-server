@@ -8,7 +8,7 @@ import {downloadHttpDocuments} from "./downloader";
 import {exportIntoMongo} from "./exporter";
 import {readdirSync} from "fs";
 
-const jobsPath = './jobs';
+const jobsPath = './../jobs';
 
 log('JBL Data Center Launcher', 1);
 
