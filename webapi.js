@@ -54,7 +54,7 @@ const LaunchApi = {
             tasks = [request.params.task]
         }
         launch.run(request.params.job, tasks);
-        return reply({ a: 1 });
+        return reply();
     }
 };
 
@@ -69,7 +69,7 @@ server.route({ method: 'DELETE', path: '/repo/http/{name}', handler: RepoApi.rem
 
 server.route({ method: 'GET', path: '/jobs', handler: LaunchApi.getJobs });
 server.route({ method: 'GET', path: '/jobs/tasks', handler: LaunchApi.getTasks });
-server.route({ method: 'POST', path: '/run/{job}/{task}', handler: LaunchApi.run });
+server.route({ method: 'POST', path: '/run/{job}/{task?}', handler: LaunchApi.run });
 
 server.start((err) =>
 {
