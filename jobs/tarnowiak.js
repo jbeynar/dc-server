@@ -18,6 +18,11 @@ exports.extract = {
         name: {
             singular: true,
             selector: 'div.box_content_desc > strong'
+        },
+        link: {
+            singular: true,
+            selector: 'p>a',
+            attribute: 'href'
         }
     }
 };

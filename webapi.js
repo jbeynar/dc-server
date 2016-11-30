@@ -2,8 +2,9 @@
 
 const Hapi = require('hapi');
 const repo = require('./libs/repo');
+const launch = require('./libs/launch');
 
-const api = {
+const RepoApi = {
     getJsonDocuments: function (request, reply) {
         var query = {
             type: request.params.type,
@@ -29,8 +30,21 @@ const api = {
             reply({ data: result });
         });
     },
-    removeHttpDocumentsByHost: function (request, reply) {
-        return repo.removeHttpDocumentsByHost(request.params.host).then((result)=> {
+    removeHttpDocumentsByName: function (request, reply) {
+        return repo.removeHttpDocumentsByName(request.params.name).then((result)=> {
+            reply({ data: result });
+        });
+    }
+};
+
+const LaunchApi = {
+    getJobs: function (request, reply) {
+        return launch.getJobs().then((result) => {
+            reply({ data: result });
+        });
+    },
+    getTasks: function (request, reply) {
+        return launch.getTasks().then((result) => {
             reply({ data: result });
         });
     }
@@ -38,11 +52,15 @@ const api = {
 
 const server = new Hapi.Server();
 server.connection({ port: 3003, routes: { cors: true } });
-server.route({ method: 'GET', path: '/repo/json/types', handler: api.getJsonTypes });
-server.route({ method: 'POST', path: '/repo/json/{type}', handler: api.getJsonDocuments });
-server.route({ method: 'DELETE', path: '/repo/json/{type}', handler: api.removeJsonType });
-server.route({ method: 'GET', path: '/repo/http/summary', handler: api.getHttpDocumentsSummary });
-server.route({ method: 'DELETE', path: '/repo/http/{host}', handler: api.removeHttpDocumentsByHost });
+
+server.route({ method: 'GET', path: '/repo/json/types', handler: RepoApi.getJsonTypes });
+server.route({ method: 'POST', path: '/repo/json/{type}', handler: RepoApi.getJsonDocuments });
+server.route({ method: 'DELETE', path: '/repo/json/{type}', handler: RepoApi.removeJsonType });
+server.route({ method: 'GET', path: '/repo/http/summary', handler: RepoApi.getHttpDocumentsSummary });
+server.route({ method: 'DELETE', path: '/repo/http/{name}', handler: RepoApi.removeHttpDocumentsByName });
+
+server.route({ method: 'GET', path: '/jobs', handler: LaunchApi.getJobs });
+server.route({ method: 'GET', path: '/jobs/tasks', handler: LaunchApi.getTasks });
 
 server.start((err) =>
 {

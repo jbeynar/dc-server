@@ -127,16 +127,14 @@ export function mergeDocuments(type1Config, type2Config, destinationType) {
     });
 }
 
-// todo(hakier) check with frontend
 export function saveHttpDocument(data: IDocumentHttp) {
     var query = squel.insert().into('repo.document_http').setFields(data).toParam();
     return db.query(query.text, query.values);
 }
 
-// todo(hakier) check with frontend
 export function getHttpDocumentsSummary() {
-    const query = 'SELECT host, COUNT(*) as count, AVG(length)::bigint as avg_size, MAX(ts) as latest ' +
-        'FROM repo.document_http GROUP BY host';
+    const query = 'SELECT name, COUNT(*) as count, AVG(length)::bigint as avg_size, MAX(ts) as latest ' +
+        'FROM repo.document_http GROUP BY name';
     return db.query(query);
 }
 
