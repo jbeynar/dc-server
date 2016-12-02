@@ -3,7 +3,7 @@
 import _ = require('lodash');
 import Promise = require('bluebird');
 import pg = require('pg-rxjs');
-import config = require('../config');
+import {config} from '../config';
 import db = require('../libs/db');
 import {TaskDownload, TaskExtract} from "../shared/typings";
 

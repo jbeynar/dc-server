@@ -6,10 +6,10 @@ import Mongo = require('mongodb');
 import pg = require('pg-rxjs');
 import Squel = require('squel')
 import {TaskExport} from "../shared/typings";
+import {config} from '../config';
 
 const squel = Squel.useFlavour('postgres');
 const mongo = Mongo.MongoClient;
-const config = require('../config');
 //TODO: check whether config file work appropriate
 
 function handleError(err) {

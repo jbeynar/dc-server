@@ -3,7 +3,7 @@
 import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import promise = require('bluebird');
-import config = require('../config');
+import {config} from '../config';
 import db = require('../libs/db');
 import * as pg from 'pg';
 import pgrx = require('pg-rxjs');

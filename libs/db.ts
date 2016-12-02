@@ -2,7 +2,7 @@
 
 import * as pg from 'pg';
 import * as Promise from 'bluebird';
-import config = require('../config');
+import {config} from '../config';
 import * as _ from 'lodash';
 
 var highlightStart = '\x1b[31m';

@@ -1,6 +1,6 @@
-"use strict";
-"use strict";
-exports.config = {
+`use strict`;
+
+export const config = {
     webapi: {
         httpServer: {
             port: 3003
