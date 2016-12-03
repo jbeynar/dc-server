@@ -62,7 +62,7 @@ var mockTypesSet = [
     }
 ];
 
-describe.only('Repo library', function ()
+describe('Repo library', function ()
 {
     describe('getJsonDocuments', function ()
     {

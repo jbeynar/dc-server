@@ -78,4 +78,5 @@ export function run(jobName, jobTask){
             log(`Task ${taskName} complete`, 1);
         });
     });
+    // finally pool.end();
 }

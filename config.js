@@ -3,7 +3,8 @@
 exports.config = {
     webapi: {
         httpServer: {
-            port: 3003
+            port: 3003,
+            url: 'http://localhost:3003'
         },
         socketServer: {
             port: 3333,
