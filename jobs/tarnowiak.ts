@@ -8,7 +8,7 @@ export class download extends TaskDownload {
     urls() {
         return ['http://www.tarnowiak.pl/']
     };
-};
+}
 
 export class extract extends TaskExtract {
     sourceHttpDocuments = {
@@ -30,4 +30,4 @@ export class extract extends TaskExtract {
             attribute: 'href'
         }
     };
-};
+}

@@ -1,27 +1,25 @@
 'use strict';
 
-import _ = require('lodash');
-import db = require('./db');
-import repo = require('./repo');
-import Promise = require('bluebird');
-import urlInfoService = require('url');
-import LibCurl = require('node-libcurl');
+import * as _ from 'lodash';
+import * as db from './db';
+import * as repo from './repo';
+import * as Promise from 'bluebird';
+import * as urlInfoService from 'url';
+import {Curl} from 'node-libcurl';
 import {log} from "./logger";
 import {TaskDownload} from "../shared/typings";
 import {progressNotification} from "./sockets";
-
-const Curl = LibCurl.Curl;
 
 const defaultOptions = {
     intervalTime: 600
 };
 
 export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> {
-    var options = defaultOptions;
+    const options = defaultOptions;
 
     function autoRemoveSeries() {
         if (downloadTask.autoRemove) {
-            console.log(`Removing all http documents with name ${downloadTask.name}`);
+            log(`Removing all http documents with name ${downloadTask.name}`);
             return repo.removeHttpDocumentsByName(downloadTask.name);
         } else {
             return Promise.resolve();
@@ -30,11 +28,11 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
 
     function downloadSeries() {
         return Promise.resolve(downloadTask.urls()).then((urls) => {
-            var i = 0;
+            let i = 0;
             return Promise.mapSeries(urls, function (url: string) {
-                process.stdout.write(++i + '/' + urls.length + ' ' + url);
+                log(++i + '/' + urls.length + ' ' + url);
                 return new Promise((resolve) => {
-                    var curl = new Curl();
+                    const curl = new Curl();
                     curl.setOpt(Curl.option.URL, url);
                     curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
                     curl.setOpt(Curl.option.TIMEOUT, 30);
@@ -68,9 +66,9 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                     });
 
                     curl.on('error', function (error, errCode) {
-                        console.log('Downloader error', errCode);
-                        console.log(error);
-                        console.log('Ommiting', url);
+                        log(`Downloader error: ${errCode}`, 1);
+                        log(error, 1);
+                        log(`Ommiting ${url}`, 1);
                         this.close();
                         resolve();
                     });

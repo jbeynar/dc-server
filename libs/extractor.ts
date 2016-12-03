@@ -1,15 +1,15 @@
 'use strict';
 
-import _ = require('lodash');
-import Promise = require('bluebird');
-import cheerio = require('cheerio');
-import db = require('./db');
-import Squel = require('squel');
-import repo = require('./repo');
-import logger = require('./logger');
+import * as _ from 'lodash';
+import * as Promise from 'bluebird';
+import * as cheerio from 'cheerio';
+import * as db from './db';
+import {useFlavour} from 'squel';
+import * as repo from './repo';
+import * as logger from './logger';
 import {TaskExtract} from "../shared/typings";
 
-const squel = Squel.useFlavour('postgres');
+const squel = useFlavour('postgres');
 
 export const errorCodes = {
     documentMalformedStructure: 'ERR_DOCUMENT_MALFORMED_STRUCTURE',
@@ -21,7 +21,7 @@ export function extract(document, extractionTask, whitelist?)
 {
     return new Promise((resolve, reject) =>
     {
-        var $;
+        let $;
 
         function extractOnce($scope, def, key)
         {
@@ -29,19 +29,19 @@ export function extract(document, extractionTask, whitelist?)
                 return null;
             }
 
-            var selector = _.isString(def) ? def : def.selector;
-            var elements = $scope.find(selector);
+            const selector = _.isString(def) ? def : def.selector;
+            const elements = $scope.find(selector);
 
-            var res = _.map(elements, (element : any) =>
+            const res = _.map(elements, (element : any) =>
             {
                 element = $(element);
-                var value = def.attribute ? element.attr(def.attribute) : element.text();
+                let value = def.attribute ? element.attr(def.attribute) : element.text();
 
                 if (_.isFunction(def.process)) {
                     try {
                         value = def.process(value, element);
                     } catch (err) {
-                        console.error('Process function fails at `' + key + '` cause:', err);
+                        logger.error('Process function fails at `' + key + '` cause:', err);
                     }
                 } else if (_.isString(def.process) && _.isString(value)) {
                     try {
@@ -65,7 +65,7 @@ export function extract(document, extractionTask, whitelist?)
 
         function extractAll($scope, map)
         {
-            var extracted = _.chain(map).keys().zipObject().value() || {};
+            const extracted = _.chain(map).keys().zipObject().value() || {};
             _.forEach(map, (def, key) =>
             {
                 let extractedValue = extractOnce($scope, def, key);
@@ -118,7 +118,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
         return db.query(query.text, query.values).then((rows)=>
         {
             logger.log(`Extracting ${rows.length} rows...`, 1);
-            var i = 0;
+            let i = 0;
             return Promise.map(rows, (row)=>
             {
                 return extract(row, extractionTask).then((document):Promise<any> =>

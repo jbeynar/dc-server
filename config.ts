@@ -1,5 +1,9 @@
 `use strict`;
 
+import {config as configDotEnv} from 'dotenv';
+
+configDotEnv();
+
 export const config = {
     webapi: {
         httpServer: {
@@ -24,5 +28,8 @@ export const config = {
         driverOptions: {
             poolIdleTimeout: 2000
         }
+    },
+    logger: {
+        enabled: !parseInt(process.env.LOGGER_SILENT)
     }
 };

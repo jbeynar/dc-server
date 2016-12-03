@@ -1,15 +1,15 @@
 'use strict';
 
-import _ = require('lodash');
-import Promise = require('bluebird');
-import chai = require('chai');
-import proxyquire = require('proxyquire');
+import * as _ from 'lodash';
+import * as Promise from 'bluebird';
+import * as chai from 'chai';
+import * as proxyquire from 'proxyquire';
 
 const expect = chai.expect;
 
 describe('Downloader library', () => {
-    var downloader;
-    var mockRepoSavedHttpDocuments = [];
+    let downloader;
+    let mockRepoSavedHttpDocuments = [];
 
     before(()=> {
         const repoLibMock = {
