@@ -2,12 +2,12 @@
 
 import * as Rx from 'rxjs';
 import * as _ from 'lodash';
-import promise = require('bluebird');
-import {config} from '../config';
-import db = require('../libs/db');
+import * as Promise from 'bluebird';
 import * as pg from 'pg';
-import pgrx = require('pg-rxjs');
-import repo = require("../libs/repo");
+import * as pgrx from 'pg-rxjs';
+import * as db from '../libs/db';
+import * as repo from '../libs/repo';
+import {config} from '../config';
 import {TaskDownload, TaskExtract, TaskScript, TaskExport, Task} from "../shared/typings";
 
 const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/warzywa-owoce/warzywa/Cat0000';
@@ -65,7 +65,7 @@ export class save extends TaskScript {
     script() {
         return repo.removeJsonDocuments('tescoProductsLinks').then(()=> {
             return repo.getJsonDocuments({type: 'tescoLinks'}).then((d)=> {
-                var linksSet = _.reduce(d.results, (acc, item)=> {
+                const linksSet = _.reduce(d.results, (acc, item)=> {
                     return acc.concat(_.get(item, 'body.links'));
                 }, []);
                 return repo.saveJsonDocument('tescoProductsLinks', {links: linksSet});
@@ -80,7 +80,7 @@ export class downloadProducts extends TaskDownload {
 
     urls() {
         return repo.getJsonDocuments({type: 'tescoProductsLinks'}).then((tescoProductsLinks)=> {
-            var links = _.get(tescoProductsLinks, 'results[0].body.links', []);
+            const links = _.get(tescoProductsLinks, 'results[0].body.links', []);
             return _.map(links, identity => 'https://ezakupy.tesco.pl/' + identity);
         });
     }
@@ -129,7 +129,7 @@ export class extractProducts extends TaskExtract {
 
 export class produce extends TaskScript {
     script() {
-        return new promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
 
             const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
 
@@ -262,7 +262,7 @@ export class produce2 extends TaskScript {
 
         const source = createIngredientObservable().map(mapIngredient).flatMap(searchIngredientInProducts,50);
 
-        return new promise((resolve) => {
+        return new Promise((resolve) => {
             source.subscribe((data) => {
                 process.stdout.write('.');
                 console.log(data);

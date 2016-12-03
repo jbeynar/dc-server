@@ -13,7 +13,7 @@ export class download extends TaskDownload {
         headers: ['User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'],
         intervalTime: 500
     };
-};
+}
 
 export class extract extends TaskExtract {
     sourceHttpDocuments = {
@@ -41,4 +41,4 @@ export class extract extends TaskExtract {
         });
         return extracted;
     };
-};
+}

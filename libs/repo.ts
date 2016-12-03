@@ -1,40 +1,41 @@
 'use strict';
 
-import _ = require('lodash');
-import Squel = require('squel');
-import db = require('./db');
-import Promise = require('bluebird');
+import * as _ from 'lodash';
+import * as Squel from 'squel';
+import * as db from './db';
+import * as Promise from 'bluebird';
 import {IJsonSearchConfig, IDocumentHttp} from "../shared/typings";
 
 const squel = Squel.useFlavour('postgres');
 
 // todo(hakier) check this with frontend
 export function removeJsonDocuments(type) {
-    var query = squel.delete().from('repo.document_json').where('type=?', type).toParam();
+    const query = squel.delete().from('repo.document_json').where('type=?', type).toParam();
     return db.query(query.text, query.values);
 }
 
 export function saveJsonDocument(type, obj) {
-    var json = JSON.stringify(obj);
-    var data = {
+    const json = JSON.stringify(obj);
+    const data = {
         type: type,
         body: json,
         length: json.length || 0
     };
-    var query = squel.insert().into('repo.document_json').setFields(data).toParam();
+    const query = squel.insert().into('repo.document_json').setFields(data).toParam();
     //todo check wheteher it works without bluebird Promise wrapping
     return db.query(query.text, query.values);
 }
 
 export function getJsonDocuments(config: IJsonSearchConfig) {
-    var query = _.cloneDeep(config);
-    var stmt = squel.select().from('repo.document_json').order('id');
+    const query = _.cloneDeep(config);
+    const stmt = squel.select().from('repo.document_json').order('id');
     if (query.type) {
         stmt.where('type=?', query.type);
     }
     // todo(hakier) check frontend with this
     return db.query(stmt.toString()).then(function (rows) {
-        var keys, allProps = {};
+        let keys;
+        let allProps = {};
         _.forEach(rows, function (record) {
             _.assign(allProps, record.body);
         });
@@ -52,7 +53,7 @@ export function getJsonDocuments(config: IJsonSearchConfig) {
         }
         _.forEach(rows, function (record)
         {
-            var sortedBody = {};
+            const sortedBody = {};
             _.forEach(keys, function (key)
             {
                 sortedBody[key] = record.body[key];
@@ -86,13 +87,13 @@ export function mergeDocuments(type1Config, type2Config, destinationType) {
     if (!(_.isString(destinationType) && !_.isEmpty(destinationType))) {
         throw new Error('Destination type must be not empty string');
     }
-    var stmt1 = squel.select().from('repo.document_json').where('type=?', type1Config.type).toString();
+    const stmt1 = squel.select().from('repo.document_json').where('type=?', type1Config.type).toString();
     return db.query(stmt1).then((results1)=>
     {
         return Promise.map(results1, (doc1 : any) =>
         {
-            var mergeId = _.get(doc1.body, type1Config.id);
-            var stmt2 = squel.select()
+            const mergeId = _.get(doc1.body, type1Config.id);
+            const stmt2 = squel.select()
                 .from('repo.document_json')
                 .where('type=?', type2Config.type)
                 .where('body->>\'' + type2Config.id + '\'=?', mergeId)
@@ -107,7 +108,7 @@ export function mergeDocuments(type1Config, type2Config, destinationType) {
 }
 
 export function saveHttpDocument(data: IDocumentHttp) {
-    var query = squel.insert().into('repo.document_http').setFields(data).toParam();
+    const query = squel.insert().into('repo.document_http').setFields(data).toParam();
     return db.query(query.text, query.values);
 }
 
