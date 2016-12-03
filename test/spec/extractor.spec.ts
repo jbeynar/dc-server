@@ -3,7 +3,6 @@
 import _ = require('lodash');
 import Promise = require('bluebird');
 import chai = require('chai')
-import rfr = require('rfr');
 import utils = require('../utils');
 import proxyquire = require('proxyquire');
 

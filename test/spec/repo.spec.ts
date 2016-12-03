@@ -4,7 +4,6 @@ import chai = require('chai');
 import proxyquire = require('proxyquire');
 import promise = require('bluebird');
 import _ = require('lodash');
-import rfr = require('rfr');
 
 const expect = chai.expect;
 
@@ -63,7 +62,7 @@ var mockTypesSet = [
     }
 ];
 
-describe('Repo library', function ()
+describe.only('Repo library', function ()
 {
     describe('getJsonDocuments', function ()
     {
@@ -151,7 +150,7 @@ describe('Repo library', function ()
     {
 
         // proxyquire db.query for many times response with diffrent data - how?
-        let repo = rfr('libs/repo');
+        const repo = require('../../libs/repo');
 
         //TODO: fix it to work without running DB
         it('should merge two document types', ()=>
