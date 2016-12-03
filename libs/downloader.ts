@@ -8,7 +8,7 @@ import * as urlInfoService from 'url';
 import {Curl} from 'node-libcurl';
 import {log} from "./logger";
 import {TaskDownload} from "../shared/typings";
-import {progressNotification} from "./sockets";
+import {progressNotification, emit} from "./sockets";
 
 const defaultOptions = {
     intervalTime: 600
@@ -80,5 +80,5 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
         });
     }
 
-    return autoRemoveSeries().then(downloadSeries);
+    return autoRemoveSeries().then(downloadSeries).then(() => emit('downloaderFinished'));
 }

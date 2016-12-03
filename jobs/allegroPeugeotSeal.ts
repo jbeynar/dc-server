@@ -4,6 +4,7 @@ import _ = require('lodash');
 import {TaskExtract, TaskDownload} from "../shared/typings";
 
 export class download extends TaskDownload {
+    name = 'allegroPeugeotSeal';
     urls() {
         return ['http://allegro.pl/listing/listing.php?order=p&string=peugeot+306+uszczelka+drzwi&bmatch=base-relevance-floki-5-uni-1-1-1025&ref=fq_mp_title'];
     };

@@ -12,10 +12,11 @@ function url(path) {
 }
 
 describe('Provide webapi as a http server', () => {
-    var app;
+    let app;
 
     before(() => {
         // todo don't we need to capture app unregister callback, and destroy at the end?
+        // todo use test config to not conflict with running app
         app = require('../../webapi');
     });
 

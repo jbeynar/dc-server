@@ -106,14 +106,15 @@ function setupHttpServer() {
 function setupSocketServer() {
     const io = require('socket.io')(socketPort);
     const ns = io.of('/ns');
+    const forwardEvents = [
+        'progressNotification',
+        'extractorFinished',
+        'downloaderFinished'
+    ];
 
     ns.on('connection', (conn) => {
         console.log('Sockets client connected');
-        conn.on('progressNotification', (msg) => {
-            console.log('progressNotification',);
-            console.log('progressNotification', JSON.stringify(msg));
-            ns.emit('progressNotification', msg);
-        });
+        _.each(forwardEvents, event => conn.on(event, msg => ns.emit(event, msg)));
     });
 
     console.log(`Sockets server running at ${socketPort}`);

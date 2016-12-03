@@ -8,6 +8,7 @@ import {useFlavour} from 'squel';
 import * as repo from './repo';
 import * as logger from './logger';
 import {TaskExtract} from "../shared/typings";
+import {emit} from "./sockets";
 
 const squel = useFlavour('postgres');
 
@@ -136,5 +137,5 @@ export function extractFromRepo(extractionTask : TaskExtract)
                 logger.log(`Saved ${i} JSON documents`, 1);
             });
         });
-    });
+    }).then(() => emit('extractorFinished'));
 }
