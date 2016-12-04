@@ -18,7 +18,6 @@ export class download extends TaskDownload {
 }
 
 export class extract extends TaskExtract {
-    type= 'TaskExtract';
     sourceHttpDocuments= {
         host: 'swiatprzychodni.pl'
     };
