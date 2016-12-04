@@ -56,13 +56,12 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                             length: body.length
                         };
                         log(' [' + documentHttp.code + ']', 1);
-                        resolve(repo.saveHttpDocument(documentHttp).then(() => {
+                        repo.saveHttpDocument(documentHttp).then(() => {
                             const progress = i / urls.length;
                             progressNotification('terminal', downloadTask.name, progress);
-
-                            // todo what thay close is for? is scope bind right?
                             this.close();
-                        }));
+                            resolve();
+                        });
                     });
 
                     curl.on('error', function (error, errCode) {

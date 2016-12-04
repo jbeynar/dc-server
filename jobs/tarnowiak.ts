@@ -4,7 +4,7 @@ import {TaskDownload, TaskExtract} from "../shared/typings";
 
 export class download extends TaskDownload {
     name = 'tarnowiak';
-
+    autoRemove = true;
     urls() {
         return ['http://www.tarnowiak.pl/']
     };

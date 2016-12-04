@@ -77,6 +77,9 @@ export function run(jobName, jobTask){
         return task.execute().then(() => {
             log(`Task ${taskName} complete`, 1);
         });
+    }).finally(() => {
+        // setTimeout cause socket-client makes process hanging.
+        // todo socket client disconnect in elegant way
+        setTimeout(process.exit, 10);
     });
-    // finally pool.end();
 }

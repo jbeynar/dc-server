@@ -57,7 +57,7 @@ export interface ITaskExtractDefinition {
 }
 
 export abstract class TaskExtract extends Task {
-    type: 'TaskExtract';
+    type: string = 'TaskExtract';
     sourceHttpDocuments: {
         host?: string;
         name?: string;
@@ -71,7 +71,7 @@ export abstract class TaskExtract extends Task {
         [key: string]: string|ITaskExtractDefinition;
     };
     process(extracted: any, doc: IDocumentHttp): any{
-
+        return extracted;
     }
 
     execute(): Promise<any> {
@@ -80,7 +80,7 @@ export abstract class TaskExtract extends Task {
 }
 
 export abstract class TaskScript extends Task {
-    type: 'TaskScript';
+    type: string = 'TaskScript';
     abstract script():any;
 
     execute(): Promise<any> {
@@ -89,7 +89,7 @@ export abstract class TaskScript extends Task {
 }
 
 export abstract class TaskExport extends Task {
-    type: 'TaskExport';
+    type: string = 'TaskExport';
     sourceJsonDocuments: {
         typeName: string;
         order: string;
