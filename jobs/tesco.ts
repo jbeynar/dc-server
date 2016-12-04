@@ -4,11 +4,10 @@ import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
 import * as pg from 'pg';
-import * as pgrx from 'pg-rxjs';
 import * as db from '../libs/db';
 import * as repo from '../libs/repo';
-import {config} from '../config';
-import {TaskDownload, TaskExtract, TaskScript, TaskExport, Task} from "../shared/typings";
+import {TaskDownload, TaskExtract, TaskScript, TaskExport} from "../shared/typings";
+import {log} from "../libs/logger";
 
 const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/warzywa-owoce/warzywa/Cat0000';
 
@@ -127,90 +126,16 @@ export class extractProducts extends TaskExtract {
     };
 }
 
-export class produce extends TaskScript {
-    script() {
-        return new Promise((resolve, reject) => {
-
-            const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
-
-            const querySearchingredientsInProducts = `SELECT id, body FROM repo.document_json
-                WHERE type = 'product' AND to_tsvector(body->>'ingredients') @@ to_tsquery($1)`;
-
-            const queryUpdateProducts = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
-
-            // move to regular rxjs
-            const pool = pgrx.Pool(config.db.connectionUrl);
-            pool.stream(queryFetchIngredients)
-                .map((ingredient)=> {
-                    return {
-                        data: {
-                            code: ingredient.body.code,
-                            name: ingredient.body.name,
-                            rating: ingredient.body.rating,
-                        },
-                        searchVector: _.chain(ingredient.body.names)
-                            .map((name) => {
-                                //TODO: simplify regex / +/g
-                                return name.replace(/[ ]+/g, ' & ');
-                            }).join(' | ').value()
-                    }
-                })
-                .flatMap((component) => {
-                    return db.query(querySearchingredientsInProducts, [component.searchVector]).then((products)=> {
-                        process.stdout.write('.');
-                        return {component: component.data, products: _.map(products, 'id')};
-                    }).catch(() => {
-                        console.log('error');
-                    });
-                })
-                .reduce((acc, x)=> {
-                    _.forEach(x.products, (p)=> {
-                        if (acc[p]) {
-                            acc[p].push(x.component);
-                        } else {
-                            acc[p] = [x.component];
-                        }
-                        process.stdout.write('/');
-                    });
-                    return acc;
-                }, {})
-                .flatMap((dictionary)=> {
-                    console.log(dictionary);
-                    console.log('ok');
-                    return _.map(dictionary, (components, productId) => {
-                        return {productId: productId, components: components};
-                    });
-                })
-                .flatMap((e)=> {
-                    return db.query('SELECT body FROM repo.document_json WHERE id=$1',
-                        [parseInt(e.productId)]).then((res)=> {
-                        res[0].body.components = e.components;
-                        process.stdout.write('+');
-                        return db.query(queryUpdateProducts, [JSON.stringify(res[0].body), e.productId]).then(() => {
-                            process.stdout.write('~');
-                        });
-                    });
-                })
-                .subscribe(function () {
-                }, function (error) {
-                    console.log('rx pipeline error');
-                    console.log(error);
-                }, resolve);
-        });
-    }
-}
-
 export class produce2 extends TaskScript {
     script() {
-
         const pool = db.getPool();
 
         function createIngredientObservable(): Rx.Observable<any> {
-            const queryFetchIngredients = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
+            const query = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
 
             return Rx.Observable.create((subscriber) => {
                 pool.connect().then((client: pg.Client) => {
-                    const stream: pg.Query = client.query(queryFetchIngredients, () => {
+                    const stream: pg.Query = client.query(query, () => {
                     });
 
                     stream.on('row', (row) => {
@@ -239,36 +164,71 @@ export class produce2 extends TaskScript {
         }
 
         function searchIngredientInProducts(ingredient) {
-            const querySearchIngredientsInProducts = `SELECT id, body FROM repo.document_json 
+            const query = `SELECT id, body FROM repo.document_json 
                 WHERE type = 'product' AND to_tsvector(body->>'ingredients') @@ to_tsquery($1)`;
 
-            console.log('pool/search');
             return pool.connect().then((client) => {
-                console.log('client');
-                return client.query(querySearchIngredientsInProducts, [ingredient.searchVector]).then((products) => {
-                    console.log('done');
+                return client.query(query, [ingredient.searchVector]).then((products) => {
                     client.release();
                     return {ingredient: ingredient.meta, products: _.map(products.rows, 'id')};
                 }).catch((err) => {
-                    console.log('Some error');
+                    console.error('SQL ERROR IN searchIngredientInProducts');
                     console.log(err);
                     client.release();
                 });
-            }).catch((err) => {
-                console.log('SQL ERROR');
-                console.log(err);
             });
         }
 
-        const source = createIngredientObservable().map(mapIngredient).flatMap(searchIngredientInProducts,50);
+        function reduceSearchResults(acc, x) {
+            if (!_.isObject(x)) {
+                return acc;
+            }
+            _.forEach(x.products, (p) => {
+                if (acc[p]) {
+                    acc[p].push(x.ingredient);
+                } else {
+                    acc[p] = [x.ingredient];
+                }
+            });
+            return acc;
+        }
+
+        function mapDictionaryToArray(dictionary) {
+            return _.map(dictionary, (value, key: string) => {
+                return {productId: parseInt(key), ingredients: value};
+            });
+        }
+
+        function updateProducts(e) {
+            const querySearchProduct = 'SELECT body FROM repo.document_json WHERE id=$1';
+            const queryUpdateProduct = 'UPDATE repo.document_json SET body=$1 WHERE id=$2';
+
+            return pool.connect().then((client) => {
+                return client.query(querySearchProduct, [e.productId]).then((res) => {
+                    res.rows[0].body.components = e.ingredients;
+                    return db.query(queryUpdateProduct, [JSON.stringify(res.rows[0].body), e.productId]).then(() => {
+                        log('.');
+                        client.release();
+                    });
+                });
+            });
+        }
+
+        const source: Rx.Observable<any> = createIngredientObservable()
+            .map(mapIngredient)
+            .flatMap(searchIngredientInProducts, 50)
+            .reduce(reduceSearchResults, {})
+            .flatMap(mapDictionaryToArray)
+            .flatMap(updateProducts, 50);
 
         return new Promise((resolve) => {
             source.subscribe((data) => {
-                process.stdout.write('.');
-                console.log(data);
+                // on next
+            }, (err) => {
+                console.log('Error on rx chain');
+                console.log(err);
             }, () => {
-
-            }, () => {
+                // on complete
                 resolve();
             });
         });
