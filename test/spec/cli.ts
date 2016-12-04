@@ -1,6 +1,5 @@
 'use strict';
 
-import _ = require('lodash');
 import Promise = require('bluebird');
 import chai = require('chai');
 import shelljs = require('shelljs');
@@ -9,6 +8,9 @@ import * as _ from 'lodash';
 const expect = chai.expect;
 
 describe('Launcher CLI', () => {
+    before(() => {
+        process.env.LOGGER_SILENT = 0;
+    });
 
     it('Executs tarnowiak download task', (done) => {
         const expected = [
