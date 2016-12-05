@@ -6,3 +6,4 @@ typings
 *.js
 *.js.map
 .env
+coverage
