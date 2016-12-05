@@ -6,6 +6,7 @@ import * as Promise from 'bluebird';
 import * as pg from 'pg';
 import * as db from '../libs/db';
 import * as repo from '../libs/repo';
+import {config} from '../config';
 import {TaskDownload, TaskExtract, TaskScript, TaskExport} from "../shared/typings";
 import {log} from "../libs/logger";
 
@@ -126,7 +127,7 @@ export class extractProducts extends TaskExtract {
     };
 }
 
-export class produce2 extends TaskScript {
+export class produce extends TaskScript {
     script() {
         const pool = db.getPool();
 
@@ -173,7 +174,7 @@ export class produce2 extends TaskScript {
                     return {ingredient: ingredient.meta, products: _.map(products.rows, 'id')};
                 }).catch((err) => {
                     console.error('SQL ERROR IN searchIngredientInProducts');
-                    console.log(err);
+                    console.log(err.toLocaleString());
                     client.release();
                 });
             });
@@ -214,12 +215,14 @@ export class produce2 extends TaskScript {
             });
         }
 
+        const concurrencyCount = Math.max(1, config.db.poolConfig.max - 5);
+
         const source: Rx.Observable<any> = createIngredientObservable()
             .map(mapIngredient)
-            .flatMap(searchIngredientInProducts, 50)
+            .flatMap(searchIngredientInProducts, concurrencyCount)
             .reduce(reduceSearchResults, {})
             .flatMap(mapDictionaryToArray)
-            .flatMap(updateProducts, 50);
+            .flatMap(updateProducts, concurrencyCount);
 
         return new Promise((resolve) => {
             source.subscribe((data) => {
@@ -242,8 +245,8 @@ export class exportProducts extends TaskExport {
         order: 'ean'
     };
     targetMongo = {
-        url: 'mongodb://localhost:27017/food-scanner',
-        // url: 'mongodb://heroku_qsjg9m7p:jklhg9edv91jg58aeah2shr4jk@ds055742.mlab.com:55742/heroku_qsjg9m7p',
+        // url: 'mongodb://localhost:27017/food-scanner',
+        url: 'mongodb://heroku_qsjg9m7p:jklhg9edv91jg58aeah2shr4jk@ds055742.mlab.com:55742/heroku_qsjg9m7p',
         collectionName: 'products',
         autoRemove: true
     };
