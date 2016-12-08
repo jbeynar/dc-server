@@ -1,17 +1,16 @@
 'use strict';
 
-import * as fs from 'fs';
 import * as Promise from 'bluebird';
 import * as _ from 'lodash';
-import {readdirSync} from "fs";
+import {readdirSync,realpathSync,readdir} from "fs";
 import {log} from './logger';
 import {Task} from "../shared/typings";
 
-const JOBS_PATH = fs.realpathSync('./jobs');
+const JOBS_PATH = realpathSync('./jobs');
 
 export function getJobs() {
     return new Promise((resolve) => {
-        fs.readdir(JOBS_PATH, (err, data) => {
+        readdir(JOBS_PATH, (err, data) => {
             resolve(_.chain(data).filter(name => name.match(/.*js$/)).value());
         });
     });

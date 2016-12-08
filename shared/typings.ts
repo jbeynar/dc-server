@@ -48,6 +48,17 @@ export abstract class TaskDownload extends Task {
     }
 }
 
+export abstract class TaskNightmare extends Task {
+    type: string = 'TaskNightmare';
+    name: string;
+    map: {
+        [key: string]: any;
+    };
+    $inject: any[];
+    execute() : Promise<any> {
+    }
+}
+
 export interface ITaskExtractDefinition {
     attribute?: string,
     singular?: boolean;
