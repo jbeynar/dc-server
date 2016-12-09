@@ -10,7 +10,7 @@ import {config} from '../config';
 import {TaskDownload, TaskExtract, TaskScript, TaskExport} from "../shared/typings";
 import {log} from "../libs/logger";
 
-const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/warzywa-owoce/warzywa/Cat0000';
+const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/art.-spozywcze/all?page=';
 
 const tescoLinksSourcesUrls = {
     favorites: _.map(['bounty', 'hit', 'pudliszki', 'pudliszki&page=2',
@@ -22,7 +22,7 @@ const tescoLinksSourcesUrls = {
             'kabanosy&page=3', 'kabanosy&page=4'],
         item => 'https://ezakupy.tesco.pl/groceries/pl-PL/search?query=' + item),
     range: ()=> {
-        return _.map(_.range(5309, 5764, 1), k=>baseUrl + k);
+        return _.map(_.range(1, 243, 1), k=>baseUrl + k);
     }
 };
 
@@ -31,7 +31,7 @@ export class download extends TaskDownload {
     autoRemove = true;
 
     urls() {
-        return tescoLinksSourcesUrls.favorites;
+        return tescoLinksSourcesUrls.range();
     }
 }
 
