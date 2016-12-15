@@ -1,11 +1,12 @@
 {
   "name": "jbl-repo-server",
-  "version": "0.1.0",
-  "description": "Command line utility for shares valuation in term of fundamental analysis",
+  "version": "0.1.rc1",
+  "description": "JBL Data Center",
   "main": "index.js",
   "scripts": {
     "start": "nodemon --harmony webapi.js",
-    "test": "./node_modules/.bin/istanbul cover -x *.spec.js _mocha --recursive",
+    "test": "./node_modules/.bin/mocha --recursive --harmony test/spec",
+    "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -x *.spec.js _mocha",
     "testing": "./node_modules/.bin/mocha --recursive --watch",
     "seed": "node scripts/seed.js",
     "dc": "node --harmony libs/cli"
@@ -21,7 +22,6 @@
     "new-hapi-project": "0.0.4",
     "node-libcurl": "1.0.0",
     "pg": "6.1.0",
-    "pg-rxjs": "^1.0.20",
     "proxyquire": "1.7.4",
     "rfr": "1.2.3",
     "rxjs": "5.0.0-rc.4",

@@ -25,7 +25,7 @@ const launch = proxyquire('../../libs/launch', {
     '../jobs/bmw.js':  {},
 });
 
-describe.only('Launch library', () => {
+describe('Launch library', () => {
     describe('getJobs', () => {
         it('should return only js files', done => {
             launch.getJobs().then(files => {
@@ -43,9 +43,12 @@ describe.only('Launch library', () => {
             });
         });
     });
-    describe('run', () => {
-        launch.run('tarnowiak.js', 'download').then(() => {
-
-        });
-    });
+    // TODO Hakier
+    // describe('run', () => {
+    //     it('works?',()=>{
+    //         launch.run('tarnowiak.js', 'download').then(() => {
+    //
+    //         });
+    //     });
+    // });
 });

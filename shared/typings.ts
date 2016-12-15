@@ -48,6 +48,8 @@ export abstract class TaskDownload extends Task {
     }
 }
 
+// TODO
+// WIP
 export abstract class TaskNightmare extends Task {
     type: string = 'TaskNightmare';
     name: string;
@@ -56,6 +58,7 @@ export abstract class TaskNightmare extends Task {
     };
     $inject: any[];
     execute() : Promise<any> {
+        return Promise.resolve();
     }
 }
 

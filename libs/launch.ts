@@ -36,6 +36,9 @@ export function run(jobName, jobTask){
         console.log(`\nYou did not provide task name, available tasks: ${separator}${files.join(separator)}`);
         process.exit();
     }
+    if(_.isString(jobTask)){
+        jobTask = [jobTask];
+    }
 
     let jobConfigPath = JOBS_PATH + '/' + jobName;
 
