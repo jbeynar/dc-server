@@ -29,6 +29,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
     function downloadSeries() {
         return Promise.resolve(downloadTask.urls()).then((urls) => {
             let i = 0;
+            const faildDownloads = [];
             return Promise.mapSeries(urls, function (url: string) {
                 log(++i + '/' + urls.length + ' ' + url);
                 return new Promise((resolve) => {
@@ -55,7 +56,13 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                             body: body,
                             length: body.length
                         };
+
                         log(' [' + documentHttp.code + ']', 1);
+
+                        if (200 !== documentHttp.code) {
+                            faildDownloads.push({url: url, code: documentHttp.code});
+                        }
+
                         repo.saveHttpDocument(documentHttp).then(() => {
                             const progress = i / urls.length;
                             progressNotification('terminal', downloadTask.name, progress);
@@ -65,9 +72,10 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                     });
 
                     curl.on('error', function (error, errCode) {
-                        log(`Downloader error: ${errCode}`, 1);
-                        log(error, 1);
-                        log(`Ommiting ${url}`, 1);
+                        console.log(`Downloader error: ${errCode}`);
+                        console.log(error);
+                        console.log(`Faild on ${url}`, 1);
+                        faildDownloads.push({url: url, error: error});
                         this.close();
                         resolve();
                     });
@@ -75,7 +83,14 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                     curl.perform();
 
                 }).delay(_.get(downloadTask, 'options.intervalTime', options.intervalTime));
-            }).catch(db.exceptionHandler);
+            }).catch(db.exceptionHandler).then(() => {
+                if (!_.isEmpty(faildDownloads)) {
+                    console.log('Fail on some URLs');
+                    console.log(JSON.stringify(faildDownloads, null, 4));
+                } else {
+                    console.log('All URLs downloaded successfully');
+                }
+            });
         });
     }
 

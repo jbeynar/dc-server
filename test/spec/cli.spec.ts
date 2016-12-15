@@ -17,6 +17,7 @@ describe('Launcher CLI', () => {
             'JBL Data Center Launcher 1',
             'Executing task download type TaskDownload... ',
             'Removing all http documents with name tarnowiak1/1 http://www.tarnowiak.pl/ [200]',
+            'All URLs downloaded successfully',
             'Task download complete'];
 
         shelljs.exec('npm run dc tarnowiak download', {}, (code, stdout, stderr) => {
@@ -25,6 +26,7 @@ describe('Launcher CLI', () => {
             expect(output[4]).to.be.equal(expected[1]);
             expect(output[5]).to.be.equal(expected[2]);
             expect(output[6]).to.be.equal(expected[3]);
+            expect(output[7]).to.be.equal(expected[4]);
             done();
         });
     });
