@@ -65,7 +65,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
 
                         repo.saveHttpDocument(documentHttp).then(() => {
                             const progress = i / urls.length;
-                            progressNotification('terminal', downloadTask.name, progress);
+                            progressNotification('terminal', downloadTask.type, downloadTask.name, progress);
                             this.close();
                             resolve();
                         });

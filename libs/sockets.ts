@@ -5,9 +5,10 @@ import {config} from "../config";
 
 const conn = io.connect(config.webapi.socketServer.url);
 
-export function progressNotification(jobName, taskName, progressPercent) : void {
+export function progressNotification(jobName, taskType, taskName, progressPercent) : void {
     const msg = {
         jobName: jobName,
+        taskType: taskType,
         taskName: taskName,
         progressPercent: progressPercent
     };

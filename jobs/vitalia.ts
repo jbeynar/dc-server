@@ -88,11 +88,13 @@ export class extract extends TaskExtract {
 
     process(extracted, doc) {
         if (!_.get(extracted, 'primaryNames.name')) {
-            console.log(`Excluded cause have no name ${doc.url}`);
+            // Excluded cause have no name ${doc.url}
+            // This ilustrate needs of validators
             return;
         }
         if ('E' !== _.get(extracted, 'primaryNames.code[0]')) {
-            console.log(`Excluded cause invalid code ${doc.url}`);
+            // Excluded cause invalid code ${doc.url}
+            // This job is only for E-named codes
             return;
         }
         extracted.name = extracted.primaryNames.name;

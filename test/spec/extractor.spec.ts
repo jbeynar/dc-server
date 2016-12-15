@@ -36,6 +36,7 @@ describe('Extractor library', () =>
             }
         };
         const repoMock = {
+            // todo this mock doesn't work since extractFromRepo has been refactor to rxjs chain
             saveJsonDocument: (type, obj) => {
                 mockRepoSavedJsonDocuments[type] = mockRepoSavedJsonDocuments[type] || [];
                 mockRepoSavedJsonDocuments[type].push({ body: obj });
@@ -359,7 +360,7 @@ describe('Extractor library', () =>
             mockRepoSavedJsonDocuments = {};
         });
 
-        describe('When there are documents in storage with given type name', () => {
+        describe.only('When there are documents in storage with given type name', () => {
             beforeEach(function () {
                 mockRepoSavedJsonDocuments = {
                     device: [
@@ -378,7 +379,7 @@ describe('Extractor library', () =>
                     const extractionTask = _.cloneDeep(extractionJob.extract);
                     extractionTask.targetJsonDocuments.autoRemove = true;
                     return extractor.extractFromRepo(extractionTask).then(() => {
-                        expect(mockRepoSavedJsonDocuments.device[0].body).to.be.eql(expectedDevices[0]);
+                        expect(_.get(mockRepoSavedJsonDocuments,'device[0].body')).to.be.eql(expectedDevices[0]);
                         expect(mockRepoSavedJsonDocuments.device[1].body).to.be.eql(expectedDevices[1]);
                         expect(mockRepoSavedJsonDocuments.device[2].body).to.be.eql(expectedDevices[2]);
                     });

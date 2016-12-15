@@ -1,14 +1,17 @@
 'use strict';
 
+import * as pg from 'pg';
+import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
 import * as cheerio from 'cheerio';
 import * as db from './db';
 import {useFlavour} from 'squel';
-import * as repo from './repo';
+import {removeJsonDocuments, saveJsonDocument} from './repo';
 import * as logger from './logger';
 import {TaskExtract} from "../shared/typings";
-import {emit} from "./sockets";
+import {emit, progressNotification} from "./sockets";
+import {config} from "../config";
 
 const squel = useFlavour('postgres');
 
@@ -104,38 +107,77 @@ export function extractFromRepo(extractionTask : TaskExtract)
     return new Promise((resolve)=>
     {
         if (extractionTask.targetJsonDocuments.autoRemove) {
-            return repo.removeJsonDocuments(extractionTask.targetJsonDocuments.typeName).then(resolve);
+            return removeJsonDocuments(extractionTask.targetJsonDocuments.typeName).then(resolve);
         }
         resolve();
     }).then(() =>
     {
-        let query = squel.select().from('repo.document_http');
-        _.each(extractionTask.sourceHttpDocuments, (value, field) =>
-        {
-            query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
-        });
-        query = query.toParam();
+        const pool = db.getPool(), concurrencyCount = Math.max(1, config.db.poolConfig.max - 5);
+        let i = 0, total = 10000, progress = 0;
 
-        return db.query(query.text, query.values).then((rows)=>
-        {
-            logger.log(`Extracting ${rows.length} rows...`, 1);
-            let i = 0;
-            return Promise.map(rows, (row)=>
-            {
-                return extract(row, extractionTask).then((document):Promise<any> =>
-                {
-                    if (_.isEmpty(document)) {
-                        return Promise.resolve();
-                    } else if (_.isArray(document)) {
-                        return Promise.map(document, (doc) => {
-                            return repo.saveJsonDocument(extractionTask.targetJsonDocuments.typeName, doc).then(()=>i++);
-                        });
-                    }
-                    return repo.saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document).then(()=>i++);
+        function createRepoHttpObservable(conditions: any): Rx.Observable<any> {
+
+            const query = squel.select().from('repo.document_http');
+            _.each(conditions, (value, field) => {
+                query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
+            });
+            const countQuery = query.clone().field('COUNT(id)', 'count');
+
+            return Rx.Observable.create((subscriber) => {
+                pool.connect().then((client: pg.Client) => {
+                    client.query(countQuery.toParam()).then((result) => {
+                        total = _.get(result, 'rows[0].count', total);
+                    });
+
+                    const stream: pg.Query = client.query(query.toParam(), () => {
+                    });
+
+                    stream.on('row', (row) => {
+                        subscriber.next(row);
+                    });
+
+                    stream.on('end', () => {
+                        subscriber.complete();
+                        client.release();
+                    });
                 });
-            }, {concurrency: 1}).finally(()=> {
-                logger.log(`Saved ${i} JSON documents`, 1);
+            });
+        }
+
+        var source: Rx.Observable<any> = createRepoHttpObservable(extractionTask.sourceHttpDocuments).flatMap((row) => {
+            return extract(row, extractionTask).then((document): Promise<any> => {
+                delete row.body;
+
+                if (_.isEmpty(document)) {
+                    return Promise.resolve();
+                }
+
+                if (_.isArray(document)) {
+                    return Promise.map(document, (doc) => {
+                        return saveJsonDocument(extractionTask.targetJsonDocuments.typeName, doc);
+                    });
+                }
+
+                return saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document);
+            }).then(() => {
+                i++;
+            });
+        }, concurrencyCount).bufferCount(20).map(() => {
+            progress = i / total;
+            progressNotification('terminal', extractionTask.type, extractionTask.targetJsonDocuments.typeName, progress);
+        });
+
+        return new Promise((resolve) => {
+            source.subscribe(() => {
+                // on next
+            }, (err) => {
+                console.log('Error on rx chain');
+                console.log(err && err.stack);
+            }, () => {
+                // on complete
+                resolve();
             });
         });
+
     }).then(() => emit('extractorFinished'));
 }
