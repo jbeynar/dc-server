@@ -20,12 +20,13 @@ export const config = {
         schema: 'repo',
         schemaTest: 'repo-test',
         poolConfig: {
+            ssl: true,
             max: process.env.DC_POSTGRES_POOL_MAX || 90,
             idleTimeoutMillis: 5000,
-            host: 'localhost',
-            user: 'jbl-dc',
-            password: 'jbl-dc',
-            database: 'jbl-dc'
+            host: process.env.DATABASE_HOST || 'localhost',
+            user: process.env.DATABASE_USER || 'jbl-dc',
+            password: process.env.DATABASE_PASSWORD || 'jbl-dc',
+            database: process.env.DATABASE_NAME || 'jbl-dc'
         },
         driverOptions: {
             poolIdleTimeout: 2000
