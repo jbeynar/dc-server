@@ -1,7 +1,5 @@
 'use strict';
 
-// const Hapi = require('hapi');
-
 const repo = require('./libs/repo');
 const launch = require('./libs/launch');
 import {config} from './config';

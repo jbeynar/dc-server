@@ -16,7 +16,7 @@ export const config = {
         }
     },
     db: {
-        connectionUrl: process.env.DC_POSTGRES_URL || 'postgres://jbl-dc:jbl-dc@localhost/jbl-dc',
+        connectionUrl: process.env.DATABASE_URL || 'postgres://jbl-dc:jbl-dc@localhost/jbl-dc',
         schema: 'repo',
         schemaTest: 'repo-test',
         poolConfig: {

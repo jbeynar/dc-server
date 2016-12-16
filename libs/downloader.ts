@@ -26,6 +26,11 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
         }
     }
 
+    function isDocumentExists(url) {
+        // todo
+        // repo.isDocumentExists
+    }
+
     function downloadSeries() {
         return Promise.resolve(downloadTask.urls()).then((urls) => {
             let i = 0;

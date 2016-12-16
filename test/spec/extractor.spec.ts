@@ -360,7 +360,7 @@ describe('Extractor library', () =>
             mockRepoSavedJsonDocuments = {};
         });
 
-        describe.only('When there are documents in storage with given type name', () => {
+        describe('When there are documents in storage with given type name', () => {
             beforeEach(function () {
                 mockRepoSavedJsonDocuments = {
                     device: [
