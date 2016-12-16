@@ -3,11 +3,12 @@
 import * as pg from 'pg';
 import * as Promise from 'bluebird';
 import {config} from '../config';
-import * as _ from 'lodash';
 
 var highlightStart = '\x1b[31m';
 var highlightEnd = '\x1b[0m';
 var pool = new pg.Pool(config.db.poolConfig);
+
+query(`SET search_path TO ${config.db.schema}`);
 
 export function exceptionHandler(err) {
     console.error(highlightStart + 'SQL ' + err.toString());

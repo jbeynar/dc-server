@@ -117,7 +117,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
 
         function createRepoHttpObservable(conditions: any): Rx.Observable<any> {
 
-            const query = squel.select().from('repo.document_http');
+            const query = squel.select().from('document_http');
             _.each(conditions, (value, field) => {
                 query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
             });
