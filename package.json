@@ -1,5 +1,5 @@
 {
-  "name": "jbl-repo-server",
+  "name": "jbl-dc-server",
   "version": "0.1.1",
   "description": "JBL Data Center",
   "main": "index.js",
@@ -10,7 +10,8 @@
     "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -x *.spec.js _mocha",
     "testing": "./node_modules/.bin/mocha --recursive --watch",
     "seed": "node scripts/seed.js",
-    "dc": "node --harmony libs/cli"
+    "dc": "node --harmony libs/cli",
+    "postinstall": "./node_modules/.bin/tsc"
   },
   "dependencies": {
     "bluebird": "3.4.6",
@@ -30,7 +31,8 @@
     "socket.io": "1.6.0",
     "socket.io-client": "1.7.1",
     "squel": "4.4.2",
-    "striptags": "2.1.1"
+    "striptags": "2.1.1",
+    "typescript": "2.1.4"
   },
   "author": "JBL Software",
   "devDependencies": {
