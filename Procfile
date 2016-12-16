@@ -1,1 +1,1 @@
-node webapi
+web: npm start

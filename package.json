@@ -4,7 +4,8 @@
   "description": "JBL Data Center",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --harmony webapi.js",
+    "start": "node --harmony webapi.js",
+    "develop": "nodemon --harmony webapi.js",
     "test": "./node_modules/.bin/mocha --recursive --harmony test/spec",
     "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -x *.spec.js _mocha",
     "testing": "./node_modules/.bin/mocha --recursive --watch",
