@@ -7,18 +7,20 @@ configDotEnv();
 export const config = {
     webapi: {
         httpServer: {
-            port: 3003,
-            url: 'http://localhost:3003'
+            port: process.env.DC_WEBAPI_HTTP_PORT || 3003,
+            url: process.env.DC_WEBAPI_HTTP_SERVER || 'http://localhost:3003'
         },
         socketServer: {
-            port: 3333,
-            url: 'http://localhost:3333/ns'
+            port: process.env.DC_WEBAPI_SOCKET_PORT || 3333,
+            url: process.env.DC_WEBAPI_SOCKET_SERVER || 'http://localhost:3333/ns'
         }
     },
     db: {
-        connectionUrl: 'postgres://jbl-dc:jbl-dc@localhost/jbl-dc',
+        connectionUrl: process.env.DC_POSTGRES_URL || 'postgres://jbl-dc:jbl-dc@localhost/jbl-dc',
+        schema: 'repo',
+        schemaTest: 'repo-test',
         poolConfig: {
-            max: 90,
+            max: process.env.DC_POSTGRES_POOL_MAX || 90,
             idleTimeoutMillis: 5000,
             host: 'localhost',
             user: 'jbl-dc',
