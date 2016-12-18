@@ -29,59 +29,59 @@ export function getTasks() {
     });
 }
 
-export function run(jobName, jobTask){
-    if (!jobName) {
-        const files = _.uniq(_.map(readdirSync(JOBS_PATH), file => file.replace(/\..*/, '')));
-        const separator = '\n - ';
-        console.log(`\nYou did not provide task name, available tasks: ${separator}${files.join(separator)}`);
-        process.exit();
-    }
-    if(_.isString(jobTask)){
-        jobTask = [jobTask];
-    }
-
-    let jobConfigPath = JOBS_PATH + '/' + jobName;
-
-    log(`Loading job config ${jobConfigPath}... `, 1);
-
-    const job = require(jobConfigPath);
-
-    if (!_.isObject(job)) {
-        throw new Error('Job config format is malformed');
-    }
-
-    const tasksNames = _.keys(job);
-
-    if (_.first(jobTask) === 'listTasks') {
-        log(`Job ${jobName} has ${tasksNames.length} tasks:`, 1);
-        _.each(tasksNames, (taskName, index) => {
-            log(`${index + 1}. ${taskName}`, 1);
-        });
-        process.exit();
-    }
-
-    _.each(jobTask, (task) => {
-        if (!_.has(job, task)) {
-            throw new Error(`Missing ${task} on job config`);
+export function run(jobName, jobTask) {
+    return Promise.resolve().then(() => {
+        if (!jobName) {
+            const files = _.uniq(_.map(readdirSync(JOBS_PATH), file => file.replace(/\..*/, '')));
+            const separator = '\n - ';
+            log(`\nYou did not provide task name, available tasks: ${separator}${files.join(separator)}`);
+            return;
         }
-    });
-
-    if (_.isEmpty(jobTask)) {
-        jobTask = tasksNames;
-    }
-
-    return Promise.mapSeries(jobTask, (taskName: string) => {
-        if (!_.isObject(job[taskName])) {
-            throw new Error('Task must be an object');
+        if(_.isString(jobTask)){
+            jobTask = [jobTask];
         }
-        let task: Task = new job[taskName];
-        log(`\nExecuting task ${taskName} type ${task.type}... `, 1);
-        return task.execute().then(() => {
-            log(`Task ${taskName} complete`, 1);
+        let jobConfigPath = JOBS_PATH + '/' + jobName;
+
+        log(`Loading job config ${jobConfigPath}... `, 1);
+        const job = require(jobConfigPath);
+
+        if (!_.isObject(job)) {
+            throw new Error('Job config format is malformed');
+        }
+
+        const tasksNames = _.keys(job);
+
+        if (_.first(jobTask) === 'listTasks') {
+            log(`Job ${jobName} has ${tasksNames.length} tasks:`, 1);
+            _.each(tasksNames, (taskName, index) => {
+                log(`${index + 1}. ${taskName}`, 1);
+            });
+            return;
+        }
+
+        _.each(jobTask, (task) => {
+            if (!_.has(job, task)) {
+                throw new Error(`Missing ${task} on job config`);
+            }
         });
-    }).finally(() => {
-        // setTimeout cause socket-client makes process hanging.
-        // todo socket client disconnect in elegant way
-        setTimeout(process.exit, 10);
+
+        if (_.isEmpty(jobTask)) {
+            jobTask = tasksNames;
+        }
+
+        return Promise.mapSeries(jobTask, (taskName: string) => {
+            let Task = job[taskName];
+            if (!_.isFunction(Task)) {
+                throw new Error('Task must be a function');
+            }
+            let task: Task = new Task;
+            if (!task.execute) {
+                throw new Error('Task must be executable');
+            }
+            log(`\nExecuting task ${taskName} type ${task.type}... `, 1);
+            return task.execute().then(() => {
+                log(`Task ${taskName} complete`, 1);
+            });
+        });
     });
 }
