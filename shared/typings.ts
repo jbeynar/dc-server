@@ -1,7 +1,7 @@
 import {downloadHttpDocuments} from "../libs/downloader";
 import * as Promise from 'bluebird';
 import {extractFromRepo} from "../libs/extractor";
-import {exportIntoMongo} from "../libs/exporter";
+import {exportIntoMongo, exportIntoCsv} from "../libs/exporter";
 
 export interface IDocumentHttp {
     id?: number;
@@ -23,6 +23,11 @@ export interface IJsonSearchConfig {
     type?: string;
     whitelist?: [any];
     blacklist?: [any];
+}
+
+export interface IJsonSearchResults {
+    properties: string[],
+    results: any[]
 }
 
 export abstract class Task {
@@ -116,5 +121,17 @@ export abstract class TaskExport extends Task {
 
     execute(): Promise<any> {
         return exportIntoMongo(this);
+    }
+}
+
+export abstract class TaskExportCsv extends Task {
+    type: string = 'TaskExport';
+    sourceTypeName: string;
+
+    execute(): Promise<any> {
+        const ts = new Date();
+        const t = [ts.getUTCFullYear(), ts.getUTCDay(), ts.getHours(), ts.getMinutes()];
+        const filename = `${this.sourceTypeName}-${t.join('-')}.csv`;
+        return exportIntoCsv(this.sourceTypeName, filename);
     }
 }

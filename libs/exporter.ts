@@ -5,8 +5,13 @@ import Promise = require('bluebird');
 import Mongo = require('mongodb');
 import pg = require('pg-rxjs');
 import Squel = require('squel')
-import {TaskExport} from "../shared/typings";
+import {TaskExport, IJsonSearchConfig, IJsonSearchResults} from "../shared/typings";
 import {config} from '../config';
+import * as json2csv from 'json2csv';
+import * as fs from 'fs';
+import {getJsonDocuments} from "./repo";
+
+const EXPORTS_PATH = fs.realpathSync('exports');
 
 const squel = Squel.useFlavour('postgres');
 const mongo = Mongo.MongoClient;
@@ -96,6 +101,29 @@ export function exportIntoMongo(exportTask : TaskExport) {
                         }
                     );
             });
+        });
+    });
+}
+
+
+export function exportIntoCsv(typeName, filename) {
+    return new Promise((resolve, reject) => {
+        const filter: IJsonSearchConfig = {type: typeName};
+        getJsonDocuments(filter).then((data: IJsonSearchResults) => {
+            const dataSet = _.map(data.results, 'body');
+            const dataFields: string[] = ["event", "date", "sport", "country", "odds", "stake", "bet", "result"];
+            try {
+                const result = json2csv({data: dataSet, fields: dataFields});
+                fs.writeFile(`${EXPORTS_PATH}/${filename}`, result, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
         });
     });
 }

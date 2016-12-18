@@ -3,7 +3,8 @@
 import * as _ from 'lodash';
 import * as Squel from 'squel';
 import * as db from './db';
-import {IJsonSearchConfig, IDocumentHttp} from "../shared/typings";
+import * as Promise from 'bluebird';
+import {IJsonSearchConfig, IDocumentHttp, IJsonSearchResults} from "../shared/typings";
 
 const squel = Squel.useFlavour('postgres');
 
@@ -20,6 +21,7 @@ export function saveJsonDocument(type, obj) {
         length: json.length || 0
     };
     const query = squel.insert().into('document_json').setFields(data).toParam();
+    //todo check wheteher it works without bluebird Promise wrapping
     return db.query(query.text, query.values);
 }
 
