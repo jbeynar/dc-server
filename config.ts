@@ -2,7 +2,7 @@
 
 import {config as configDotEnv} from 'dotenv';
 
-configDotEnv();
+configDotEnv({silent:true});
 
 export const config = {
     webapi: {
