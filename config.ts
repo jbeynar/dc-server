@@ -5,6 +5,7 @@ import {config as configDotEnv} from 'dotenv';
 configDotEnv({silent:true});
 
 export const config = {
+    mocha: process.env.MOCHA || false,
     webapi: {
         httpServer: {
             port: process.env.DC_WEBAPI_HTTP_PORT || 3003,
@@ -17,11 +18,10 @@ export const config = {
     },
     db: {
         connectionUrl: process.env.DATABASE_URL || 'postgres://jbl-dc:jbl-dc@localhost/jbl-dc',
-        schema: 'repo',
-        schemaTest: 'repo-test',
+        schema: process.env.MOCHA ? 'testrepo' : 'repo',
         poolConfig: {
-            ssl: true,
-            max: process.env.DC_POSTGRES_POOL_MAX || 90,
+            ssl: process.env.DATABASE_SSL || false,
+            max: process.env.DATABASE_POOL_MAX || 90,
             idleTimeoutMillis: 5000,
             host: process.env.DATABASE_HOST || 'localhost',
             user: process.env.DATABASE_USER || 'jbl-dc',

@@ -145,25 +145,4 @@ describe('Repo library', function ()
             });
         });
     });
-
-    describe('mergeDocuments', ()=>
-    {
-
-        // proxyquire db.query for many times response with diffrent data - how?
-        const repo = require('../../libs/repo');
-
-        //TODO: fix it to work without running DB
-        it('should merge two document types', ()=>
-        {
-            var type1Cfg = {
-                type: 'valuation.biznesradar',
-                id: 'symbol'
-            };
-            var type2Cfg = {
-                type: 'valuation.stockwatch',
-                id: 'symbol'
-            };
-            return repo.mergeDocuments(type1Cfg, type2Cfg, 'merged');
-        });
-    });
 });

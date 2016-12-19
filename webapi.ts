@@ -119,4 +119,6 @@ function setupSocketServer() {
 }
 
 setupHttpServer();
-setupSocketServer();
+if (!config.mocha) {
+    setupSocketServer();
+}

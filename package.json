@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node --harmony webapi.js",
     "develop": "nodemon --harmony webapi.js",
-    "test": "./node_modules/.bin/mocha --recursive --harmony test/spec",
-    "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover -x *.spec.js _mocha",
-    "testing": "./node_modules/.bin/mocha --recursive --watch",
+    "test": "MOCHA=true ./node_modules/.bin/mocha --recursive --harmony test/spec",
+    "coverage": "MOCHA=true node --harmony node_modules/istanbul/lib/cli.js cover -x *.spec.js _mocha",
+    "testing": "MOCHA=true ./node_modules/.bin/mocha --recursive --watch",
     "seed": "node scripts/seed.js",
     "dc": "node --harmony libs/cli"
   },

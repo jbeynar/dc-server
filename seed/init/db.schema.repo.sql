@@ -1,7 +1,7 @@
-DROP SCHEMA IF EXISTS repo CASCADE;
-CREATE SCHEMA repo;
+DROP SCHEMA IF EXISTS __SCHEMANAME__ CASCADE;
+CREATE SCHEMA __SCHEMANAME__;
 
-SET search_path TO repo;
+SET search_path TO __SCHEMANAME__;
 
 CREATE SEQUENCE document_http_id_seq
     START WITH 1001
@@ -43,5 +43,3 @@ CREATE TABLE document_json (
 
 ALTER TABLE ONLY document_json ADD CONSTRAINT "document_json_PK" PRIMARY KEY (id);
 ALTER TABLE ONLY document_http ADD CONSTRAINT "document_http_PK" PRIMARY KEY (id);
-
-SET search_path TO public;

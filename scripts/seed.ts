@@ -1,5 +1,6 @@
 'use strict';
 
+import {config} from "../config";
 const promise = require('bluebird');
 const fs = promise.promisifyAll(require('fs'));
 const db = require('../libs/db');
@@ -17,6 +18,7 @@ export function seed() {
     }).then(function (scripts) {
         var queryPromises = [];
         _.forEach(scripts, function (sql) {
+            sql = sql.replace(/__SCHEMANAME__/g, config.db.schema);
             queryPromises.push(db.query(sql));
         });
         return promise.all(queryPromises).then(() => {
