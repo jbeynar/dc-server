@@ -1,87 +1,62 @@
 'use strict';
 
 import chai = require('chai');
-import proxyquire = require('proxyquire');
-import promise = require('bluebird');
+import Promise = require('bluebird');
+import utils = require('../utils');
 import _ = require('lodash');
+import {IDocumentHttp} from "../../shared/typings";
+import * as repo from '../../libs/repo';
 
 const expect = chai.expect;
 
-var mockDocumentsSet = [
-    {
-        id: 1,
-        type: 'valuation',
-        body: {
-            symbol: 'ETA',
-            price: 23,
-            value_1: 30,
-            value_2: 30
-        },
-        length: 256,
-        ts: new Date()
-    },
-    {
-        id: 2,
-        type: 'valuation',
-        body: {
-            symbol: 'ABS',
-            price: 23
-        },
-        length: 512,
-        ts: new Date()
-    },
-    {
-        id: 3,
-        type: 'valuation',
-        body: {
-            symbol: 'ABM',
-            cz: 12,
-            cwk: 23,
-            value_2: 44
-        },
-        length: 1024,
-        ts: new Date()
-    }
-];
+describe('Repo library provide database abstraction layer', () => {
 
-var mockTypesSet = [
-    {
-        type: 'valuation',
-        count: 476,
-        last_update: new Date('2016-03-29 10:59:06.564129')
-    },
-    {
-        type: 'valuation',
-        count: 476,
-        last_update: new Date('2016-03-30 07:38:22.03407')
-    },
-    {
-        type: 'valuation',
-        count: 117,
-        last_update: new Date('2016-04-04 22:19:52.356274')
-    }
-];
+    before(() => {
+        const documents = [
+            {
+                type: 'valuation',
+                body: JSON.stringify({
+                    symbol: 'ETA',
+                    price: 23,
+                    value_1: 30,
+                    value_2: 30
+                }),
+                length: 256,
+                ts: (new Date()).toISOString()
+            },
+            {
+                type: 'valuation',
+                body: JSON.stringify({
+                    symbol: 'ABS',
+                    price: 23
+                }),
+                length: 512,
+                ts: (new Date()).toISOString()
+            },
+            {
+                type: 'valuation',
+                body: JSON.stringify({
+                    symbol: 'ABM',
+                    cz: 12,
+                    cwk: 23,
+                    value_2: 44
+                }),
+                length: 1024,
+                ts: (new Date()).toISOString()
+            }
+        ];
+        return utils.truncateRepoTable('document_json').then(() => {
+            return Promise.mapSeries(documents, (document) => {
+                return utils.insertRepoRecord('document_json', document);
+            });
+        });
+    });
 
-describe('Repo library', function ()
-{
     describe('getJsonDocuments', function ()
     {
-        let repo;
-
-        before(function ()
-        {
-            var stub = {
-                query: function ()
-                {
-                    return promise.resolve(_.cloneDeep(mockDocumentsSet));
-                }
-            };
-            repo = proxyquire('../../libs/repo', {'./db': stub});
-        });
-
         it('accept whitelist', () =>
         {
-            return repo.getJsonDocuments({whitelist: ['symbol', 'cz']}).then(function (data)
+            return repo.getJsonDocuments({whitelist: ['symbol', 'cz']}).then((data) =>
             {
                 expect(data.results[0].body).to.eql({
                     symbol: 'ETA',
@@ -100,7 +75,7 @@ describe('Repo library', function ()
 
         it('accept blacklist', () =>
         {
-            return repo.getJsonDocuments({blacklist: ['cwk']}).then(function (data)
+            return repo.getJsonDocuments({blacklist: ['cwk']}).then((data) =>
             {
                 expect(data.results[0].body).to.eql({
                     cz: undefined,
@@ -121,27 +96,65 @@ describe('Repo library', function ()
     });
 
 
-    describe('getTypes', function ()
+    describe('getTypes', () =>
     {
-        let repo;
-
-        before(function ()
+        it('should return types stats', () =>
         {
-            var stub = {
-                query: function ()
-                {
-                    return promise.resolve(_.cloneDeep(mockTypesSet));
-                }
-            };
-            repo = proxyquire('../../libs/repo', {'./db': stub});
-        });
-
-        it('should return types stats', function ()
-        {
-            return repo.getJsonDocumentsTypes().then(function (data)
+            return repo.getJsonDocumentsTypes().then((data) =>
             {
                 expect(data).to.be.an('array');
-                return expect(data).to.eql(mockTypesSet);
+                expect(data[0].type).to.eql('valuation');
+                expect(data[0].count).to.eql('3');
+            });
+        });
+    });
+
+    const documentHttp: IDocumentHttp = {
+        name: 'example',
+        type: 'text/html; charset=UTF-8',
+        url: 'https://example.com/',
+        host: 'example.com',
+        path: '/',
+        query: null,
+        code: 200,
+        headers: JSON.stringify([]),
+        body: '<html><body><p>contents</p></body></html>',
+        length: 100
+    };
+
+    describe('Http documents interface', () => {
+        before(() => {
+            return utils.truncateRepoTable('document_http');
+        });
+
+        it('should save http document and provide appropriate summary', () => {
+            return repo.saveHttpDocument(documentHttp).then(() => {
+                return repo.getHttpDocumentsSummary().then((data) => {
+                    expect(data).to.be.an('array');
+                    expect(data[0].name).to.be.equal('example');
+                    expect(data[0].count).to.be.equal('1');
+                    expect(data[0].avg_size).to.be.equal('100');
+                });
+            });
+        });
+
+        it('should remove http document and provide appropriate summary', () => {
+            return repo.removeHttpDocumentsByName('example').then(() => {
+                return repo.getHttpDocumentsSummary().then((data) => {
+                    expect(data).to.be.an('array');
+                    expect(data).to.be.empty;
+                });
+            });
+        });
+
+        it('', () => {
+            return repo.saveHttpDocument(documentHttp).then(() => {
+                return repo.getHttpDocumentsSummary().then((data) => {
+                    expect(data).to.be.an('array');
+                    expect(data[0].name).to.be.equal('example');
+                    expect(data[0].count).to.be.equal('1');
+                    expect(data[0].avg_size).to.be.equal('100');
+                });
             });
         });
     });
