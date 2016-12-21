@@ -179,5 +179,5 @@ export function extractFromRepo(extractionTask : TaskExtract)
             });
         });
 
-    }).then(() => emit('extractorFinished'));
+    });
 }

@@ -99,5 +99,5 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
         });
     }
 
-    return autoRemoveSeries().then(downloadSeries).then(() => emit('downloaderFinished'));
+    return autoRemoveSeries().then(downloadSeries);
 }

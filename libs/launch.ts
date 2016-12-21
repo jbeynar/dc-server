@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import {readdirSync,realpathSync,readdir} from "fs";
 import {log} from './logger';
 import {Task} from "../shared/typings";
+import {progressNotification} from "./sockets";
 
 const JOBS_PATH = realpathSync('./jobs');
 
@@ -75,12 +76,15 @@ export function run(jobName, jobTask) {
                 throw new Error('Task must be a function');
             }
             let task: Task = new Task;
+            progressNotification(job.name, task.type, taskName, -1);
             if (!task.execute) {
                 throw new Error('Task must be executable');
             }
             log(`\nExecuting task ${taskName} type ${task.type}... `, 1);
+            progressNotification(job.name, task.type, taskName, -2);
             return task.execute().then(() => {
                 log(`Task ${taskName} complete`, 1);
+                progressNotification(job.name, task.type, taskName, -100);
             });
         });
     });

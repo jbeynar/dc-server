@@ -6,6 +6,8 @@ import {config} from './config';
 
 import * as _ from 'lodash';
 import {Server} from 'hapi';
+import {error} from "./libs/logger";
+import {debugNotification} from "./libs/sockets";
 
 const RepoApi = {
     getJsonDocuments: {
@@ -80,7 +82,7 @@ const LaunchApi = {
 function setupHttpServer() {
     const server = new Server();
 
-    server.connection({port: process.env.PORT, routes: {cors: true}});
+    server.connection({port: config.webapi.httpServer.port, routes: {cors: true}});
 
     _.forEach(RepoApi, (route) => {
         server.route({method: route.method, path: route.path, handler: route.handler});
@@ -90,11 +92,12 @@ function setupHttpServer() {
         server.route({method: route.method, path: route.path, handler: route.handler});
     });
 
-    server.start((err) => {
+    return server.start((err) => {
         if (err) {
+            error(err);
             throw err;
         }
-        console.log('Http server running at:', server.info.uri);
+        console.log('DC WEB API starts at:', server.info.uri);
     });
 }
 
@@ -103,8 +106,7 @@ function setupSocketServer() {
     const ns = io.of('/ns');
     const forwardEvents = [
         'progressNotification',
-        'extractorFinished',
-        'downloaderFinished'
+        'logger'
     ];
 
     ns.on('connection', (conn) => {
@@ -112,10 +114,12 @@ function setupSocketServer() {
         _.each(forwardEvents, event => conn.on(event, msg => ns.emit(event, msg)));
     });
 
-    console.log(`Sockets server running at ${config.webapi.socketServer.port}`);
+    debugNotification('log', 'JBL DC Server starts');
+    console.log(`DC Sockets server starts at ${config.webapi.socketServer.url}`);
 }
 
-setupHttpServer();
 if (!config.mocha) {
     setupSocketServer();
 }
+
+setupHttpServer();

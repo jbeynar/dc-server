@@ -8,7 +8,7 @@ export const config = {
     mocha: process.env.MOCHA || false,
     webapi: {
         httpServer: {
-            port: process.env.DC_WEBAPI_HTTP_PORT || 3003,
+            port: process.env.PORT || 3003,
             host: process.env.DC_WEBAPI_HTTP_SERVER || 'localhost'
         },
         socketServer: {
