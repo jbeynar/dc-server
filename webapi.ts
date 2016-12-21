@@ -80,7 +80,7 @@ const LaunchApi = {
 function setupHttpServer() {
     const server = new Server();
 
-    server.connection({port: config.webapi.httpServer.port, host: config.webapi.httpServer.host, routes: {cors: true}});
+    server.connection({port: process.env.PORT, routes: {cors: true}});
 
     _.forEach(RepoApi, (route) => {
         server.route({method: route.method, path: route.path, handler: route.handler});
