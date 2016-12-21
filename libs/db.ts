@@ -25,10 +25,10 @@ export function query(query: string, bindings?: string[]|number[]): Promise<any>
     return new Promise((resolve) => {
         return pool.connect().then(function (client) {
             client.query(`SET search_path TO ${config.db.schema}`).then(() => {
-            return client.query(query, bindings).then(function(res) {
-                client.release();
-                resolve(res.rows);
-            }).catch(exceptionHandler);
+                client.query(query, bindings).then(function (res) {
+                    client.release();
+                    resolve(res.rows);
+                }).catch(exceptionHandler);
             }).catch(exceptionHandler);
         }).catch(exceptionHandler);
     }).catch(exceptionHandler);

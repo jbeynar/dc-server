@@ -117,7 +117,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
 
         function createRepoHttpObservable(conditions: any): Rx.Observable<any> {
 
-            const query = squel.select().from('document_http');
+            const query = squel.select().from(config.db.schema + '.document_http');
             _.each(conditions, (value, field) => {
                 query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
             });
@@ -127,6 +127,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
                 pool.connect().then((client: pg.Client) => {
                     client.query(countQuery.toParam()).then((result) => {
                         total = _.get(result, 'rows[0].count', total);
+                        logger.log(`Extracting ${total} rows...`, 1);
                     });
 
                     const stream: pg.Query = client.query(query.toParam(), () => {
@@ -154,13 +155,12 @@ export function extractFromRepo(extractionTask : TaskExtract)
 
                 if (_.isArray(document)) {
                     return Promise.map(document, (doc) => {
+                        i++;
                         return saveJsonDocument(extractionTask.targetJsonDocuments.typeName, doc);
                     });
                 }
-
-                return saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document);
-            }).then(() => {
                 i++;
+                return saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document);
             });
         }, concurrencyCount).bufferCount(20).map(() => {
             progress = i / total;
@@ -174,7 +174,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
                 console.log('Error on rx chain');
                 console.log(err && err.stack);
             }, () => {
-                // on complete
+                logger.log(`Saved ${i} JSON documents`, 1);
                 resolve();
             });
         });

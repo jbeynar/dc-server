@@ -3,7 +3,6 @@
 import * as _ from 'lodash';
 import * as Squel from 'squel';
 import * as db from './db';
-import * as Promise from 'bluebird';
 import {IJsonSearchConfig, IDocumentHttp, IJsonSearchResults} from "../shared/typings";
 
 const squel = Squel.useFlavour('postgres');
@@ -25,11 +24,18 @@ export function saveJsonDocument(type, obj) {
     return db.query(query.text, query.values);
 }
 
-export function getJsonDocuments(config: IJsonSearchConfig) {
-    const query = _.cloneDeep(config);
-    const stmt = squel.select().from('document_json').order('id');
+export function getJsonDocuments(config?: IJsonSearchConfig) {
+    const query = _.cloneDeep(config) || {};
+    const stmt = squel.select().from('document_json');
     if (query.type) {
         stmt.where('type=?', query.type);
+    }
+    if (!_.isEmpty(query.sort)) {
+        _.forEach(query.sort, (direction, value) => {
+            stmt.order(`body->'${value}'`, direction === 'DESC' ? false : true);
+        });
+    } else {
+        stmt.order('id');
     }
     return db.query(stmt.toString()).then(function (rows) {
         let keys;

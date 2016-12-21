@@ -7,3 +7,4 @@ typings
 *.js.map
 .env
 coverage
+exports/*

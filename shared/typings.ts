@@ -5,7 +5,7 @@ import {exportIntoMongo, exportIntoCsv} from "../libs/exporter";
 
 export interface IDocumentHttp {
     id?: number;
-    name?: string;
+    name: string;
     type: string
     url: string;
     host: string;
@@ -16,13 +16,16 @@ export interface IDocumentHttp {
     body: string;
     length: number;
     retry_count?: number;
-    ts?: Date;
+    ts?: Date|string;
 }
 
 export interface IJsonSearchConfig {
     type?: string;
     whitelist?: [any];
     blacklist?: [any];
+    sort?: {
+        [key: string]: string;
+    }
 }
 
 export interface IJsonSearchResults {
