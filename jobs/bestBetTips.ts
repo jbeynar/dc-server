@@ -11,14 +11,15 @@ export class download extends TaskDownload {
     name = 'bestBetTips';
 
     urls() {
-        return _.times(24, (i) => {
+        return _.times(222, (i) => {
             const limitstart = i * 100;
-            return `http://bestbet.tips/tipsters/tipster/7?start=0&limitstart=${limitstart}#.WFWIRLYrJ-X`;
+            // return `http://bestbet.tips/tipsters/tipster/7?start=0&limitstart=${limitstart}#.WFWIRLYrJ-X`;
+            return `http://bestbet.tips/latest-betting-tips?start=${limitstart}#.WFgth3eZMdW`;
         });
     };
 
     options = {
-        headers: ['User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'],
+        headers: ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36'],
         intervalTime: 500
     }
 }
@@ -40,11 +41,6 @@ export class extract extends TaskExtract {
     };
     scope = 'form table.betting tbody tr';
     map = {
-        event: {
-            selector: 'td:nth-child(1) a',
-            singular: true,
-            process: cleanup
-        },
         sport: {
             selector: 'td:nth-child(1) a span img:first-child',
             attribute: 'title',
@@ -57,12 +53,12 @@ export class extract extends TaskExtract {
             singular: true,
             process: cleanup
         },
-        date: {
+        event: {
             selector: 'td:nth-child(2)',
             singular: true,
             process: cleanup
         },
-        bet: {
+        user: {
             selector: 'td:nth-child(3)',
             singular: true,
             process: cleanup
