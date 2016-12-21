@@ -8,7 +8,7 @@ const $http = require('http-as-promised');
 const expect = chai.expect;
 
 function url(path) {
-    return config.webapi.httpServer.url + path;
+    return `http://${config.webapi.httpServer.host}:${config.webapi.httpServer.port}${path}`;
 }
 
 describe('Provide webapi as a http server', () => {

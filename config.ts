@@ -9,7 +9,7 @@ export const config = {
     webapi: {
         httpServer: {
             port: process.env.DC_WEBAPI_HTTP_PORT || 3003,
-            url: process.env.DC_WEBAPI_HTTP_SERVER || 'http://localhost:3003'
+            host: process.env.DC_WEBAPI_HTTP_SERVER || 'localhost'
         },
         socketServer: {
             port: process.env.DC_WEBAPI_SOCKET_PORT || 3333,

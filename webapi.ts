@@ -7,9 +7,6 @@ import {config} from './config';
 import * as _ from 'lodash';
 import {Server} from 'hapi';
 
-const httpServerPort = config.webapi.httpServer.port;
-const socketPort = config.webapi.socketServer.port;
-
 const RepoApi = {
     getJsonDocuments: {
         method: 'POST', path: '/repo/json/{type}', handler: function (request, reply) {
@@ -83,7 +80,7 @@ const LaunchApi = {
 function setupHttpServer() {
     const server = new Server();
 
-    server.connection({port: httpServerPort, routes: {cors: true}});
+    server.connection({port: config.webapi.httpServer.port, host: config.webapi.httpServer.host, routes: {cors: true}});
 
     _.forEach(RepoApi, (route) => {
         server.route({method: route.method, path: route.path, handler: route.handler});
@@ -102,7 +99,7 @@ function setupHttpServer() {
 }
 
 function setupSocketServer() {
-    const io = require('socket.io')(socketPort);
+    const io = require('socket.io')(config.webapi.socketServer.port);
     const ns = io.of('/ns');
     const forwardEvents = [
         'progressNotification',
@@ -115,7 +112,7 @@ function setupSocketServer() {
         _.each(forwardEvents, event => conn.on(event, msg => ns.emit(event, msg)));
     });
 
-    console.log(`Sockets server running at ${socketPort}`);
+    console.log(`Sockets server running at ${config.webapi.socketServer.port}`);
 }
 
 setupHttpServer();
