@@ -10,7 +10,7 @@ import {useFlavour} from 'squel';
 import {removeJsonDocuments, saveJsonDocument} from './repo';
 import * as logger from './logger';
 import {TaskExtract} from "../shared/typings";
-import {emit, progressNotification} from "./sockets";
+import {progressNotification} from "./sockets";
 import {config} from "../config";
 
 const squel = useFlavour('postgres');

@@ -8,7 +8,7 @@ import * as urlInfoService from 'url';
 import {Curl} from 'node-libcurl';
 import {log} from "./logger";
 import {TaskDownload} from "../shared/typings";
-import {progressNotification, emit} from "./sockets";
+import {progressNotification} from "./sockets";
 
 const defaultOptions = {
     intervalTime: 600
@@ -17,7 +17,7 @@ const defaultOptions = {
 export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> {
     const options = defaultOptions;
 
-    function autoRemoveSeries() {
+    function autoRemoveSeries():Promise<any> {
         if (downloadTask.autoRemove) {
             log(`Removing all http documents with name ${downloadTask.name}`);
             return repo.removeHttpDocumentsByName(downloadTask.name);

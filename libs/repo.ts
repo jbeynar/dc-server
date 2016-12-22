@@ -1,5 +1,6 @@
 'use strict';
 
+import * as Promise from 'bluebird';
 import * as _ from 'lodash';
 import * as Squel from 'squel';
 import * as db from './db';
@@ -71,22 +72,30 @@ export function getJsonDocuments(config?: IJsonSearchConfig) {
     });
 }
 
-export function getJsonDocumentsTypes() {
+export function isDocumentNotExists(url: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+        return db.query('SELECT COUNT(*) as count FROM document_http WHERE url', [url]).then((rows) => {
+            return parseInt(rows[0].count) > 0 ? reject() : resolve();
+        });
+    });
+}
+
+export function getJsonDocumentsTypes(): Promise<any[]> {
     return db.query('SELECT type, COUNT(*) as count, MAX(ts) as last_change FROM document_json GROUP BY type');
 }
 
-export function saveHttpDocument(data: IDocumentHttp) {
+export function saveHttpDocument(data: IDocumentHttp): Promise<any[]> {
     const query = squel.insert().into('document_http').setFields(data).toParam();
     return db.query(query.text, query.values);
 }
 
-export function getHttpDocumentsSummary() {
+export function getHttpDocumentsSummary(): Promise<any[]> {
     const query = 'SELECT name, COUNT(*) as count, AVG(length)::bigint as avg_size, MAX(ts) as latest ' +
         'FROM document_http GROUP BY name';
     return db.query(query);
 }
 
-export function removeHttpDocumentsByName(name) {
+export function removeHttpDocumentsByName(name: string): Promise<any[]> {
     const query = 'DELETE FROM document_http WHERE name LIKE $1';
     return db.query(query, [name]);
 }
