@@ -72,10 +72,10 @@ export function getJsonDocuments(config?: IJsonSearchConfig) {
     });
 }
 
-export function isDocumentNotExists(url: string): Promise<any> {
+export function isDocumentExists(url: string): Promise<any> {
     return new Promise((resolve, reject) => {
-        return db.query('SELECT COUNT(*) as count FROM document_http WHERE url', [url]).then((rows) => {
-            return parseInt(rows[0].count) > 0 ? reject() : resolve();
+        return db.query('SELECT COUNT(*) as count FROM document_http WHERE url LIKE $1', [url]).then((rows) => {
+            return parseInt(rows[0].count) > 0 ? resolve() : reject();
         });
     });
 }

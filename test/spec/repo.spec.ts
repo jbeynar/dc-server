@@ -147,13 +147,20 @@ describe('Repo library provide database abstraction layer', () => {
             });
         });
 
-        it('', () => {
-            return repo.saveHttpDocument(documentHttp).then(() => {
-                return repo.getHttpDocumentsSummary().then((data) => {
-                    expect(data).to.be.an('array');
-                    expect(data[0].name).to.be.equal('example');
-                    expect(data[0].count).to.be.equal('1');
-                    expect(data[0].avg_size).to.be.equal('100');
+        it('rejects if documents not exists', (done) => {
+            repo.removeHttpDocumentsByName('example').then(() => {
+                repo.isDocumentExists('https://example.com/').catch(() => {
+                    done();
+                });
+            });
+        });
+
+        it('resolves if documents exists', (done) => {
+            repo.saveHttpDocument(documentHttp).then(() => {
+                repo.isDocumentExists('https://example.com/').then(() => {
+                    done();
+                }).catch(() => {
+                    throw new Error('shit hole');
                 });
             });
         });
