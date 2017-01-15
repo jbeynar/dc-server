@@ -89,12 +89,22 @@ export function extract(document, extractionTask, whitelist?)
             return reject(new Error(errorCodes.taskMalformedStructure));
         }
 
-        $ = cheerio.load(document.body);
-
-        if (extractionTask.scope) {
-            resolve(_.map($(extractionTask.scope), scope => extractAll($(scope), extractionTask.map)));
+        if (_.isEmpty(extractionTask.map)) {
+            try {
+                resolve(JSON.parse(document.body));
+            } catch (err) {
+                logger.error('Extractor was trying to save raw json cause map was not specified');
+                logger.error(err);
+                reject(err);
+            }
         } else {
-            resolve(extractAll($('html'), extractionTask.map));
+            $ = cheerio.load(document.body);
+
+            if (extractionTask.scope) {
+                resolve(_.map($(extractionTask.scope), scope => extractAll($(scope), extractionTask.map)));
+            } else {
+                resolve(extractAll($('html'), extractionTask.map));
+            }
         }
     }).then((extracted) =>
     {

@@ -28,12 +28,7 @@ export class extract extends TaskExtract {
         autoRemove: true
     };
 
-    map = {
-        data: 'pre'
-    };
-
     process(extracted: any, doc: IDocumentHttp): any {
-        console.log(extracted);
-        return extracted;
+        return _.get(extracted, 'data.product');
     }
 }
