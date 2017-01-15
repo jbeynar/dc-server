@@ -6,8 +6,7 @@ import {config} from './config';
 
 import * as _ from 'lodash';
 import {Server} from 'hapi';
-import {error} from "./libs/logger";
-import {debugNotification} from "./libs/sockets";
+import {error, log} from "./libs/logger";
 
 const RepoApi = {
     getJsonDocuments: {
@@ -32,6 +31,13 @@ const RepoApi = {
     removeJsonType: {
         method: 'DELETE', path: '/repo/json/{type}', handler: function (request, reply) {
             return repo.removeJsonDocuments(request.params.type).then((result) => {
+                reply({data: result});
+            })
+        }
+    },
+    getHttpDocument: {
+        method: 'GET', path: '/repo/http/{type}/{offset}', handler: function (request, reply) {
+            return repo.getHttpDocument(request.params.type, request.params.offset).then((result) => {
                 reply({data: result});
             })
         }
@@ -97,7 +103,7 @@ function setupHttpServer() {
             error(err);
             throw err;
         }
-        console.log('DC WEB API starts at:', server.info.uri);
+        log(`DC WEB API starts at: ${server.info.uri}`, 1);
     });
 }
 
@@ -114,8 +120,7 @@ function setupSocketServer() {
         _.each(forwardEvents, event => conn.on(event, msg => ns.emit(event, msg)));
     });
 
-    debugNotification('log', 'JBL DC Server starts');
-    console.log(`DC Sockets server starts at ${config.webapi.socketServer.url}`);
+    log(`DC Sockets server starts at ${config.webapi.socketServer.url}`, 1);
 }
 
 if (!config.mocha) {

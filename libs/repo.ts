@@ -84,6 +84,12 @@ export function getJsonDocumentsTypes(): Promise<any[]> {
     return db.query('SELECT type, COUNT(*) as count, MAX(ts) as last_change FROM document_json GROUP BY type');
 }
 
+export function getHttpDocument(name: string, offset: number): Promise<any> {
+    return db.query('SELECT * FROM repo.document_http WHERE name LIKE $1  ORDER BY id OFFSET $2 LIMIT 1', [name, '' + offset]).then((results) => {
+        return _.first(results);
+    });
+}
+
 export function saveHttpDocument(data: IDocumentHttp): Promise<any[]> {
     const query = squel.insert().into('document_http').setFields(data).toParam();
     return db.query(query.text, query.values);
@@ -99,3 +105,5 @@ export function removeHttpDocumentsByName(name: string): Promise<any[]> {
     const query = 'DELETE FROM document_http WHERE name LIKE $1';
     return db.query(query, [name]);
 }
+
+

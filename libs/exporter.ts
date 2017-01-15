@@ -64,7 +64,7 @@ export function exportIntoMongo(exportTask : TaskExport) {
                 handleError(err);
                 const pool = pg.Pool(config.db.connectionUrl);
                 var query = squel.select()
-                    .from('document_json')
+                    .from('repo.document_json')
                     .field('id')
                     .field('body')
                     .where('type=?', _.get(exportTask, 'sourceJsonDocuments.typeName'));

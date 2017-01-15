@@ -4,10 +4,9 @@ import * as pg from 'pg';
 import * as Promise from 'bluebird';
 import {config} from '../config';
 import {Client} from "../node_modules/@types/pg/index";
+import {error} from "./logger";
 
-var highlightStart = '\x1b[31m';
-var highlightEnd = '\x1b[0m';
-var pool = new pg.Pool(config.db.poolConfig);
+const pool = new pg.Pool(config.db.poolConfig);
 
 let searchPathSet = false;
 
@@ -22,14 +21,14 @@ function setSearchPath(client: Client): Promise<Client> {
 }
 
 export function exceptionHandler(err) {
-    console.error(highlightStart + 'SQL ' + err.toString());
+    error('SQL ' + err.toString());
     if (err.detail) {
-        console.error('detail: ' + err.detail);
+        error('detail: ' + err.detail);
     }
-    console.error('code: ' + err.code);
-    console.error('position: ' + err.position);
-    console.error('routine: ' + err.routine);
-    console.log(err.stack, highlightEnd);
+    error('code: ' + err.code);
+    error('position: ' + err.position);
+    error('routine: ' + err.routine);
+    error(err.stack);
 }
 
 export function query(query: string, bindings?: string[]|number[]): Promise<any[]> {
