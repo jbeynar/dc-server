@@ -19,7 +19,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
 
     function autoRemoveSeries():Promise<any> {
         if (downloadTask.autoRemove) {
-            log(`Removing all http documents with name ${downloadTask.name}`);
+            log(`Removing all http documents with name ${downloadTask.name}`, 1);
             return repo.removeHttpDocumentsByName(downloadTask.name);
         } else {
             return Promise.resolve();
