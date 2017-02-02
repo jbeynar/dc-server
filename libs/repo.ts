@@ -38,6 +38,13 @@ export function getJsonDocuments(config?: IJsonSearchConfig) {
     } else {
         stmt.order('id');
     }
+
+    if (query.random) {
+        // todo dynamic random / count all
+        stmt.offset(_.random(0, 2000));
+        stmt.limit(10);
+    }
+
     return db.query(stmt.toString()).then(function (rows) {
         let keys;
         let allProps = {};

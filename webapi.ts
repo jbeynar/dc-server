@@ -7,14 +7,16 @@ import {config} from './config';
 import * as _ from 'lodash';
 import {Server} from 'hapi';
 import {error, log} from "./libs/logger";
+import {IJsonSearchConfig} from "./shared/typings";
 
 const RepoApi = {
     getJsonDocuments: {
         method: 'POST', path: '/repo/json/{type}', handler: function (request, reply) {
-            var query = {
+            var query:IJsonSearchConfig = {
                 type: request.params.type,
                 blacklist: request.payload.blacklist,
-                whitelist: request.payload.whitelist
+                whitelist: request.payload.whitelist,
+                random: true
             };
             return repo.getJsonDocuments(query).then((result) => {
                 reply({data: result});

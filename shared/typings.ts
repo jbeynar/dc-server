@@ -23,6 +23,7 @@ export interface IJsonSearchConfig {
     type?: string;
     whitelist?: [any];
     blacklist?: [any];
+    random?: boolean;
     sort?: {
         [key: string]: string;
     }
