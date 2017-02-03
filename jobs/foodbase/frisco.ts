@@ -1,11 +1,11 @@
 'use strict';
 
-import {TaskDownload, TaskExtract, IDocumentHttp, IJsonSearchConfig} from "../shared/typings";
+import {TaskDownload, TaskExtract, IDocumentHttp, IJsonSearchConfig} from "../../shared/typings";
 import * as _ from "lodash";
-import {getJsonDocuments} from "../libs/repo";
+import {getJsonDocuments} from "../../libs/repo";
 import * as Promise from 'bluebird';
 
-let existsProductsEans;
+let existsProductsCodes;
 
 const frisco = {
     friscoApi: () => { // note extraction path: return _.get(extracted, 'data.product', {});
@@ -21,7 +21,7 @@ const frisco = {
 };
 
 export class download extends TaskDownload {
-    name = 'frisco';
+    name = 'foodbase-frisco';
     autoRemove = true;
 
     urls() {
@@ -33,10 +33,10 @@ export class download extends TaskDownload {
             'Accept: application/json'],
     };
 }
-
+let i = 0;
 export class extract extends TaskExtract {
     sourceHttpDocuments = {
-        name: 'frisco'
+        name: 'foodbase-frisco'
     };
     targetJsonDocuments = {
         typeName: 'product',
@@ -44,20 +44,31 @@ export class extract extends TaskExtract {
 
     process(extracted: any, doc: IDocumentHttp): any {
         const products = _.get(extracted, 'products.results', {}), results = [];
-        let ean;
+        let code;
         _.forEach(products, (product) => {
-            ean = _.get(product, 'attributes.ean[0]');
-            if (!_.includes(existsProductsEans, ean)) {
+            code = _.get(product, 'attributes.ean[0]');
+            if (!_.includes(existsProductsCodes, code)) {
                 results.push({
-                    ean: ean,
-                    imgAddress: _.get(product, 'images[0]'),
-                    ingredients: _.get(product, 'extra-info.nutrient_elements[0]'),
+                    code: code,
                     name: _.get(product, 'name'),
                     producer: _.get(product, 'attributes.producer[0]'),
+                    brand: _.get(product, 'attributes.brand_name[0]'),
+                    weight: _.get(product, 'human_grammage_gross[0]'),
+                    imgAddress: _.get(product, 'images[0]'),
+                    price: {
+                        price: _.get(product, 'extra-info.orginal_price[0]'),
+                        humanUnitPrice: _.get(product, 'extra-info.human_unit_price[0]')
+                    },
                     sourceUrl: _.get(product, 'url'),
+                    ingredients: _.get(product, 'extra-info.nutrient_elements[0]'),
+                    ingredientsStrcut: _.get(product, 'extra-info.nutrient_elements[0]', '').split(/, ?/),
                     components: [],
                     queryCount: 0
                 });
+            } else {
+                i++;
+                console.log(`EAN ${code} already exists`);
+                console.log(i);
             }
         });
         return results;
@@ -66,10 +77,10 @@ export class extract extends TaskExtract {
     execute(): Promise<any> {
         const query: IJsonSearchConfig = {
             type: 'product',
-            whitelist: ['ean']
+            whitelist: ['code']
         };
         return getJsonDocuments(query).then((data) => {
-            existsProductsEans = _.map(data.results, 'body.ean');
+            existsProductsCodes = _.map(data.results, 'body.code');
             return super.execute();
         });
     };

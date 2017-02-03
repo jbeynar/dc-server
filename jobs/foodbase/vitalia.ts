@@ -3,9 +3,9 @@
 import _ = require('lodash');
 import Promise = require('bluebird');
 import pg = require('pg-rxjs');
-import {config} from '../config';
-import db = require('../libs/db');
-import {TaskDownload, TaskExtract} from "../shared/typings";
+import {config} from '../../config';
+import db = require('../../libs/db');
+import {TaskDownload, TaskExtract} from "../../shared/typings";
 
 const baseUrl = 'http://vitalia.pl/index.php/mid/90/fid/1047/kalorie/diety/product_id';
 
@@ -23,7 +23,7 @@ const harmityMap = {
 };
 
 export class download extends TaskDownload {
-    name = 'ingredientPage';
+    name = 'foodbase-vitalia';
 
     urls() {
         return _.times(818, i => [baseUrl, '/', i].join(''));

@@ -8,3 +8,4 @@ typings
 .env
 coverage
 exports/*
+npm-debug.log*

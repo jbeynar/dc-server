@@ -4,10 +4,10 @@ import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
 import * as pg from 'pg';
-import * as db from '../libs/db';
-import {config} from '../config';
-import {TaskScript, TaskExport} from "../shared/typings";
-import {log} from "../libs/logger";
+import * as db from '../../libs/db';
+import {config} from '../../config';
+import {TaskScript, TaskExport} from "../../shared/typings";
+import {log} from "../../libs/logger";
 
 export class produce extends TaskScript {
     script() {

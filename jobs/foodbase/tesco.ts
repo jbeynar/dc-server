@@ -4,13 +4,16 @@ import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
 import * as pg from 'pg';
-import * as db from '../libs/db';
-import * as repo from '../libs/repo';
-import {config} from '../config';
-import {TaskDownload, TaskExtract, TaskScript, TaskExport} from "../shared/typings";
-import {log} from "../libs/logger";
+import * as db from '../../libs/db';
+import * as repo from '../../libs/repo';
+import {config} from '../../config';
+import {TaskDownload, TaskExtract, TaskScript, TaskExport, IJsonSearchConfig} from "../../shared/typings";
+import {log} from "../../libs/logger";
+import {getJsonDocuments} from "../../libs/repo";
 
 const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/art.-spozywcze/all?page=';
+
+let existsProductsCodes;
 
 const tescoLinksSourcesUrls = {
     favorites: _.map(['bounty', 'hit', 'pudliszki', 'pudliszki&page=2',
@@ -21,13 +24,13 @@ const tescoLinksSourcesUrls = {
             'łosoś&page=2', 'piątnica', 'piątnica&page=2', 'masło',
             'kabanosy&page=3', 'kabanosy&page=4'],
         item => 'https://ezakupy.tesco.pl/groceries/pl-PL/search?query=' + item),
-    range: ()=> {
-        return _.map(_.range(1, 243, 1), k=>baseUrl + k);
+    range: () => {
+        return _.map(_.range(1, 243, 1), k => baseUrl + k);
     }
 };
 
 export class download extends TaskDownload {
-    name = 'tescoLinks';
+    name = 'foodbase-tescoLinks';
     autoRemove = true;
 
     urls() {
@@ -37,7 +40,7 @@ export class download extends TaskDownload {
 
 export class extract extends TaskExtract {
     sourceHttpDocuments = {
-        name: 'tescoLinks'
+        name: 'foodbase-tescoLinks'
     };
     targetJsonDocuments = {
         typeName: 'tescoLinks',
@@ -63,9 +66,9 @@ export class extract extends TaskExtract {
 
 export class save extends TaskScript {
     script() {
-        return repo.removeJsonDocuments('tescoProductsLinks').then(()=> {
-            return repo.getJsonDocuments({type: 'tescoLinks'}).then((d)=> {
-                const linksSet = _.reduce(d.results, (acc, item)=> {
+        return repo.removeJsonDocuments('tescoProductsLinks').then(() => {
+            return repo.getJsonDocuments({type: 'tescoLinks'}).then((d) => {
+                const linksSet = _.reduce(d.results, (acc, item) => {
                     return acc.concat(_.get(item, 'body.links'));
                 }, []);
                 return repo.saveJsonDocument('tescoProductsLinks', {links: linksSet});
@@ -75,11 +78,11 @@ export class save extends TaskScript {
 }
 
 export class downloadProducts extends TaskDownload {
-    name = 'tescoProduct';
+    name = 'foodbase-tescoProduct';
     autoRemove = true;
-
+    // todo pull out ean from identiy and check whether its exists
     urls() {
-        return repo.getJsonDocuments({type: 'tescoProductsLinks'}).then((tescoProductsLinks)=> {
+        return repo.getJsonDocuments({type: 'tescoProductsLinks'}).then((tescoProductsLinks) => {
             const links = _.get(tescoProductsLinks, 'results[0].body.links', []);
             return _.map(links, identity => 'https://ezakupy.tesco.pl/' + identity);
         });
@@ -88,7 +91,7 @@ export class downloadProducts extends TaskDownload {
 
 export class extractProducts extends TaskExtract {
     sourceHttpDocuments = {
-        name: 'tescoProduct'
+        name: 'foodbase-tescoProduct'
     };
     targetJsonDocuments = {
         typeName: 'product',
@@ -111,18 +114,45 @@ export class extractProducts extends TaskExtract {
             singular: true,
             selector: '.brand-bank--brand-info .groupItem h3:contains("Składniki") ~ div.longTextItems>p'
         },
-        ean: {
+        code: {
             singular: true,
             selector: 'img.product-image',
             attribute: 'src',
             process: /[0-9]{13}/
+        },
+        producer: {
+            singular: true,
+            selector: '.brand-bank--brand-info .groupItem h3:contains("Nazwa i Adres Podmiotu Odpowiedzialnego") ~ div.memo>p'
+        },
+        price: {
+            singular: true,
+            selector: '.price-per-sellable-unit'
+        },
+        humanUnitPrice: {
+            singular: true,
+            selector: '.price-per-quantity-weight'
         }
     };
 
     process(extracted, doc) {
-        extracted.components = [];
-        extracted.sourceUrl = doc.url;
-        extracted.queryCount = 0;
-        return extracted;
+        if (!_.includes(existsProductsCodes, extracted.code)) {
+            extracted.components = [];
+            extracted.sourceUrl = doc.url;
+            extracted.queryCount = 0;
+            return extracted;
+        }else{
+            console.log(`EAN ${extracted.code} already exists`);
+        }
+    };
+
+    execute(): Promise<any> {
+        const query: IJsonSearchConfig = {
+            type: 'product',
+            whitelist: ['code']
+        };
+        return getJsonDocuments(query).then((data) => {
+            existsProductsCodes = _.map(data.results, 'body.code');
+            return super.execute();
+        });
     };
 }
