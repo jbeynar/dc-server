@@ -1,11 +1,10 @@
 'use strict';
 
-import {TaskDownload, TaskExtract, IDocumentHttp, IJsonSearchConfig} from "../../shared/typings";
+import {TaskDownload, TaskExtract, IDocumentHttp} from "../../shared/typings";
 import * as _ from "lodash";
 import {getJsonDocuments} from "../../libs/repo";
 import * as Promise from 'bluebird';
-
-let existsProductsCodes;
+import {isCodeExists} from "./shared";
 
 const ecarrefourApi = {
     scroll: (slug, bulkSize, totalCount) => {
@@ -44,26 +43,19 @@ export class extractLinks extends TaskExtract {
     process(extracted: any, doc: IDocumentHttp): any {
         const products = _.get(extracted, 'content', []), results = [];
         let code;
-        _.forEach(products, (product) => {
-            code = _.get(product, 'product.code');
-            if (!_.includes(existsProductsCodes, code)) {
-                results.push({
-                    slug: product.slug, url: 'https://www.ecarrefour.pl/web/product-views/' + product.slug
-                });
-            }
-        });
-        return results;
-    };
 
-    execute(): Promise<any> {
-        const query: IJsonSearchConfig = {
-            type: 'product',
-            whitelist: ['code']
-        };
-        return getJsonDocuments(query).then((data) => {
-            existsProductsCodes = _.map(data.results, 'body.code');
-            return super.execute();
-        });
+        return Promise.each(products, (product) => {
+            code = _.get(product, 'product.code');
+            return isCodeExists(code).then((ans) => {
+                if (ans) {
+                    console.log(`EAN ${code} already exists`);
+                } else {
+                    results.push({
+                        slug: product.slug, url: 'https://www.ecarrefour.pl/web/product-views/' + product.slug
+                    });
+                }
+            });
+        }).then(() => results);
     };
 }
 
@@ -103,39 +95,31 @@ export class extractProducts extends TaskExtract {
     process(extracted: any, doc: IDocumentHttp): any {
         let product, ingredients = '';
         const code = _.get(extracted, 'product.code');
-        if (!_.includes(existsProductsCodes, code)) {
-            const attribs = _.get(extracted, 'descriptionAttributeSets[0].descriptionAttributes', []);
-            ingredients = _.get(_.find(attribs, (item) => item.name === 'Składniki'), 'value', '');
-            product = {
-                code: code,
-                name: _.get(extracted, 'name'),
-                producer: _.get(extracted, 'brandView.name'),
-                brand: _.get(extracted, 'brandView.name'),
-                imgAddress: _.get(extracted, 'defaultImage.name'),
-                price: {
-                    price: _.get(extracted, 'actualSku.amount.actualGrossPrice'),
-                    humanUnitPrice: _.get(extracted, 'actualSku.grammageWithUnitString')
-                },
-                sourceUrl: doc.url,
-                ingredients: ingredients,
-                ingredientsStrcut: ingredients.split(/, ?/),
-                components: [],
-                queryCount: 0
-            };
-            return product;
-        } else {
-            console.log(`EAN ${code} already exists`);
-        }
-    };
-
-    execute(): Promise<any> {
-        const query: IJsonSearchConfig = {
-            type: 'product',
-            whitelist: ['code']
-        };
-        return getJsonDocuments(query).then((data) => {
-            existsProductsCodes = _.map(data.results, 'body.code');
-            return super.execute();
+        return isCodeExists(code).then((ans) => {
+            if (ans) {
+                console.log(`EAN ${code} already exists`);
+                return;
+            } else {
+                const attribs = _.get(extracted, 'descriptionAttributeSets[0].descriptionAttributes', []);
+                ingredients = _.get(_.find(attribs, (item) => item.name === 'Składniki'), 'value', '');
+                product = {
+                    code: code,
+                    name: _.get(extracted, 'name'),
+                    producer: _.get(extracted, 'brandView.name'),
+                    brand: _.get(extracted, 'brandView.name'),
+                    imgAddress: _.get(extracted, 'defaultImage.name'),
+                    price: {
+                        price: _.get(extracted, 'actualSku.amount.actualGrossPrice'),
+                        humanUnitPrice: _.get(extracted, 'actualSku.grammageWithUnitString')
+                    },
+                    sourceUrl: doc.url,
+                    ingredients: ingredients,
+                    ingredientsStrcut: ingredients.split(/, ?/),
+                    components: [],
+                    queryCount: 0
+                };
+                return product;
+            }
         });
-    };
+    }
 }

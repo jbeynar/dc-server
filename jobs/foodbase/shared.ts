@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 
 let allCodes;
 
-export function isCodeExists(code: number) {
+export function isCodeExists(code) {
     function fetchCodes() {
         return new Promise((resolve) => {
             if (!allCodes) {
