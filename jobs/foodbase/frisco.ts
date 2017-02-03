@@ -1,11 +1,9 @@
 'use strict';
 
-import {TaskDownload, TaskExtract, IDocumentHttp, IJsonSearchConfig} from "../../shared/typings";
+import {TaskDownload, TaskExtract, IDocumentHttp} from "../../shared/typings";
 import * as _ from "lodash";
-import {getJsonDocuments} from "../../libs/repo";
 import * as Promise from 'bluebird';
-
-let existsProductsCodes;
+import {isCodeExists} from "./shared";
 
 const frisco = {
     friscoApi: () => { // note extraction path: return _.get(extracted, 'data.product', {});
@@ -33,7 +31,7 @@ export class download extends TaskDownload {
             'Accept: application/json'],
     };
 }
-let i = 0;
+
 export class extract extends TaskExtract {
     sourceHttpDocuments = {
         name: 'foodbase-frisco'
@@ -43,45 +41,35 @@ export class extract extends TaskExtract {
     };
 
     process(extracted: any, doc: IDocumentHttp): any {
-        const products = _.get(extracted, 'products.results', {}), results = [];
+        const products = _.get(extracted, 'products.results', []), results = [];
         let code;
-        _.forEach(products, (product) => {
-            code = _.get(product, 'attributes.ean[0]');
-            if (!_.includes(existsProductsCodes, code)) {
-                results.push({
-                    code: code,
-                    name: _.get(product, 'name'),
-                    producer: _.get(product, 'attributes.producer[0]'),
-                    brand: _.get(product, 'attributes.brand_name[0]'),
-                    weight: _.get(product, 'human_grammage_gross[0]'),
-                    imgAddress: _.get(product, 'images[0]'),
-                    price: {
-                        price: _.get(product, 'extra-info.orginal_price[0]'),
-                        humanUnitPrice: _.get(product, 'extra-info.human_unit_price[0]')
-                    },
-                    sourceUrl: _.get(product, 'url'),
-                    ingredients: _.get(product, 'extra-info.nutrient_elements[0]'),
-                    ingredientsStrcut: _.get(product, 'extra-info.nutrient_elements[0]', '').split(/, ?/),
-                    components: [],
-                    queryCount: 0
-                });
-            } else {
-                i++;
-                console.log(`EAN ${code} already exists`);
-                console.log(i);
-            }
-        });
-        return results;
-    };
 
-    execute(): Promise<any> {
-        const query: IJsonSearchConfig = {
-            type: 'product',
-            whitelist: ['code']
-        };
-        return getJsonDocuments(query).then((data) => {
-            existsProductsCodes = _.map(data.results, 'body.code');
-            return super.execute();
-        });
+        return Promise.each(products, (product) => {
+            code = _.get(product, 'attributes.ean[0]');
+            return isCodeExists(code).then((ans) => {
+                if (ans) {
+                    console.log(`EAN ${code} already exists`);
+                } else {
+                    results.push({
+                        code: code,
+                        name: _.get(product, 'name'),
+                        producer: _.get(product, 'attributes.producer[0]'),
+                        brand: _.get(product, 'attributes.brand_name[0]'),
+                        weight: _.get(product, 'human_grammage_gross[0]'),
+                        imgAddress: _.get(product, 'images[0]'),
+                        price: {
+                            price: _.get(product, 'extra-info.orginal_price[0]'),
+                            humanUnitPrice: _.get(product, 'extra-info.human_unit_price[0]')
+                        },
+                        sourceUrl: _.get(product, 'url'),
+                        ingredients: _.get(product, 'extra-info.nutrient_elements[0]'),
+                        ingredientsStrcut: _.get(product, 'extra-info.nutrient_elements[0]', '').split(/, ?/),
+                        components: [],
+                        queryCount: 0,
+                        s: 'f'
+                    });
+                }
+            });
+        }).then(() => results);
     };
 }
