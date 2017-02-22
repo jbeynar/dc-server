@@ -1,15 +1,11 @@
 'use strict';
 
-import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
-import * as pg from 'pg';
-import * as db from '../../libs/db';
 import * as repo from '../../libs/repo';
-import {config} from '../../config';
 import {TaskDownload, TaskExtract, TaskScript, TaskExport, IJsonSearchConfig} from "../../shared/typings";
-import {log} from "../../libs/logger";
 import {getJsonDocuments} from "../../libs/repo";
+import {isCodeExists} from "./shared";
 
 const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/art.-spozywcze/all?page=';
 
@@ -43,15 +39,10 @@ export class extract extends TaskExtract {
         name: 'foodbase-tescoLinks'
     };
     targetJsonDocuments = {
-        typeName: 'tescoLinks',
+        typeName: 'foodbase-tescoLinks',
         autoRemove: true
     };
     map = {
-        count: {
-            selector: '.pagination-component p.results-count strong:last-child',
-            process: /[0-9]{0,5}/,
-            singular: true
-        },
         links: {
             attribute: 'href',
             selector: 'a.product-tile--title.product-tile--browsable'
@@ -59,32 +50,27 @@ export class extract extends TaskExtract {
     };
 
     process(extracted, doc) {
-        extracted.url = doc.url;
-        return extracted
-    };
-}
-
-export class save extends TaskScript {
-    script() {
-        return repo.removeJsonDocuments('tescoProductsLinks').then(() => {
-            return repo.getJsonDocuments({type: 'tescoLinks'}).then((d) => {
-                const linksSet = _.reduce(d.results, (acc, item) => {
-                    return acc.concat(_.get(item, 'body.links'));
-                }, []);
-                return repo.saveJsonDocument('tescoProductsLinks', {links: linksSet});
-            });
+        return _.map(extracted.links, (identity: string) => {
+            return {slug: identity, code: _.last(identity.match(/\/([0-9]{8,13})/))}
         });
-    }
+    };
 }
 
 export class downloadProducts extends TaskDownload {
     name = 'foodbase-tescoProduct';
     autoRemove = true;
-    // todo pull out ean from identiy and check whether its exists
     urls() {
-        return repo.getJsonDocuments({type: 'tescoProductsLinks'}).then((tescoProductsLinks) => {
-            const links = _.get(tescoProductsLinks, 'results[0].body.links', []);
-            return _.map(links, identity => 'https://ezakupy.tesco.pl/' + identity);
+        return repo.getJsonDocuments({type: 'foodbase-tescoLinks'}).then((data) => {
+            const results = [];
+            return Promise.each(data.results, (item) => {
+                return isCodeExists(item.body.code).then((ans) => {
+                    if (ans) {
+                        console.log(`Code ${item.body.code} already exists`);
+                    } else {
+                        results.push('https://ezakupy.tesco.pl/' + item.body.slug);
+                    }
+                });
+            }).then(() => results);
         });
     }
 }
@@ -139,6 +125,7 @@ export class extractProducts extends TaskExtract {
             extracted.components = [];
             extracted.sourceUrl = doc.url;
             extracted.queryCount = 0;
+            extracted.source = 'tesco';
             return extracted;
         }else{
             console.log(`EAN ${extracted.code} already exists`);

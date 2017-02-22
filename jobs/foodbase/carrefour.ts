@@ -116,7 +116,8 @@ export class extractProducts extends TaskExtract {
                     ingredients: ingredients,
                     ingredientsStrcut: ingredients.split(/, ?/),
                     components: [],
-                    queryCount: 0
+                    queryCount: 0,
+                    source: 'carrefour'
                 };
                 return product;
             }

@@ -48,7 +48,7 @@ export class extract extends TaskExtract {
             code = _.get(product, 'attributes.ean[0]');
             return isCodeExists(code).then((ans) => {
                 if (ans) {
-                    console.log(`EAN ${code} already exists`);
+                    console.log(`Code ${code} already exists`);
                 } else {
                     results.push({
                         code: code,
@@ -66,7 +66,7 @@ export class extract extends TaskExtract {
                         ingredientsStrcut: _.get(product, 'extra-info.nutrient_elements[0]', '').split(/, ?/),
                         components: [],
                         queryCount: 0,
-                        s: 'f'
+                        source: 'frisco'
                     });
                 }
             });
