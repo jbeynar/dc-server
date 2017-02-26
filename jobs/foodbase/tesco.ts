@@ -121,25 +121,16 @@ export class extractProducts extends TaskExtract {
     };
 
     process(extracted, doc) {
-        if (!_.includes(existsProductsCodes, extracted.code)) {
-            extracted.components = [];
-            extracted.sourceUrl = doc.url;
-            extracted.queryCount = 0;
-            extracted.source = 'tesco';
-            return extracted;
-        }else{
-            console.log(`EAN ${extracted.code} already exists`);
-        }
-    };
-
-    execute(): Promise<any> {
-        const query: IJsonSearchConfig = {
-            type: 'product',
-            whitelist: ['code']
-        };
-        return getJsonDocuments(query).then((data) => {
-            existsProductsCodes = _.map(data.results, 'body.code');
-            return super.execute();
+        return isCodeExists(extracted.code).then((ans) => {
+            if (ans) {
+                console.log(`Code ${extracted.code} already exists`);
+            } else {
+                extracted.components = [];
+                extracted.sourceUrl = doc.url;
+                extracted.queryCount = 0;
+                extracted.source = 'tesco';
+                return extracted;
+            }
         });
     };
 }

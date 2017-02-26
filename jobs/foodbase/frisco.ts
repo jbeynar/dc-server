@@ -32,7 +32,7 @@ export class download extends TaskDownload {
     };
 }
 
-export class extract extends TaskExtract {
+export class extractProducts extends TaskExtract {
     sourceHttpDocuments = {
         name: 'foodbase-frisco'
     };
@@ -63,7 +63,6 @@ export class extract extends TaskExtract {
                         },
                         sourceUrl: _.get(product, 'url'),
                         ingredients: _.get(product, 'extra-info.nutrient_elements[0]'),
-                        ingredientsStrcut: _.get(product, 'extra-info.nutrient_elements[0]', '').split(/, ?/),
                         components: [],
                         queryCount: 0,
                         source: 'frisco'
