@@ -107,7 +107,7 @@ export class extractProducts extends TaskExtract {
                     name: _.get(extracted, 'name'),
                     producer: _.get(extracted, 'brandView.name'),
                     brand: _.get(extracted, 'brandView.name'),
-                    imgAddress: _.get(extracted, 'defaultImage.name'),
+                    imgAddress: 'https://www.ecarrefour.pl/images/product/org/' + _.get(extracted, 'defaultImage.name'),
                     price: {
                         price: _.get(extracted, 'actualSku.amount.actualGrossPrice'),
                         humanUnitPrice: _.get(extracted, 'actualSku.grammageWithUnitString')
