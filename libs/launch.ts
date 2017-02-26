@@ -70,6 +70,7 @@ export function run(jobName, jobTask) {
             jobTask = tasksNames;
         }
 
+        let t0, t1;
         return Promise.mapSeries(jobTask, (taskName: string) => {
             let Task = job[taskName];
             if (!_.isFunction(Task)) {
@@ -80,10 +81,15 @@ export function run(jobName, jobTask) {
             if (!task.execute) {
                 throw new Error('Task must be executable');
             }
-            log(`\nExecuting task ${taskName} type ${task.type}... `, 1);
+            t0 = new Date();
+            log(`Executing task ${taskName} type ${task.type}... `, 1);
+            log(`Starts at ${t0.toLocaleString()}`, 1);
             progressNotification(job.name, task.type, taskName, -2);
             return task.execute().then(() => {
+                t1 = new Date();
                 log(`Task ${taskName} complete`, 1);
+                log(`Ends at ${t1.toLocaleString()}`, 1);
+                log(`Total time ${_.round((t1 - t0) / 1000 / 60, 2)} minutes`, 1);
                 progressNotification(job.name, task.type, taskName, -100);
             });
         });
