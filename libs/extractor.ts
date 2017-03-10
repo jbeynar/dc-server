@@ -18,7 +18,6 @@ const squel = useFlavour('postgres');
 export const errorCodes = {
     documentMalformedStructure: 'ERR_DOCUMENT_MALFORMED_STRUCTURE',
     documentBodyEmpty: 'ERR_DOCUMENT_BODY_EMPTY',
-    taskMalformedStructure: 'ERR_TASK_MALFORMED_STRUCTURE'
 };
 
 export function extract(document, extractionTask, whitelist?)
@@ -84,9 +83,6 @@ export function extract(document, extractionTask, whitelist?)
         }
         if (_.isEmpty(document.body)) {
             return reject(new Error(errorCodes.documentBodyEmpty));
-        }
-        if (_.isEmpty(extractionTask)) {
-            return reject(new Error(errorCodes.taskMalformedStructure));
         }
 
         if (_.isEmpty(extractionTask.map)) {

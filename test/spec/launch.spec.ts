@@ -170,7 +170,7 @@ describe('Launch library', () => {
                     });
                     it('should inform about executing it and what type it is', () => {
                         launch.run('tarnowiak', 'functionWithMethodExecute').then(() => {
-                            expect('\nExecuting task functionWithMethodExecute type TaskExtract... ').to.be.eql(logSpy.secondCall.args[0]);
+                            expect('Executing task functionWithMethodExecute type TaskExtract... ').to.be.eql(logSpy.secondCall.args[0]);
                         });
                     });
                     it('should call execute method', () => {
@@ -180,7 +180,7 @@ describe('Launch library', () => {
                     });
                     it('should inform when executing task is complete', () => {
                         launch.run('tarnowiak', 'functionWithMethodExecute').then(() => {
-                            expect('Task functionWithMethodExecute complete').to.be.eql(logSpy.thirdCall.args[0]);
+                            expect('Task functionWithMethodExecute complete').to.be.eql(logSpy.getCall(3).args[0]);
                         });
                     });
                 });

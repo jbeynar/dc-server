@@ -35,12 +35,6 @@ describe('Extractor library', () =>
                     return expect(err.message.toString()).to.equal(extractor.errorCodes.documentMalformedStructure);
                 });
             });
-
-            it('when called with map of non-object type', () => {
-                return extractor.extract({body:htmlDocument}, 'map').catch((err)=> {
-                    return expect(err.message.toString()).to.equal(extractor.errorCodes.taskMalformedStructure);
-                });
-            });
         });
 
         describe('Extracts', ()=> {
@@ -94,6 +88,12 @@ describe('Extractor library', () =>
                 };
                 return extractor.extract({body: htmlDocument}, mapping).then((data)=> {
                     return expect(data).to.eql(expected);
+                });
+            });
+
+            it('when called without map then handle document body as a JSON', () => {
+                return extractor.extract({body:'{"a":"b"}'}, {}).then((data)=> {
+                    return expect(data).to.eql({a:'b'});
                 });
             });
         });
