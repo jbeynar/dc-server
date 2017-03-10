@@ -21,12 +21,14 @@ export interface IDocumentHttp {
 
 export interface IJsonSearchConfig {
     type?: string;
-    whitelist?: [any];
-    blacklist?: [any];
+    whitelist?: any[];
+    blacklist?: any[];
     random?: boolean;
     sort?: {
         [key: string]: string;
-    }
+    },
+    from?: number,
+    size?: number
 }
 
 export interface IJsonSearchResults {

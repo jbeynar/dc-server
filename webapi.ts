@@ -12,11 +12,16 @@ import {IJsonSearchConfig} from "./shared/typings";
 const RepoApi = {
     getJsonDocuments: {
         method: 'POST', path: '/repo/json/{type}', handler: function (request, reply) {
-            var query:IJsonSearchConfig = {
+            let payload;
+            if (request.payload) {
+                payload = JSON.parse(request.payload);
+            }
+            const query: IJsonSearchConfig = {
                 type: request.params.type,
-                blacklist: request.payload.blacklist,
-                whitelist: request.payload.whitelist,
-                random: false
+                blacklist: _.get(payload, 'blacklist', []),
+                whitelist: _.get(payload, 'whitelist', []),
+                from: _.get(payload, 'from', undefined),
+                size: _.get(payload, 'size', undefined),
             };
             return repo.getJsonDocuments(query).then((result) => {
                 reply({data: result});

@@ -28,9 +28,11 @@ export function saveJsonDocument(type, obj) {
 export function getJsonDocuments(config?: IJsonSearchConfig) {
     const query = _.cloneDeep(config) || {};
     const stmt = squel.select().from('document_json');
+
     if (query.type) {
         stmt.where('type=?', query.type);
     }
+
     if (!_.isEmpty(query.sort)) {
         _.forEach(query.sort, (direction, value) => {
             stmt.order(`body->'${value}'`, direction === 'DESC' ? false : true);
@@ -39,10 +41,12 @@ export function getJsonDocuments(config?: IJsonSearchConfig) {
         stmt.order('id');
     }
 
-    if (query.random) {
-        // todo dynamic random / count all
-        stmt.offset(_.random(0, 2000));
-        stmt.limit(10);
+    if (_.isNumber(query.from)) {
+        stmt.offset(query.from);
+    }
+
+    if (_.isNumber(query.size)) {
+        stmt.limit(query.size);
     }
 
     return db.query(stmt.toString()).then(function (rows) {

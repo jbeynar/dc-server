@@ -11,8 +11,10 @@ const expect = chai.expect;
 
 describe('Repo library provide database abstraction layer', () => {
 
+    let documents;
+
     before(() => {
-        const documents = [
+        documents = [
             {
                 type: 'valuation',
                 body: JSON.stringify({
@@ -91,6 +93,12 @@ describe('Repo library provide database abstraction layer', () => {
                     value_2: undefined,
                     value_1: undefined
                 });
+            });
+        });
+        it('support pagination', () => {
+            return repo.getJsonDocuments({type: 'valuation', from: 1, size: 2}).then((data) => {
+                expect(data.results[0].body.symbol).to.eql(JSON.parse(documents[1].body).symbol);
+                return expect(data.results[1].body.symbol).to.eql(JSON.parse(documents[2].body).symbol);
             });
         });
     });
