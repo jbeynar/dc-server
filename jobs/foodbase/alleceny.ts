@@ -478,7 +478,7 @@ export class extract extends TaskExtract {
     };
     map = {
         name: {
-            singulat: true,
+            singular: true,
             selector: 'h1.productname'
         },
         ingredients: {

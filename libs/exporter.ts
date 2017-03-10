@@ -82,7 +82,7 @@ export function exportIntoMongo(exportTask : TaskExport) {
                                 handleError);
 
                             targetCollection.insertMany(_.map(documentsSet, (sourceDoc : any)=> {
-                                    sourceDoc.body._source_id = sourceDoc.id;
+                                    sourceDoc.body._sourceId = sourceDoc.id;
                                     return sourceDoc.body;
                                 }),
                                 {},

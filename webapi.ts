@@ -16,7 +16,7 @@ const RepoApi = {
                 type: request.params.type,
                 blacklist: request.payload.blacklist,
                 whitelist: request.payload.whitelist,
-                random: true
+                random: false
             };
             return repo.getJsonDocuments(query).then((result) => {
                 reply({data: result});
