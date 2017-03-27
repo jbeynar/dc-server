@@ -3,8 +3,7 @@
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
 import * as repo from '../../libs/repo';
-import {TaskDownload, TaskExtract, TaskScript, TaskExport, IJsonSearchConfig} from "../../shared/typings";
-import {getJsonDocuments} from "../../libs/repo";
+import {TaskDownload, TaskExtract} from "../../shared/typings";
 import {isCodeExists} from "./shared";
 
 const baseUrl = 'https://ezakupy.tesco.pl/groceries/pl-PL/shop/art.-spozywcze/all?page=';

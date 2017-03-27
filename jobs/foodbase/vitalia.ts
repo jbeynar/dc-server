@@ -2,8 +2,6 @@
 
 import _ = require('lodash');
 import Promise = require('bluebird');
-import pg = require('pg-rxjs');
-import {config} from '../../config';
 import db = require('../../libs/db');
 import {TaskDownload, TaskExtract} from "../../shared/typings";
 
