@@ -6,32 +6,33 @@ import * as Promise from 'bluebird';
 import * as pg from 'pg';
 import * as db from '../../libs/db';
 import {config} from '../../config';
-import {TaskScript, TaskExport} from "../../shared/typings";
+import {TaskScript, TaskExportMongodb} from "../../shared/typings";
 import {log} from "../../libs/logger";
+
+const pool = db.getPool();
+
+function createJsonDocumentsObservable(type): Rx.Observable<any> {
+    const query = `SELECT body FROM repo.document_json WHERE type = '${type}'`;
+
+    return Rx.Observable.create((subscriber) => {
+        pool.connect().then((client: pg.Client) => {
+            const stream: pg.Query = client.query(query, () => {
+            });
+
+            stream.on('row', (row) => {
+                subscriber.next(row);
+            });
+
+            stream.on('end', () => {
+                subscriber.complete();
+                client.release();
+            });
+        });
+    });
+}
 
 export class produce extends TaskScript {
     script() {
-        const pool = db.getPool();
-
-        function createIngredientObservable(): Rx.Observable<any> {
-            const query = `SELECT body FROM repo.document_json WHERE type = 'ingredient'`;
-
-            return Rx.Observable.create((subscriber) => {
-                pool.connect().then((client: pg.Client) => {
-                    const stream: pg.Query = client.query(query, () => {
-                    });
-
-                    stream.on('row', (row) => {
-                        subscriber.next(row);
-                    });
-
-                    stream.on('end', () => {
-                        subscriber.complete();
-                        client.release();
-                    });
-                });
-            });
-        }
 
         function mapIngredient(ingredient) {
             return {
@@ -99,7 +100,7 @@ export class produce extends TaskScript {
 
         const concurrencyCount = Math.max(1, config.db.poolConfig.max - 5);
 
-        const source: Rx.Observable<any> = createIngredientObservable()
+        const source: Rx.Observable<any> = createJsonDocumentsObservable('ingredient')
             .map(mapIngredient)
             .flatMap(searchIngredientInProducts, concurrencyCount)
             .reduce(reduceSearchResults, {})
@@ -120,14 +121,15 @@ export class produce extends TaskScript {
     }
 }
 
-export class exportProducts extends TaskExport {
+export class exportProducts extends TaskExportMongodb {
     sourceJsonDocuments = {
         typeName: 'product',
         order: 'ean'
     };
-    targetMongo = {
-        // url: 'mongodb://localhost:27017/food-base',
-        url: 'mongodb://heroku_qsjg9m7p:jklhg9edv91jg58aeah2shr4jk@ds055742.mlab.com:55742/heroku_qsjg9m7p',
+    target = {
+        url: 'mongodb://localhost:27017/food-base',
+        bulkSize: 1000,
+        // url: 'mongodb://heroku_qsjg9m7p:jklhg9edv91jg58aeah2shr4jk@ds055742.mlab.com:55742/heroku_qsjg9m7p',
         collectionName: 'products',
         autoRemove: true
     };
