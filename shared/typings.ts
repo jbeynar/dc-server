@@ -1,7 +1,9 @@
 import {downloadHttpDocuments} from "../libs/downloader";
 import * as Promise from 'bluebird';
 import {extractFromRepo} from "../libs/extractor";
-import {exportIntoMongo, exportIntoCsv} from "../libs/exporter";
+import {exportIntoMongo} from "../libs/exporterMongo";
+import {exportIntoElasticsearch} from "../libs/exporterElasticsearch";
+import {exportIntoCsv} from "../libs/exporterCsv";
 
 export interface IDocumentHttp {
     id?: number;
@@ -18,6 +20,15 @@ export interface IDocumentHttp {
     retry_count?: number;
     ts?: Date|string;
 }
+
+export interface IDocumentJson {
+    id: number,
+    type: string,
+    body: any,
+    length: number,
+    ts: Date|string
+}
+;
 
 export interface IJsonSearchConfig {
     type?: string;
@@ -56,20 +67,6 @@ export abstract class TaskDownload extends Task {
 
     execute(): Promise<any> {
         return downloadHttpDocuments(this);
-    }
-}
-
-// TODO
-// WIP
-export abstract class TaskNightmare extends Task {
-    type: string = 'TaskNightmare';
-    name: string;
-    map: {
-        [key: string]: any;
-    };
-    $inject: any[];
-    execute() : Promise<any> {
-        return Promise.resolve();
     }
 }
 
@@ -113,16 +110,46 @@ export abstract class TaskScript extends Task {
     }
 }
 
-export abstract class TaskExport extends Task {
+abstract class TaskExport extends Task {
     type: string = 'TaskExport';
     sourceJsonDocuments: {
         typeName: string;
-        order: string;
+        order?: string;
+        bufferSize?: string;
     };
-    targetMongo: {
+
+    target: {
         url: string;
-        collectionName: string;
-        autoRemove: boolean;
+        bulkSize: number;
+    }
+}
+
+export abstract class TaskExportElasticsearch extends TaskExport {
+    type: string = 'TaskExportElasticsearch';
+    target: {
+        url: string;
+        bulkSize: number;
+        indexName: string;
+        mapping: any;
+    };
+
+    transform?(document: any): any {
+        return Promise.resolve(document.body);
+    }
+
+    execute(): Promise<any> {
+        return exportIntoElasticsearch(this);
+    }
+}
+
+export abstract class TaskExportMongodb extends TaskExport {
+    type: string = 'TaskExportMongodb';
+    target: {
+        url: string;
+        bulkSize: number;
+        collectionName: string
+        autoRemove?: boolean;
+        indicies?: any;
     };
 
     execute(): Promise<any> {

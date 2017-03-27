@@ -1,0 +1,12 @@
+version: "3"
+services:
+
+    elasticsearch:
+        image: elasticsearch:5.2.2
+        ports:
+            - "9200:9200"
+
+    mongodb:
+        image: mongo:3.2.12
+        ports:
+            - "27017:27017"

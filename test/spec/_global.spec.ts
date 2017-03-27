@@ -1,3 +1,0 @@
-before(() => {
-    //set search path
-});
