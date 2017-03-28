@@ -3,7 +3,6 @@ import * as Promise from 'bluebird';
 import {extractFromRepo} from "../libs/extractor";
 import {exportIntoMongo} from "../libs/exporterMongo";
 import {exportIntoElasticsearch} from "../libs/exporterElasticsearch";
-import {exportIntoCsv} from "../libs/exporterCsv";
 
 export interface IDocumentHttp {
     id?: number;
@@ -154,17 +153,5 @@ export abstract class TaskExportMongodb extends TaskExport {
 
     execute(): Promise<any> {
         return exportIntoMongo(this);
-    }
-}
-
-export abstract class TaskExportCsv extends Task {
-    type: string = 'TaskExport';
-    sourceTypeName: string;
-
-    execute(): Promise<any> {
-        const ts = new Date();
-        const t = [ts.getUTCFullYear(), ts.getUTCDay(), ts.getHours(), ts.getMinutes()];
-        const filename = `${this.sourceTypeName}-${t.join('-')}.csv`;
-        return exportIntoCsv(this.sourceTypeName, filename);
     }
 }
