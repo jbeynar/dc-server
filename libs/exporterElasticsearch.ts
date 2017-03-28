@@ -9,8 +9,6 @@ import * as http from 'http-as-promised';
 import {TaskExportElasticsearch} from "../shared/typings";
 import {log} from "./logger";
 
-const pool = db.getPool();
-
 function esHttpCall(esUrl, indexName, method?, body?) {
     return http({
         uri: `${esUrl}/${indexName}`,
@@ -23,8 +21,12 @@ export function createJsonDocumentsObservable(type: string): Rx.Observable<any> 
     const query = `SELECT body FROM document_json WHERE type = '${type}'`;
 
     return Rx.Observable.create((subscriber) => {
-        pool.connect().then((client: pg.Client) => {
-            const stream: pg.Query = client.query(query, () => {
+        return db.getClient().then((client: pg.Client) => {
+            const stream: pg.Query = client.query(query, (err) => {
+                if (err) {
+                    console.error(err);
+                    throw err;
+                }
             });
 
             stream.on('row', (row) => {

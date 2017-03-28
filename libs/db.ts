@@ -42,6 +42,15 @@ export function query(query: string, bindings?: string[]|number[]): Promise<any[
     }).catch(exceptionHandler) as Promise<any[]>;
 }
 
+/**
+ * @deprecated
+ * @returns {Pool}
+ */
 export function getPool(){
+    console.error('getPool is deprected, use getClient instead');
     return pool;
+}
+
+export function getClient(): Promise<Client> {
+    return Promise.resolve(pool.connect().then(setSearchPath));
 }

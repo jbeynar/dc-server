@@ -27,7 +27,6 @@ export interface IDocumentJson {
     length: number,
     ts: Date|string
 }
-;
 
 export interface IJsonSearchConfig {
     type?: string;
