@@ -9,20 +9,20 @@ export class download extends TaskDownload {
     name = 'foodbase-alleceny';
 
     urls() {
-        throw new Error('Are you sure?');
-        // return _.times(50000, i => `http://www.alleceny.pl/produkt/${i}/soplica_szlachetna_wodka_1_l`);
+        return _.map(_.range(108601, 110000), (i) => `http://www.alleceny.pl/produkt/${i}/tux`)
     };
 
-    options: {
-        headers: ['Accept-Encoding: gzip, deflate, sdch',
-            'Accept-Language: pl',
-            'Upgrade-Insecure-Requests: 1',
-            'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
-            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    options = {
+        headers: ['Host: www.alleceny.pl',
+            'Referer: http://www.alleceny.pl',
+            'Connection: keep-alive',
             'Cache-Control: max-age=0',
-            'Cookie: PHPSESSID=einuuooas1toddvg843agd3rp4; modal-info=true; grey_wizard=epOHw%2F98%2Bg%2FVY4Mflp4XtduWWQcfTzQtIyZRvhdFoOi4mXhHTYk3qIqMgqpT9vT4%2B7cAReSL01LkkWxEqfoMYw%3D%3D; _gat=1; _ga=GA1.2.632424612.1486160804',
-            'Connection: keep-alive'],
-        intervalTime: 500
+            'Upgrade-Insecure-Requests: 1',
+            'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language: pl',
+            'Cookie: PHPSESSID=jhh9c4p31vi8uh6snpk2u6ej91; modal-info=true; grey_wizard_captcha=VWrRzWA0D%2FM6tolmJ9aa4S2zDNgVeh1YxRp1oE5wlDkviwcaflm42IphTvnOzy5G3oZ5nQ%2FHgWP94Q%2FMVyvwcQ%3D%3D; grey_wizard=T2kFe9RU1lOCIDctQfiYAaTC5dpWCWnw8z0qfQ88yNaDeLSGA6uihkpxCdXepy9jeqgmpXg4Ix3FFV18ER1XlA%3D%3D; _ga=GA1.2.2091708389.1493022157; _gat=1'],
+        intervalTime: 1150
     }
 }
 
