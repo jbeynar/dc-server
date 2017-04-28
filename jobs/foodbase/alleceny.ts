@@ -3,7 +3,7 @@
 import _ = require('lodash');
 import Promise = require('bluebird');
 import db = require('../../libs/db');
-import {TaskDownload, TaskExtract, TaskExportElasticsearch} from "../../shared/typings";
+import {TaskDownload, TaskExtract, TaskExportElasticsearch, IDocumentJson} from "../../shared/typings";
 
 export class download extends TaskDownload {
     name = 'foodbase-alleceny';
@@ -82,11 +82,15 @@ export class exportProducts extends TaskExportElasticsearch {
     };
 
     transform(document) {
-        return Promise.resolve(_.pick(document.body, ['name', 'brand', 'ingredients']));
+        const body: any = _.pick(document.body, ['name', 'brand', 'ingredients']);
+        // todo adjust dc, mandatory sourceId at extract level
+        // body.sourceId = '' + document.url.match(/^.*produkt\/([0-9]*)\/.*/);
+        body.sourceTs = document.ts;
+        return Promise.resolve(body);
     }
 
     target = {
-        url: 'http://localhost:9200',
+        url: 'http://vps404988.ovh.net:9200',
         bulkSize: 1000,
         indexName: 'product',
         mapping: {
@@ -101,6 +105,9 @@ export class exportProducts extends TaskExportElasticsearch {
                         type: 'string'
                     },
                     ingredients: {
+                        type: 'string'
+                    },
+                    sourceTs: {
                         type: 'string'
                     }
                 }
