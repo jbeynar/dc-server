@@ -18,7 +18,7 @@ function esHttpCall(esUrl, indexName, method?, body?) {
 }
 
 export function createJsonDocumentsObservable(type: string): Rx.Observable<any> {
-    const query = `SELECT body FROM document_json WHERE type = '${type}'`;
+    const query = `SELECT body, ts FROM document_json WHERE type = '${type}'`;
 
     return Rx.Observable.create((subscriber) => {
         return db.getClient().then((client: pg.Client) => {
