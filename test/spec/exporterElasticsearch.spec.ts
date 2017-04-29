@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
 import {createMapping} from '../../libs/exporterElasticsearch';
-import {TaskExportElasticsearch} from "../../shared/typings";
+import {TaskExportElasticsearch, TaskExportElasticsearchTargetConfig} from "../../shared/typings";
 import * as http from 'http-as-promised';
 import * as chai from 'chai';
 import * as Chance from 'chance';
@@ -54,11 +54,12 @@ class ExportTask extends TaskExportElasticsearch {
         typeName: targetConfig.indexName
     };
 
-    target = {
+    target: TaskExportElasticsearchTargetConfig = {
         url: targetConfig.url,
         bulkSize: 50,
         indexName: targetConfig.indexName,
-        mapping: {'repo-test-index': mapping}
+        mapping: {'repo-test-index': mapping},
+        overwrite: true
     };
 }
 
@@ -107,9 +108,10 @@ describe('elasticsearchExporter', () => {
             });
         });
 
-        it('export data and if index IS exists it will overwrite', () => {
+        it('export data and if index exists then will remove and create again', () => {
             const task = new ExportTask();
-            return createMapping(targetConfig.url, targetConfig.indexName, task.target.mapping, true).then(() => {
+            const targetConfig = _.clone(task.target);
+            return createMapping(targetConfig).then(() => {
                 return task.execute().delay(esExecutionDelay).then(() => {
                     const url = `${targetConfig.url}/${targetConfig.indexName}/_search?size=1`;
                     return http.get(url).spread((result, body) => {

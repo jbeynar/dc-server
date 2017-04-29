@@ -2,7 +2,7 @@ import {downloadHttpDocuments} from "../libs/downloader";
 import * as Promise from 'bluebird';
 import {extractFromRepo} from "../libs/extractor";
 import {exportIntoMongo} from "../libs/exporterMongo";
-import {exportIntoElasticsearch} from "../libs/exporterElasticsearch";
+import {exportFromRepoIntoElasticsearch} from "../libs/exporterElasticsearch";
 
 export interface IDocumentHttp {
     id?: number;
@@ -110,7 +110,7 @@ export abstract class TaskScript extends Task {
 
 abstract class TaskExport extends Task {
     type: string = 'TaskExport';
-    sourceJsonDocuments: {
+    sourceJsonDocuments?: {
         typeName: string;
         order?: string;
         bufferSize?: string;
@@ -122,21 +122,24 @@ abstract class TaskExport extends Task {
     }
 }
 
+export interface TaskExportElasticsearchTargetConfig {
+    url: string;
+    indexName: string;
+    mapping: any;
+    overwrite: boolean;
+    bulkSize: number;
+}
+
 export abstract class TaskExportElasticsearch extends TaskExport {
     type: string = 'TaskExportElasticsearch';
-    target: {
-        url: string;
-        bulkSize: number;
-        indexName: string;
-        mapping: any;
-    };
+    target: TaskExportElasticsearchTargetConfig;
 
     transform?(document: any): any {
         return Promise.resolve(document.body);
     }
 
     execute(): Promise<any> {
-        return exportIntoElasticsearch(this);
+        return exportFromRepoIntoElasticsearch(this);
     }
 }
 

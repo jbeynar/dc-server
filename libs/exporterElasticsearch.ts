@@ -6,7 +6,7 @@ import * as Promise from 'bluebird';
 import * as pg from 'pg';
 import * as db from './db';
 import * as http from 'http-as-promised';
-import {TaskExportElasticsearch} from "../shared/typings";
+import {IDocumentJson, TaskExportElasticsearch, TaskExportElasticsearchTargetConfig} from "../shared/typings";
 import {log} from "./logger";
 
 function esHttpCall(esUrl, indexName, method?, body?) {
@@ -41,27 +41,29 @@ export function createJsonDocumentsObservable(type: string): Rx.Observable<any> 
     });
 }
 
-export function createMapping(esUrl, indexName: string, mapping: any, overwrite: boolean) {
-    return esHttpCall(esUrl, indexName, 'PUT', {mappings: mapping}).spread((result) => {
+export function createMapping(config: TaskExportElasticsearchTargetConfig) {
+
+    return esHttpCall(config.url, config.indexName, 'PUT', {mappings: config.mapping}).spread((result) => {
         if ([200, 201].indexOf(result.statusCode) > -1) {
-            console.log(`Created elasticsearch index ${indexName}`);
+            log(`Created elasticsearch index ${config.indexName}`, 1);
         } else {
-            throw new Error(`Can not create index ${indexName}. HTTP status code ${result.statusCode}`);
+            throw new Error(`Can not create index ${config.indexName}. HTTP status code ${result.statusCode}`);
         }
     }).catch((error) => {
         const errorType = _.get(error, 'body.error.type');
-        if (overwrite && 'index_already_exists_exception' === errorType) {
-            console.log('Index already exists but will recreate');
-            return esHttpCall(esUrl, indexName, 'DELETE').spread((result) => {
+        if (config.overwrite && 'index_already_exists_exception' === errorType) {
+            log(`Index "${config.indexName}" already exists but will recreate`, 1);
+            return esHttpCall(config.url, config.indexName, 'DELETE').spread((result) => {
                 if (200 == result.statusCode) {
-                    return createMapping(esUrl, indexName, mapping, false);
+                    config.overwrite = false;
+                    createMapping(config)
                 } else {
-                    throw new Error(`Can not delete index ${indexName}. HTTP status code ${result.statusCode}`);
+                    throw new Error(`Can not delete index ${config.indexName}. HTTP status code ${result.statusCode}`);
                 }
             });
         }
-        const e = errorType ? `Can not create index ${indexName} due to ${errorType}` : error;
-        throw new Error(e);
+        const e = errorType ? `Can not create index ${config.indexName} due to ${errorType}` : error;
+        throw new Error(error);
     });
 }
 
@@ -88,12 +90,11 @@ export function bulkSaveEs(esUrl, indexName, bulk) {
     });
 }
 
-export function exportIntoElasticsearch(exportTask: TaskExportElasticsearch) {
-    return createMapping(exportTask.target.url, exportTask.target.indexName, exportTask.target.mapping, true).then(() => {
+export function stream(exportTask: TaskExportElasticsearch, stream: Rx.Observable<IDocumentJson>) {
+    return createMapping(exportTask.target).then(() => {
         return new Promise((resolve, reject) => {
-            const source: Rx.Observable<any> = createJsonDocumentsObservable(exportTask.sourceJsonDocuments.typeName);
             const concurrencyCount = 10;
-            return source
+            return stream
                 .flatMap(exportTask.transform)
                 .bufferCount(exportTask.target.bulkSize)
                 .flatMap((buffer) => {
@@ -110,4 +111,8 @@ export function exportIntoElasticsearch(exportTask: TaskExportElasticsearch) {
                 });
         });
     });
+}
+
+export function exportFromRepoIntoElasticsearch(exportTask: TaskExportElasticsearch) {
+    return stream(exportTask, createJsonDocumentsObservable(exportTask.sourceJsonDocuments.typeName));
 }
