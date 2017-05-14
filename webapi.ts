@@ -107,7 +107,7 @@ function setupHttpServer() {
             error(err);
             throw err;
         }
-        log(`DC WEB API starts at: ${server.info.uri}`, 1);
+        log(`JBL Data Center Web API starts at: ${server.info.uri}`, 1);
     });
 }
 
@@ -124,7 +124,7 @@ function setupSocketServer() {
         _.each(forwardEvents, event => conn.on(event, msg => ns.emit(event, msg)));
     });
 
-    log(`DC Sockets server starts at ${config.webapi.socketServer.url}`, 1);
+    log(`JBL Data Center Sockets server starts at ${config.webapi.socketServer.url}`, 1);
 }
 
 if (!config.mocha) {
