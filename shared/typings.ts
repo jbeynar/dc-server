@@ -82,10 +82,14 @@ export abstract class TaskExtract extends Task {
         host?: string;
         name?: string;
     };
-    targetJsonDocuments: {
+
+    targetJsonDocuments?: {
         typeName: string;
         autoRemove?: boolean;
     };
+
+    exportJsonDocuments: TaskExportElasticsearch;
+
     scope?: string;
     map: {
         [key: string]: string|ITaskExtractDefinition;
