@@ -64,7 +64,7 @@ const RepoApi = {
 
 const LaunchApi = {
     getJobs: {
-        method: 'GET', path: '/jobs/', handler: function (request, reply) {
+        method: 'GET', path: '/jobs', handler: function (request, reply) {
             return launch.getJobs().then((result) => {
                 reply({data: result});
             });

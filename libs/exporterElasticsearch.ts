@@ -62,6 +62,7 @@ export function createMapping(config: TaskExportElasticsearchTargetConfig) {
                 }
             });
         }
+        console.error(error);
         const e = errorType ? `Can not create index ${config.indexName} due to ${errorType}` : error;
         throw new Error(error);
     });
