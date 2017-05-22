@@ -11,8 +11,9 @@ Command below must be run from postgres system user (switch to root user then sw
 `jbl-dc`.
 
 ```
-createuser jbl-dc -P && createdb jbl-dc -O jbl-dc && psql -d jbl-dc -c 'ALTER SCHEMA public OWNER TO jbl-dc;'
+createuser jbl-dc -P && createdb jbl-dc -O jbl-dc && psql -d jbl-dc -c 'ALTER SCHEMA public OWNER TO "jbl-dc";'
 ```
+In order to seed database run `npm run seed` and to seed testing schema run `MOCHA=true npm run seed`.
 
 ### Document table backup
 
