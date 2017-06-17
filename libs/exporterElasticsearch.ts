@@ -8,6 +8,7 @@ import * as db from './db';
 import * as http from 'http-as-promised';
 import {IDocumentJson, TaskExportElasticsearch, TaskExportElasticsearchTargetConfig} from "../shared/typings";
 import {log} from "./logger";
+import {Curl} from 'node-libcurl';
 
 function esHttpCall(esUrl, indexName, method?, body?) {
     return http({
@@ -56,12 +57,14 @@ export function createMapping(config: TaskExportElasticsearchTargetConfig) {
             return esHttpCall(config.url, config.indexName, 'DELETE').spread((result) => {
                 if (200 == result.statusCode) {
                     config.overwrite = false;
-                    createMapping(config)
+                    log('Eventually creating mapping');
+                    return createMapping(config);
                 } else {
                     throw new Error(`Can not delete index ${config.indexName}. HTTP status code ${result.statusCode}`);
                 }
             });
         }
+        console.error('Mapping creation exception');
         console.error(error);
         const e = errorType ? `Can not create index ${config.indexName} due to ${errorType}` : error;
         throw new Error(error);
@@ -91,29 +94,30 @@ export function bulkSaveEs(esUrl, indexName, bulk) {
     });
 }
 
-export function stream(exportTask: TaskExportElasticsearch, stream: Rx.Observable<IDocumentJson>) {
+export function stream(exportTask: TaskExportElasticsearch, stream: Rx.Observable<IDocumentJson>): Promise<Rx.Observable<IDocumentJson>> {
     return createMapping(exportTask.target).then(() => {
-        return new Promise((resolve, reject) => {
-            const concurrencyCount = 10;
-            return stream
-                .flatMap(exportTask.transform)
-                .bufferCount(exportTask.target.bulkSize)
-                .flatMap((buffer) => {
-                    return bulkSaveEs(exportTask.target.url, exportTask.target.indexName, buffer);
-                }, concurrencyCount)
-                .subscribe((item) => {
-                    log('.');
-                }, (err) => {
-                    console.error('Error while exporting to ES');
-                    reject(err);
-                }, () => {
-                    log(' [OK]', 1);
-                    resolve();
-                });
-        });
+        const concurrencyCount = 2;
+        return stream
+            .flatMap(exportTask.transform)
+            .bufferCount(exportTask.target.bulkSize)
+            .flatMap((buffer) => {
+                return bulkSaveEs(exportTask.target.url, exportTask.target.indexName, buffer);
+            }, concurrencyCount);
     });
 }
 
 export function exportFromRepoIntoElasticsearch(exportTask: TaskExportElasticsearch) {
-    return stream(exportTask, createJsonDocumentsObservable(exportTask.sourceJsonDocuments.typeName));
+    return new Promise((resolve, reject) => {
+        return stream(exportTask, createJsonDocumentsObservable(exportTask.sourceJsonDocuments.typeName)).then((observable) => {
+            observable.subscribe((item) => {
+                log('.');
+            }, (err) => {
+                console.error('Error while exporting to ES');
+                reject(err);
+            }, () => {
+                log(' [OK]', 1);
+                resolve();
+            });
+        });
+    });
 }

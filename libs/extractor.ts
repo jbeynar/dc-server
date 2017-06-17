@@ -1,6 +1,7 @@
 'use strict';
 
 import * as pg from 'pg';
+import * as Cursor from 'pg-cursor';
 import * as Rx from 'rxjs';
 import * as _ from 'lodash';
 import * as Promise from 'bluebird';
@@ -9,9 +10,9 @@ import * as db from './db';
 import {useFlavour} from 'squel';
 import {removeJsonDocuments, saveJsonDocument} from './repo';
 import * as logger from './logger';
-import {TaskExtract} from "../shared/typings";
-import {progressNotification} from "./sockets";
+import {IDocumentHttp, IDocumentJson, TaskExtract} from "../shared/typings";
 import {config} from "../config";
+import * as esExporter from "./exporterElasticsearch";
 
 const squel = useFlavour('postgres');
 
@@ -20,7 +21,7 @@ export const errorCodes = {
     documentBodyEmpty: 'ERR_DOCUMENT_BODY_EMPTY',
 };
 
-export function extract(document, extractionTask, whitelist?)
+export function extract(document: IDocumentHttp, extractionTask: TaskExtract, whitelist?)
 {
     return new Promise((resolve, reject) =>
     {
@@ -108,6 +109,27 @@ export function extract(document, extractionTask, whitelist?)
     });
 }
 
+function saveToRepo(typeName, documentOrBulk): Promise<any> {
+    let i = 0;
+    if (_.isEmpty(documentOrBulk)) {
+        return Promise.resolve(i);
+    }
+
+    if (_.isArray(documentOrBulk)) {
+        return Promise.map(documentOrBulk, (doc: IDocumentJson) => {
+            return saveJsonDocument(typeName, doc).then(() => {
+                i++;
+                doc = null;
+            });
+        }).then(() => i);
+    }
+    return saveJsonDocument(typeName, documentOrBulk).then(() => {
+        i++;
+        documentOrBulk = null;
+        return i;
+    });
+}
+
 export function extractFromRepo(extractionTask : TaskExtract)
 {
     return new Promise((resolve)=>
@@ -118,72 +140,90 @@ export function extractFromRepo(extractionTask : TaskExtract)
         resolve();
     }).then(() =>
     {
-        const pool = db.getPool(), concurrencyCount = Math.max(1, config.db.poolConfig.max - 5);
-        let i = 0, total = 10000, progress = 0;
+        // todo bulksize should be configurable
+        const bulkSize = 50;
+        let i = 0;
 
-        function createRepoHttpObservable(conditions: any): Rx.Observable<any> {
-
-            const query = squel.select().from(config.db.schema + '.document_http');
-            _.each(conditions, (value, field) => {
-                query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
-            });
-            const countQuery = query.clone().field('COUNT(id)', 'count');
-
+        function createExtractionObservable(conditions): Rx.Observable<IDocumentHttp[]> {
+            let cursor, readHandler;
             return Rx.Observable.create((subscriber) => {
-                pool.connect().then((client: pg.Client) => {
-                    client.query(countQuery.toParam()).then((result) => {
-                        total = _.get(result, 'rows[0].count', total);
-                        logger.log(`Extracting ${total} rows...`, 1);
+                db.getClient().then((client: pg.Client) => {
+
+                    const query = squel.select().from(`${config.db.schema}.document_http`);
+                    _.each(conditions, (value, field) => {
+                        query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
                     });
 
-                    const stream: pg.Query = client.query(query.toParam(), () => {
-                    });
+                    cursor = client.query(new Cursor(query.toString()));
 
-                    stream.on('row', (row) => {
-                        subscriber.next(row);
-                    });
+                    readHandler = function (err, rowsBulk) {
+                        if (err) {
+                            console.error('unexpected cursor exception');
+                            console.error(err);
+                            subscriber.error(err);
+                            return client.release();
+                        }
 
-                    stream.on('end', () => {
-                        subscriber.complete();
-                        client.release();
+                        if (!rowsBulk.length) {
+                            subscriber.complete();
+                            return client.release();
+                        }
+                        subscriber.next(rowsBulk);
+                    };
+
+                    cursor.read(bulkSize, readHandler); // initial call
+                });
+            }).flatMap((bulk) => {
+                return Promise.map(bulk, (document: IDocumentHttp) => {
+                    return extract(document, extractionTask).then((data) => {
+                        document = null;
+                        return data;
                     });
+                }).then((dataSet) => {
+                    cursor.read(bulkSize, readHandler); // backpressure
+                    return dataSet;
                 });
             });
         }
 
-        var source: Rx.Observable<any> = createRepoHttpObservable(extractionTask.sourceHttpDocuments).flatMap((row) => {
-            return extract(row, extractionTask).then((document): Promise<any> => {
-                delete row.body;
+        let observable: Rx.Observable<any> = createExtractionObservable(extractionTask.sourceHttpDocuments);
+        let targetInitPromise;
 
-                if (_.isEmpty(document)) {
-                    return Promise.resolve();
-                }
-
-                if (_.isArray(document)) {
-                    return Promise.map(document, (doc) => {
-                        i++;
-                        return saveJsonDocument(extractionTask.targetJsonDocuments.typeName, doc);
+        if (extractionTask.exportJsonDocuments) { // export to elasticsearch
+            targetInitPromise = esExporter.createMapping(extractionTask.exportJsonDocuments.target);
+            observable = observable.flatMap((bulk) => {
+                return Promise.map(bulk, extractionTask.exportJsonDocuments.transform).then((transformatedBulk) => {
+                    return esExporter.bulkSaveEs(
+                        extractionTask.exportJsonDocuments.target.url,
+                        extractionTask.exportJsonDocuments.target.indexName,
+                        transformatedBulk
+                    );
+                });
+            });
+        } else if (extractionTask.targetJsonDocuments) { // save to local postgresql
+            targetInitPromise = Promise.resolve();
+            observable = observable.flatMap((bulk) => {
+                return Promise.map(bulk, (document) => {
+                    return saveToRepo(extractionTask.targetJsonDocuments.typeName, document).then((count) => {
+                        i += count;
                     });
-                }
-                i++;
-                return saveJsonDocument(extractionTask.targetJsonDocuments.typeName, document);
-            });
-        }, concurrencyCount).bufferCount(20).map(() => {
-            progress = i / total;
-            progressNotification('terminal', extractionTask.type, extractionTask.targetJsonDocuments.typeName, progress);
-        });
+                }, {concurrency: 10});
+            }, 1);
+        }
 
-        return new Promise((resolve) => {
-            source.subscribe(() => {
-                // on next
-            }, (err) => {
-                console.log('Error on rx chain');
-                console.log(err && err.stack);
-            }, () => {
-                logger.log(`Saved ${i} JSON documents`, 1);
-                resolve();
+        return targetInitPromise.then(() => {
+            return new Promise((resolve, reject) => {
+                observable.subscribe(() => {
+                    },
+                    (err) => {
+                        logger.log('Error on rx chain');
+                        logger.log(err && err.stack);
+                        reject();
+                    }, () => {
+                        logger.log(`Saved ${i} JSON documents`, 1);
+                        resolve();
+                    });
             });
         });
-
     });
 }

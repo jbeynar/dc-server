@@ -174,6 +174,7 @@ describe('Fetch from repo database document_json table, extract and save in docu
             });
         });
     });
+
     describe('When scope is given', () => {
         it('Should extract array of documents and save each scoped item as new document', () => {
             const extractionTask = {
