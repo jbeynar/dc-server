@@ -132,98 +132,91 @@ function saveToRepo(typeName, documentOrBulk): Promise<any> {
 
 export function extractFromRepo(extractionTask : TaskExtract)
 {
-    return new Promise((resolve)=>
-    {
-        if (extractionTask.targetJsonDocuments.autoRemove) {
-            return removeJsonDocuments(extractionTask.targetJsonDocuments.typeName).then(resolve);
-        }
-        resolve();
-    }).then(() =>
-    {
-        // todo bulksize should be configurable
-        const bulkSize = 50;
-        let i = 0;
+    let i = 0;
+    const readBulkSize = 50;
 
-        function createExtractionObservable(conditions): Rx.Observable<IDocumentHttp[]> {
-            let cursor, readHandler;
-            return Rx.Observable.create((subscriber) => {
-                db.getClient().then((client: pg.Client) => {
+    function createExtractionObservable(conditions): Rx.Observable<IDocumentHttp[]> {
+        let cursor, readHandler;
+        return Rx.Observable.create((subscriber) => {
+            db.getClient().then((client: pg.Client) => {
 
-                    const query = squel.select().from(`${config.db.schema}.document_http`);
-                    _.each(conditions, (value, field) => {
-                        query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
-                    });
-
-                    cursor = client.query(new Cursor(query.toString()));
-
-                    readHandler = function (err, rowsBulk) {
-                        if (err) {
-                            console.error('unexpected cursor exception');
-                            console.error(err);
-                            subscriber.error(err);
-                            return client.release();
-                        }
-
-                        if (!rowsBulk.length) {
-                            subscriber.complete();
-                            return client.release();
-                        }
-                        subscriber.next(rowsBulk);
-                    };
-
-                    cursor.read(bulkSize, readHandler); // initial call
+                const query = squel.select().from(`${config.db.schema}.document_http`);
+                _.each(conditions, (value, field) => {
+                    query.where(field + (_.isString(value) ? ' LIKE ?' : ' = ?'), value);
                 });
-            }).flatMap((bulk) => {
-                return Promise.map(bulk, (document: IDocumentHttp) => {
-                    return extract(document, extractionTask).then((data) => {
-                        document = null;
-                        return data;
-                    });
-                }).then((dataSet) => {
-                    cursor.read(bulkSize, readHandler); // backpressure
-                    return dataSet;
+
+                cursor = client.query(new Cursor(query.toString()));
+
+                readHandler = function (err, rowsBulk) {
+                    if (err) {
+                        logger.log('unexpected cursor exception');
+                        logger.log(err);
+                        subscriber.error(err);
+                        return client.release();
+                    }
+
+                    if (!rowsBulk.length) {
+                        subscriber.complete();
+                        return client.release();
+                    }
+                    subscriber.next(rowsBulk);
+                };
+
+                cursor.read(readBulkSize, readHandler); // initial call
+            });
+        }).flatMap((bulk) => {
+            return Promise.map(bulk, (document: IDocumentHttp) => {
+                return extract(document, extractionTask).then((data) => {
+                    document = null;
+                    return data;
                 });
+            }).then((dataSet) => {
+                cursor.read(readBulkSize, readHandler); // backpressure
+                return dataSet;
             });
-        }
+        });
+    }
 
-        let observable: Rx.Observable<any> = createExtractionObservable(extractionTask.sourceHttpDocuments);
-        let targetInitPromise;
+    let observable: Rx.Observable<any> = createExtractionObservable(extractionTask.sourceHttpDocuments);
+    let targetInitPromise;
 
-        if (extractionTask.exportJsonDocuments) { // export to elasticsearch
-            targetInitPromise = esExporter.createMapping(extractionTask.exportJsonDocuments.target);
-            observable = observable.flatMap((bulk) => {
-                return Promise.map(bulk, extractionTask.exportJsonDocuments.transform).then((transformatedBulk) => {
-                    return esExporter.bulkSaveEs(
-                        extractionTask.exportJsonDocuments.target.url,
-                        extractionTask.exportJsonDocuments.target.indexName,
-                        transformatedBulk
-                    );
+    if (extractionTask.exportJsonDocuments) { // export to elasticsearch
+        targetInitPromise = esExporter.createMapping(extractionTask.exportJsonDocuments.target);
+        observable = observable.flatMap((bulk) => {
+            return Promise.map(bulk, extractionTask.exportJsonDocuments.transform).then((transformatedBulk) => {
+                return esExporter.bulkSaveEs(
+                    extractionTask.exportJsonDocuments.target.url,
+                    extractionTask.exportJsonDocuments.target.indexName,
+                    transformatedBulk
+                );
+            });
+        });
+    } else if (extractionTask.targetJsonDocuments) { // save to local postgresql
+        targetInitPromise = _.get(extractionTask, 'targetJsonDocuments.autoRemove') ?
+            removeJsonDocuments(extractionTask.targetJsonDocuments.typeName) :
+            Promise.resolve();
+
+        observable = observable.flatMap((bulk) => {
+            return Promise.map(bulk, (document) => {
+                return saveToRepo(extractionTask.targetJsonDocuments.typeName, document).then((count) => {
+                    i += count;
                 });
-            });
-        } else if (extractionTask.targetJsonDocuments) { // save to local postgresql
-            targetInitPromise = Promise.resolve();
-            observable = observable.flatMap((bulk) => {
-                return Promise.map(bulk, (document) => {
-                    return saveToRepo(extractionTask.targetJsonDocuments.typeName, document).then((count) => {
-                        i += count;
-                    });
-                }, {concurrency: 10});
-            }, 1);
-        }
+            }, {concurrency: 10});
+        }, 1);
+    }
 
-        return targetInitPromise.then(() => {
-            return new Promise((resolve, reject) => {
-                observable.subscribe(() => {
-                    },
-                    (err) => {
-                        logger.log('Error on rx chain');
-                        logger.log(err && err.stack);
-                        reject();
-                    }, () => {
-                        logger.log(`Saved ${i} JSON documents`, 1);
-                        resolve();
-                    });
-            });
+    return targetInitPromise.then(() => {
+        return new Promise((resolve, reject) => {
+            observable.subscribe(() => {
+                },
+                (err) => {
+                    logger.log('Error on rx chain');
+                    logger.log(err && err.stack);
+                    reject();
+                }, () => {
+                    logger.log(`Saved ${i} JSON documents`, 1);
+                    resolve();
+                });
         });
     });
 }
