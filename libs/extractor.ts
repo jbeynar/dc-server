@@ -23,6 +23,8 @@ export const errorCodes = {
 
 export function extract(document: IDocumentHttp, extractionTask: TaskExtract, whitelist?)
 {
+    let metadata: any = {};
+
     return new Promise((resolve, reject) =>
     {
         let $;
@@ -86,6 +88,13 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
             return reject(new Error(errorCodes.documentBodyEmpty));
         }
 
+        const decorateWithMetadata = _.isFunction(extractionTask.process) && extractionTask.process.length === 3;
+        metadata = {};
+
+        if (decorateWithMetadata) {
+            metadata = _.pick(document, ['url', 'path', 'code', 'ts']);
+        }
+
         if (_.isEmpty(extractionTask.map)) {
             try {
                 resolve(JSON.parse(document.body));
@@ -97,6 +106,11 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
         } else {
             $ = cheerio.load(document.body);
 
+            if (decorateWithMetadata) {
+                metadata.title = $('title').text();
+                metadata.author = $("meta[name='author']").attr('content');
+            }
+
             if (extractionTask.scope) {
                 resolve(_.map($(extractionTask.scope), scope => extractAll($(scope), extractionTask.map)));
             } else {
@@ -105,7 +119,22 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
         }
     }).then((extracted) =>
     {
-        return _.isFunction(extractionTask.process) ? extractionTask.process(extracted, document) : extracted;
+        if (_.isFunction(extractionTask.process)) {
+            switch (extractionTask.process.length) {
+                case 0:
+                    console.error('Specifing process function without argments doesn`t make sens');
+                    return;
+                case 1:
+                    return extractionTask.process(extracted);
+                case 2:
+                    return extractionTask.process(extracted, document);
+                case 3:
+                    return extractionTask.process(extracted, document, metadata);
+
+            }
+        } else {
+            return extracted;
+        }
     });
 }
 
