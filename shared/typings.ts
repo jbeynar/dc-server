@@ -94,7 +94,12 @@ export abstract class TaskExtract extends Task {
     map: {
         [key: string]: string|ITaskExtractDefinition;
     };
-    process(extracted: any, doc: IDocumentHttp): any{
+
+    process(extracted: any): any;
+    process(extracted: any, doc: IDocumentHttp): any;
+    process(extracted: any, doc: IDocumentHttp, metadata: any): any;
+
+    process(extracted: any): any {
         return extracted;
     }
 
