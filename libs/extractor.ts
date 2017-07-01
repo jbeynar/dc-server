@@ -178,7 +178,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
     }
 
     let observable: Rx.Observable<any> = createExtractionObservable(extractionTask.sourceHttpDocuments);
-    let targetInitPromise;
+    let targetInitPromise:Promise<any> = Promise.resolve();
 
     if (extractionTask.exportJsonDocuments) { // export to elasticsearch
         targetInitPromise = esExporter.createMapping(extractionTask.exportJsonDocuments.target);
@@ -203,6 +203,8 @@ export function extractFromRepo(extractionTask : TaskExtract)
                 });
             }, {concurrency: 10});
         }, 1);
+    }else{
+        throw new Error('Unsupported export target type');
     }
 
     return targetInitPromise.then(() => {
