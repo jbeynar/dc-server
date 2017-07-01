@@ -57,7 +57,7 @@ export function createMapping(config: TaskExportElasticsearchTargetConfig) {
             return esHttpCall(config.url, config.indexName, 'DELETE').spread((result) => {
                 if (200 == result.statusCode) {
                     config.overwrite = false;
-                    log('Eventually creating mapping');
+                    log(`Eventually creating mapping for ${config.indexName}`, 1);
                     return createMapping(config);
                 } else {
                     throw new Error(`Can not delete index ${config.indexName}. HTTP status code ${result.statusCode}`);
