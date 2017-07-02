@@ -41,7 +41,14 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
             const res = _.map(elements, (element : any) =>
             {
                 element = $(element);
-                let value = def.attribute ? element.attr(def.attribute) : element.text();
+                let value;
+                if (_.isString(def.type) && def.type === 'html') {
+                    value = (element.html() || '').replace(/\s/g, '');
+                } else {
+                    // TODO needs to refactor else case - should be map from type
+                    // + cover with test
+                    value = def.attribute ? element.attr(def.attribute) : element.text();
+                }
 
                 if (_.isFunction(def.process)) {
                     try {
@@ -84,6 +91,8 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
         if (!_.isObject(document) || _.isEmpty(document)) {
             return reject(new Error(errorCodes.documentMalformedStructure));
         }
+
+        // TODO BUGFIX this can break task, why?
         if (_.isEmpty(document.body)) {
             return reject(new Error(errorCodes.documentBodyEmpty));
         }
@@ -191,6 +200,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
                     subscriber.next(rowsBulk);
                 };
 
+                logger.log(`Start streaming with bulk size=${readBulkSize}`, 1);
                 cursor.read(readBulkSize, readHandler); // initial call
             });
         }).flatMap((bulk) => {
@@ -200,6 +210,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
                     return data;
                 });
             }).then((dataSet) => {
+                logger.log('.');
                 cursor.read(readBulkSize, readHandler); // backpressure
                 return dataSet;
             });
@@ -210,6 +221,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
     let targetInitPromise:Promise<any> = Promise.resolve();
 
     if (extractionTask.exportJsonDocuments) { // export to elasticsearch
+        logger.log(`Target URL ${extractionTask.exportJsonDocuments.target.url}`, 1);
         targetInitPromise = esExporter.createMapping(extractionTask.exportJsonDocuments.target);
         observable = observable.flatMap((bulk) => {
             return Promise.map(bulk, extractionTask.exportJsonDocuments.transform).then((transformatedBulk) => {
@@ -221,6 +233,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
             });
         });
     } else if (extractionTask.targetJsonDocuments) { // save to local postgresql
+        logger.log(`Target PostgreSQL: Local Data Center Repo`, 1);
         targetInitPromise = _.get(extractionTask, 'targetJsonDocuments.autoRemove') ?
             removeJsonDocuments(extractionTask.targetJsonDocuments.typeName) :
             Promise.resolve();

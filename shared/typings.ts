@@ -74,6 +74,7 @@ export interface ITaskExtractDefinition {
     selector: string;
     process?: any;
     default?: any;
+    type?: string;
 }
 
 export abstract class TaskExtract extends Task {
@@ -95,11 +96,8 @@ export abstract class TaskExtract extends Task {
         [key: string]: string|ITaskExtractDefinition;
     };
 
-    process(extracted: any): any;
-    process(extracted: any, doc: IDocumentHttp): any;
-    process(extracted: any, doc: IDocumentHttp, metadata: any): any;
 
-    process(extracted: any): any {
+    process(extracted: any, ...args): any {
         return extracted;
     }
 
