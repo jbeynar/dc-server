@@ -7,7 +7,7 @@ import {
     TaskDownload,
     TaskExtract,
     TaskExportElasticsearch,
-    TaskExportElasticsearchTargetConfig
+    TaskExportElasticsearchTargetConfig, IDocumentHttp
 } from "../../shared/typings";
 
 export class download extends TaskDownload {
@@ -37,15 +37,13 @@ export class exportProducts extends TaskExportElasticsearch {
     };
 
     transform(document) {
-        // todo adjust dc, mandatory sourceId at extract level
-        // body.sourceId = '' + document.url.match(/^.*produkt\/([0-9]*)\/.*/);
-        // body.sourceTs = document.ts;
-        return Promise.resolve(_.pick(document, ['name', 'brand', 'ingredients']));
+        const fields = ['group', 'name', 'brand', 'ingredients', 'nutrition', 'producerAddress', 'sourceTs'];
+        return Promise.resolve(_.pick(document, fields));
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        // url: 'http://vps404988.ovh.net:9200',
-        url: 'http://localhost:9200',
+        url: 'http://vps404988.ovh.net:9200',
+        // url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 10,
         indexName: 'product',
         overwrite: true,
@@ -57,14 +55,24 @@ export class exportProducts extends TaskExportElasticsearch {
                         type: 'string',
                         index: 'not_analyzed'
                     },
+                    group: {
+                        type: 'string'
+                    },
                     brand: {
+                        type: 'string'
+                    },
+                    producerAddress: {
                         type: 'string'
                     },
                     ingredients: {
                         type: 'string'
                     },
+                    nutrition: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
                     sourceTs: {
-                        type: 'string'
+                        type: 'date'
                     }
                 }
             }
@@ -94,8 +102,13 @@ export class extract extends TaskExtract {
             selector: 'h3:contains("Cechy") ~ ul>li'
         },
         nutrition: {
+            type: 'html',
             singular: false,
-            selector: 'h3:contains("Wartości odżywcze") ~ table>tbody>tr>*'
+            selector: 'h3:contains("Wartości odżywcze") ~ table'
+        },
+        producerAddress: {
+            singular: true,
+            selector: 'h3:contains("Adres producenta") ~ p'
         },
         brand: {
             singular: true,
@@ -118,6 +131,12 @@ export class extract extends TaskExtract {
             selector: '.zoom .fancybox',
             attribute: 'href'
         }
+    };
+
+    process(extracted, doc, metadata): any {
+        extracted.nutrition = '<table>' + extracted.nutrition + '</table>';
+        extracted.sourceTs = metadata.ts;
+        return extracted;
     };
 
     exportJsonDocuments = new exportProducts();
