@@ -1,17 +1,27 @@
 version: "3"
 services:
 
-    elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
-        ports:
-            - "9200:9200"
-        networks:
-            - elk
-
     mongodb:
         image: mongo:3.2.12
         ports:
             - "27017:27017"
+
+    postgresql:
+        image: postgres:9.6.3
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./repo:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_USER=jbl-dc
+            - POSTGRES_PASSWORD=jbl-dc
+            - POSTGRES_DB=jbl-dc
+            - PGDATA=/var/lib/postgresql/data/pgdata
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
+        ports:
+            - "9200:9200"
         networks:
             - elk
 
@@ -23,6 +33,7 @@ services:
             - elasticsearch
         networks:
             - elk
+
 networks:
   elk:
     driver: bridge
