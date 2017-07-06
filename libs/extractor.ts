@@ -21,16 +21,13 @@ export const errorCodes = {
     documentBodyEmpty: 'ERR_DOCUMENT_BODY_EMPTY',
 };
 
-export function extract(document: IDocumentHttp, extractionTask: TaskExtract, whitelist?)
-{
+export function extract(document: IDocumentHttp, extractionTask: TaskExtract, whitelist?) {
     let metadata: any = {};
 
-    return new Promise((resolve, reject) =>
-    {
+    return new Promise((resolve, reject) => {
         let $;
 
-        function extractOnce($scope, def, key)
-        {
+        function extractOnce($scope, def, key) {
             if (_.isArray(whitelist) && !_.includes(whitelist, key)) {
                 return null;
             }
@@ -38,8 +35,7 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
             const selector = _.isString(def) ? def : def.selector;
             const elements = $scope.find(selector);
 
-            const res = _.map(elements, (element : any) =>
-            {
+            const res = _.map(elements, (element: any) => {
                 element = $(element);
                 let value;
                 if (_.isString(def.type) && def.type === 'html') {
@@ -76,11 +72,9 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
             return def.singular ? _.first(res) : res;
         }
 
-        function extractAll($scope, map)
-        {
+        function extractAll($scope, map) {
             const extracted = _.chain(map).keys().zipObject().value() || {};
-            _.forEach(map, (def, key) =>
-            {
+            _.forEach(map, (def, key) => {
                 let extractedValue = extractOnce($scope, def, key);
                 extracted[key] = extractedValue != null ? extractedValue : def.default;
             });
@@ -126,8 +120,7 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
                 resolve(extractAll($('html'), extractionTask.map));
             }
         }
-    }).then((extracted) =>
-    {
+    }).then((extracted) => {
         if (_.isFunction(extractionTask.process)) {
             switch (extractionTask.process.length) {
                 case 0:
@@ -168,8 +161,7 @@ function saveToRepo(typeName, documentOrBulk): Promise<any> {
     });
 }
 
-export function extractFromRepo(extractionTask : TaskExtract)
-{
+export function extractFromRepo(extractionTask: TaskExtract) {
     let i = 0;
     const readBulkSize = 50;
 
@@ -218,7 +210,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
     }
 
     let observable: Rx.Observable<any> = createExtractionObservable(extractionTask.sourceHttpDocuments);
-    let targetInitPromise:Promise<any> = Promise.resolve();
+    let targetInitPromise: Promise<any> = Promise.resolve();
 
     if (extractionTask.exportJsonDocuments) { // export to elasticsearch
         logger.log(`Target URL ${extractionTask.exportJsonDocuments.target.url}`, 1);
@@ -245,7 +237,7 @@ export function extractFromRepo(extractionTask : TaskExtract)
                 });
             }, {concurrency: 10});
         }, 1);
-    }else{
+    } else {
         throw new Error('Unsupported export target type');
     }
 
@@ -254,8 +246,9 @@ export function extractFromRepo(extractionTask : TaskExtract)
             observable.subscribe(() => {
                 },
                 (err) => {
-                    logger.log('Error on rx chain');
-                    logger.log(err && err.stack);
+                    logger.log('Error on extractor RX chain', 1);
+                    logger.log(err.toString());
+                    logger.log(err);
                     reject();
                 }, () => {
                     logger.log(`Saved ${i} JSON documents`, 1);

@@ -73,24 +73,36 @@ export function createMapping(config: TaskExportElasticsearchTargetConfig) {
 
 export function bulkSaveEs(esUrl, indexName, bulk) {
     const body = _.reduce(bulk, (acc, item) => {
+            if (!item) {
+                return acc;
+            }
             acc.push(JSON.stringify({index: {_index: indexName, _type: indexName}}));
             acc.push(JSON.stringify(item));
             return acc;
         }, []).join('\n') + '\n';
 
+    if (body.length <= 1) {
+        return 0;
+    }
+
     return http({uri: `${esUrl}/${indexName}/_bulk`, method: 'POST', body}).spread((result, body) => {
         const response = JSON.parse(body);
         if (response.errors) {
-            const error = _.get(response, 'items[0].index.error.reason', '') || 'Can not perform ES bulk';
-            throw new Error(error);
+            console.error('ES bulk insert failed on some documents');
         }
-        let i = 0;
-        _.forEach(response.items, (item) => {
+        let success = 0, failure = 0;
+        _.forEach(response.items, (item, index: number) => {
             if (201 === item.index.status) {
-                i++;
+                success++;
+            } else {
+                failure++;
+                console.log('Document source:');
+                console.log(bulk[index]);
+                console.log('Error details:');
+                console.error(item.index);
             }
         });
-        return i;
+        return success;
     });
 }
 
