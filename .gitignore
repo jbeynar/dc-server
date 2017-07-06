@@ -9,4 +9,5 @@ typings
 coverage
 exports/*
 npm-debug.log*
-repo/*
+docker_volumes/*
+.DS_Store

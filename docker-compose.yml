@@ -11,7 +11,7 @@ services:
         ports:
             - "5432:5432"
         volumes:
-            - ./repo:/var/lib/postgresql/data
+            - ./docker_volumes/pgdata:/var/lib/postgresql/data
         environment:
             - POSTGRES_USER=jbl-dc
             - POSTGRES_PASSWORD=jbl-dc
@@ -22,8 +22,8 @@ services:
         image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
         ports:
             - "9200:9200"
-        networks:
-            - elk
+        volumes:
+            - ./docker_volumes/esdata:/usr/share/elasticsearch/data
 
     kibana:
         image: docker.elastic.co/kibana/kibana:5.4.3
@@ -31,9 +31,3 @@ services:
             - "5601:5601"
         depends_on:
             - elasticsearch
-        networks:
-            - elk
-
-networks:
-  elk:
-    driver: bridge
