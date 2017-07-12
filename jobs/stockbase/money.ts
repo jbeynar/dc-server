@@ -14,15 +14,15 @@ export class download extends TaskDownload {
     }
 }
 
-export class exportProducts extends TaskExportElasticsearch {
-    transform(document){
+class exportProducts extends TaskExportElasticsearch {
+    transform(document) {
         // todo handle many documents for export
         return document[0];
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        url: 'http://vps404988.ovh.net:9200',
-        // url: 'http://localhost:9200',
+        url: 'http://elastic:changeme@vps404988.ovh.net:9200',
+        // url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 50,
         indexName: 'recommendation',
         overwrite: true,
