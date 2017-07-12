@@ -10,22 +10,36 @@ export class download extends TaskDownload {
     name = 'stockbase-quotations';
 
     urls() {
-        return _.map(symbols, (symbol) => {
-            return _.times(2, (i) => {
-                return 'http://www.biznesradar.pl/notowania-historyczne/' + symbol + ',' + i;
+        const urls = [];
+        _.forEach(symbols, (symbol) => {
+            _.times(2, (i) => {
+                urls.push('http://www.biznesradar.pl/notowania-historyczne/' + symbol + ',' + i);
             });
-        })
+        });
+        return urls;
     }
 }
+
 class exportProducts extends TaskExportElasticsearch {
     transform(document) {
-        return document[0];
+        if (_.isEmpty(document[1])) {
+            return;
+        }
+        return {
+            open: parseFloat(document[1].open),
+            close: parseFloat(document[1].close),
+            high: parseFloat(document[1].high),
+            low: parseFloat(document[1].low),
+            volume: parseFloat(document[1].volume),
+            turnover: parseFloat(document[1].turnover),
+            date: document[1].date,
+        };
     }
 
     target: TaskExportElasticsearchTargetConfig = {
         url: 'http://elastic:changeme@vps404988.ovh.net:9200',
         // url: 'http://elastic:changeme@localhost:9200',
-        bulkSize: 50,
+        bulkSize: 2,
         indexName: 'quotations',
         overwrite: true,
         mapping: {
@@ -51,14 +65,19 @@ class exportProducts extends TaskExportElasticsearch {
                     volume: {
                         type: 'float',
                     },
+                    turnover: {
+                        type: 'float',
+                    },
                     date: {
-                        type: 'date'
+                        type: 'string',
+                        index: 'not_analyzed'
                     }
                 }
             }
         }
     };
 }
+
 export class extract extends TaskExtract {
     sourceHttpDocuments = {
         name: 'stockbase-quotations'
