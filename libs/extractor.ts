@@ -163,8 +163,9 @@ function saveToRepo(typeName, documentOrBulk): Promise<any> {
 
 export function extractFromRepo(extractionTask: TaskExtract) {
     let i = 0;
-    const readBulkSize = 50;
+    const readBulkSize = _.get(extractionTask, 'exportJsonDocuments.target.bulkSize', 50);
 
+    // todo move this function to upper scope
     function createExtractionObservable(conditions): Rx.Observable<IDocumentHttp[]> {
         let cursor, readHandler;
         return Rx.Observable.create((subscriber) => {
@@ -221,7 +222,9 @@ export function extractFromRepo(extractionTask: TaskExtract) {
                     extractionTask.exportJsonDocuments.target.url,
                     extractionTask.exportJsonDocuments.target.indexName,
                     transformatedBulk
-                );
+                ).then((successCount) => {
+                    i += successCount;
+                });
             });
         });
     } else if (extractionTask.targetJsonDocuments) { // save to local postgresql
@@ -248,8 +251,8 @@ export function extractFromRepo(extractionTask: TaskExtract) {
                 (err) => {
                     logger.log('Error on extractor RX chain', 1);
                     logger.log(err.toString());
-                    logger.log(err);
-                    reject();
+                    logger.error(err);
+                    reject(err);
                 }, () => {
                     logger.log(`Saved ${i} JSON documents`, 1);
                     resolve();

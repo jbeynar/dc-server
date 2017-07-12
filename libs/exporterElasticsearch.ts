@@ -71,7 +71,7 @@ export function createMapping(config: TaskExportElasticsearchTargetConfig) {
     });
 }
 
-export function bulkSaveEs(esUrl, indexName, bulk) {
+export function bulkSaveEs(esUrl, indexName, bulk): Promise<any> {
     const body = _.reduce(bulk, (acc, item) => {
             if (!item) {
                 return acc;
@@ -82,27 +82,36 @@ export function bulkSaveEs(esUrl, indexName, bulk) {
         }, []).join('\n') + '\n';
 
     if (body.length <= 1) {
-        return 0;
+        return Promise.resolve(0);
     }
 
-    return http({uri: `${esUrl}/${indexName}/_bulk`, method: 'POST', body}).spread((result, body) => {
-        const response = JSON.parse(body);
-        if (response.errors) {
-            console.error('ES bulk insert failed on some documents');
-        }
-        let success = 0, failure = 0;
-        _.forEach(response.items, (item, index: number) => {
-            if (201 === item.index.status) {
-                success++;
-            } else {
-                failure++;
-                console.log('Document source:');
-                console.log(bulk[index]);
-                console.log('Error details:');
-                console.error(item.index);
+    return new Promise((resolve) => {
+        const query = {
+            error: true,
+            uri: `${esUrl}/${indexName}/_bulk`,
+            method: 'POST',
+            body
+        };
+
+        http(query).spread((result, body) => {
+            const response = JSON.parse(body);
+            if (response.errors) {
+                console.error('ES bulk insert failed on some documents');
             }
+            let success = 0, failure = 0;
+            _.forEach(response.items, (item, index: number) => {
+                if (201 === item.index.status) {
+                    success++;
+                } else {
+                    failure++;
+                    console.log('Document source:');
+                    console.log(bulk[index]);
+                    console.log('Error details:');
+                    console.error(item.index);
+                }
+            });
+            resolve(success)
         });
-        return success;
     });
 }
 

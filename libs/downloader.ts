@@ -17,7 +17,7 @@ const defaultOptions = {
 export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> {
     const options = defaultOptions;
 
-    function autoRemoveSeries():Promise<any> {
+    function autoRemoveSeries(): Promise<any> {
         if (downloadTask.autoRemove) {
             log(`Removing all http documents with name ${downloadTask.name}`, 1);
             return repo.removeHttpDocumentsByName(downloadTask.name);
@@ -36,6 +36,10 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
             let i = 0;
             const faildDownloads = [];
             return Promise.mapSeries(urls, function (url: string) {
+                if (!_.isString(url)) {
+                    console.error(url);
+                    throw new Error(`URL must be string, but ${typeof url} was given`);
+                }
                 log(++i + '/' + urls.length + ' ' + url);
                 return new Promise((resolve) => {
                     const curl = new Curl();
@@ -88,7 +92,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                     curl.perform();
 
                 }).delay(_.get(downloadTask, 'options.intervalTime', options.intervalTime));
-            }).catch(db.exceptionHandler).then(() => {
+            }).then(() => {
                 if (!_.isEmpty(faildDownloads)) {
                     console.log('Fail on some URLs');
                     console.log(JSON.stringify(faildDownloads, null, 4));
