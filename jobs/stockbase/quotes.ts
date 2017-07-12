@@ -39,8 +39,8 @@ class exportProducts extends TaskExportElasticsearch {
     target: TaskExportElasticsearchTargetConfig = {
         url: 'http://elastic:changeme@vps404988.ovh.net:9200',
         // url: 'http://elastic:changeme@localhost:9200',
-        bulkSize: 2,
-        indexName: 'quotations',
+        bulkSize: 50,
+        indexName: 'quotation',
         overwrite: true,
         mapping: {
             quotations: {
