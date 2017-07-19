@@ -21,26 +21,14 @@ export class download extends TaskDownload {
 }
 
 class exportProducts extends TaskExportElasticsearch {
-    transform(document) {
-        if (_.isEmpty(document[1])) {
-            return;
-        }
-        return {
-            symbol: document[1].symbol,
-            date: document[1].date,
-            open: parseFloat(document[1].open),
-            close: parseFloat(document[1].close),
-            high: parseFloat(document[1].high),
-            low: parseFloat(document[1].low),
-            volume: parseInt(document[1].volume),
-            turnover: parseInt(document[1].turnover)
-        };
+    transform(dataset) {
+        return dataset;
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        // url: 'http://elastic:changeme@vps404988.ovh.net:9200',
-        url: 'http://elastic:changeme@localhost:9200',
-        bulkSize: 50,
+        url: 'http://elastic:changeme@vps404988.ovh.net:9200',
+        // url: 'http://elastic:changeme@localhost:9200',
+        bulkSize: 4,
         indexName: 'quotation',
         overwrite: true,
         mapping: {
@@ -115,18 +103,22 @@ export class extract extends TaskExtract {
     };
 
     process(dataset, document, meta) {
-        dataset.splice(0, 1);
+        dataset.splice(0, 1); // remove first item cause it is a header
         if (_.isString(meta.path) && !_.isEmpty(meta.path)) {
             const result = meta.path.match(/\/notowania-historyczne\/(.*),/);
             const symbol = _.get(result, [1], '');
 
             _.forEach(dataset, (item) => {
-                item.symbol = symbol;
-                item.volume = item.volume.replace(' ', '');
-                item.turnover = item.turnover.replace(' ', '');
                 const rawDate = item.date.split('.');
                 const date = new Date(rawDate[2], parseInt(rawDate[1]) - 1, rawDate[0], 17, 0, 0, 0);
+                item.symbol = symbol;
                 item.date = date;
+                item.volume = parseInt(item.volume.replace(' ', ''));
+                item.turnover = parseInt(item.turnover.replace(' ', ''));
+                item.open = parseFloat(item.open);
+                item.close = parseFloat(item.close);
+                item.high = parseFloat(item.high);
+                item.low = parseFloat(item.low);
             });
         }
         return dataset;

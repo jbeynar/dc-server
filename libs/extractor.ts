@@ -221,7 +221,7 @@ export function extractFromRepo(extractionTask: TaskExtract) {
                 return esExporter.bulkSaveEs(
                     extractionTask.exportJsonDocuments.target.url,
                     extractionTask.exportJsonDocuments.target.indexName,
-                    transformatedBulk
+                    _.isArray(_.first(transformatedBulk)) ? _.flatten(transformatedBulk) : transformatedBulk
                 ).then((successCount) => {
                     i += successCount;
                 });
