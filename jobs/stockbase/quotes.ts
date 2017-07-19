@@ -26,19 +26,20 @@ class exportProducts extends TaskExportElasticsearch {
             return;
         }
         return {
+            symbol: document[1].symbol,
+            date: document[1].date,
             open: parseFloat(document[1].open),
             close: parseFloat(document[1].close),
             high: parseFloat(document[1].high),
             low: parseFloat(document[1].low),
-            volume: parseFloat(document[1].volume),
-            turnover: parseFloat(document[1].turnover),
-            date: document[1].date,
+            volume: parseInt(document[1].volume),
+            turnover: parseInt(document[1].turnover)
         };
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        url: 'http://elastic:changeme@vps404988.ovh.net:9200',
-        // url: 'http://elastic:changeme@localhost:9200',
+        // url: 'http://elastic:changeme@vps404988.ovh.net:9200',
+        url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 50,
         indexName: 'quotation',
         overwrite: true,
@@ -69,8 +70,7 @@ class exportProducts extends TaskExportElasticsearch {
                         type: 'float',
                     },
                     date: {
-                        type: 'string',
-                        index: 'not_analyzed'
+                        type: 'date'
                     }
                 }
             }
@@ -113,6 +113,24 @@ export class extract extends TaskExtract {
             selector: 'td:nth-child(7)'
         }
     };
+
+    process(dataset, document, meta) {
+        dataset.splice(0, 1);
+        if (_.isString(meta.path) && !_.isEmpty(meta.path)) {
+            const result = meta.path.match(/\/notowania-historyczne\/(.*),/);
+            const symbol = _.get(result, [1], '');
+
+            _.forEach(dataset, (item) => {
+                item.symbol = symbol;
+                item.volume = item.volume.replace(' ', '');
+                item.turnover = item.turnover.replace(' ', '');
+                const rawDate = item.date.split('.');
+                const date = new Date(rawDate[2], parseInt(rawDate[1]) - 1, rawDate[0], 17, 0, 0, 0);
+                item.date = date;
+            });
+        }
+        return dataset;
+    }
 
     exportJsonDocuments = new exportProducts();
 }

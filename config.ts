@@ -22,7 +22,7 @@ export const config = {
         poolConfig: {
             ssl: process.env.DATABASE_SSL || false,
             max: process.env.DATABASE_POOL_MAX || 90,
-            idleTimeoutMillis: 5000,
+            idleTimeoutMillis: 60000,
             host: process.env.DATABASE_HOST || 'localhost',
             user: process.env.DATABASE_USER || 'jbl-dc',
             password: process.env.DATABASE_PASSWORD || 'jbl-dc',
