@@ -14,7 +14,7 @@ export class download extends TaskDownload {
     name = 'foodbase-alleceny';
 
     urls() {
-        return _.map(_.range(108601, 110000), (i) => `http://www.alleceny.pl/produkt/${i}/tux`)
+        return _.map(_.range(1, 10000), (i) => `http://www.alleceny.pl/produkt/${i}/a`)
     };
 
     options = {
@@ -26,12 +26,13 @@ export class download extends TaskDownload {
             'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
             'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language: pl',
-            'Cookie: PHPSESSID=jhh9c4p31vi8uh6snpk2u6ej91; modal-info=true; grey_wizard_captcha=VWrRzWA0D%2FM6tolmJ9aa4S2zDNgVeh1YxRp1oE5wlDkviwcaflm42IphTvnOzy5G3oZ5nQ%2FHgWP94Q%2FMVyvwcQ%3D%3D; grey_wizard=T2kFe9RU1lOCIDctQfiYAaTC5dpWCWnw8z0qfQ88yNaDeLSGA6uihkpxCdXepy9jeqgmpXg4Ix3FFV18ER1XlA%3D%3D; _ga=GA1.2.2091708389.1493022157; _gat=1'],
-        intervalTime: 1150
+            'Cookie: PHPSESSID=n35noqf9lmlm70peoi8hhkime6; grey_wizard=%2BqQzF2OI5kpFHrijKBL%2FiLvGcmeIrmsEBoLn1l5pOMROXnUA2g%2B%2B5oGf7mNZ9TDNodtKAhKB8vdERZP283fDSm2dSDLnDN6nS9vpQ%2B9j4Vg%3D; _gat=1; _ga=GA1.2.2091708389.1493022157; _gid=GA1.2.1000376719.1501059718; _gat_UA-19035528-6=1'],
+        intervalTime: 1250
     }
 }
 
-export class exportProducts extends TaskExportElasticsearch {
+// TODO bump node + npm version and reinstall npm module
+class exportProducts extends TaskExportElasticsearch {
     sourceJsonDocuments = {
         typeName: 'foodbase-alleceny'
     };
@@ -42,8 +43,7 @@ export class exportProducts extends TaskExportElasticsearch {
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        url: 'http://vps404988.ovh.net:9200',
-        // url: 'http://elastic:changeme@localhost:9200',
+        url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 10,
         indexName: 'product',
         overwrite: true,
@@ -84,10 +84,7 @@ export class extract extends TaskExtract {
     sourceHttpDocuments = {
         name: 'foodbase-alleceny'
     };
-    targetJsonDocuments = {
-        typeName: 'foodbase-alleceny',
-        autoRemove: true
-    };
+
     map = {
         name: {
             singular: true,

@@ -1,13 +1,14 @@
 import _ = require('lodash');
 import {
-    TaskDownload, TaskExportElasticsearch, TaskExportElasticsearchTargetConfig,
+    TaskDownload,
+    TaskExportElasticsearch,
+    TaskExportElasticsearchTargetConfig,
     TaskExtract
 } from "../../shared/typings";
 
 export class download extends TaskDownload {
     name = 'stockbase-symbol';
     autoRemove = true;
-
     urls() {
         return ['http://www.biznesradar.pl/gielda/akcje_gpw'];
     }
@@ -17,7 +18,6 @@ class exportProducts extends TaskExportElasticsearch {
     transform(dataset) {
         return dataset;
     }
-
     target: TaskExportElasticsearchTargetConfig = {
         url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 10,
@@ -59,6 +59,5 @@ export class extract extends TaskExtract {
             process: /[A-Z\-0-9]+$/
         }
     };
-
     exportJsonDocuments = new exportProducts();
 }

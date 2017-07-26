@@ -1,7 +1,6 @@
 'use strict';
 
 import * as _ from 'lodash';
-import * as db from './db';
 import * as repo from './repo';
 import * as Promise from 'bluebird';
 import * as urlInfoService from 'url';
@@ -27,14 +26,13 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
     }
 
     function isDocumentExists(url) {
-        // todo
-        // repo.isDocumentExists
+        // todo implement function body
     }
 
     function downloadSeries() {
         return Promise.resolve(downloadTask.urls()).then((urls) => {
             let i = 0;
-            const faildDownloads = [];
+            const failedItems = [];
             return Promise.mapSeries(urls, function (url: string) {
                 if (!_.isString(url)) {
                     console.error(url);
@@ -69,7 +67,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                         log(' [' + documentHttp.code + ']', 1);
 
                         if (200 !== documentHttp.code) {
-                            faildDownloads.push({url: url, code: documentHttp.code});
+                            failedItems.push({url: url, code: documentHttp.code});
                         }
 
                         repo.saveHttpDocument(documentHttp).then(() => {
@@ -84,7 +82,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                         console.log(`Downloader error: ${errCode}`);
                         console.log(error);
                         console.log(`Faild on ${url}`, 1);
-                        faildDownloads.push({url: url, error: error});
+                        failedItems.push({url: url, error: error});
                         this.close();
                         resolve();
                     });
@@ -93,9 +91,11 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
 
                 }).delay(_.get(downloadTask, 'options.intervalTime', options.intervalTime));
             }).then(() => {
-                if (!_.isEmpty(faildDownloads)) {
+                if (!_.isEmpty(failedItems)) {
                     console.log('Fail on some URLs');
-                    console.log(JSON.stringify(faildDownloads, null, 4));
+                    _.forEach(failedItems, (item) => {
+                        console.log(item.url, item.code || item.error);
+                    });
                 } else {
                     console.log('All URLs downloaded successfully');
                 }

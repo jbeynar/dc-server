@@ -127,7 +127,7 @@ function setupSocketServer() {
     log(`JBL Data Center Sockets server starts at ${config.webapi.socketServer.url}`, 1);
 }
 
-if (!config.mocha) {
+if (!config.mocha && _.get(config, 'webapi.socketServer.enable')) {
     setupSocketServer();
 }
 

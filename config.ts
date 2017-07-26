@@ -12,6 +12,7 @@ export const config = {
             host: process.env.DC_WEBAPI_HTTP_SERVER || 'localhost'
         },
         socketServer: {
+            enable: false,
             port: process.env.DC_WEBAPI_SOCKET_PORT || 3333,
             url: process.env.DC_WEBAPI_SOCKET_SERVER || 'http://localhost:3333/ns'
         }

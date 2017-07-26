@@ -9,10 +9,10 @@ import * as repo from "../../libs/repo";
 import {config} from '../../config';
 
 const expect = chai.expect;
-const esExecutionDelay = 500;
+const esExecutionDelay = 1000;
 
 const targetConfig = {
-    url: 'http://localhost:9200',
+    url: 'http://elastic:changeme@localhost:9200',
     indexName: 'repo-test-index'
 };
 
@@ -68,7 +68,7 @@ describe('elasticsearchExporter', () => {
     it('target ES instance is running', () => {
         return http.get(targetConfig.url).spread((result, body) => {
             body = JSON.parse(body);
-            expect(body.cluster_name).to.be.equal('elasticsearch');
+            expect(body.cluster_name).to.be.equal('docker-cluster');
             return expect(result.statusCode).to.be.equal(200);
         });
     });
