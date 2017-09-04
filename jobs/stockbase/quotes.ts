@@ -28,7 +28,7 @@ class exportProducts extends TaskExportElasticsearch {
     target: TaskExportElasticsearchTargetConfig = {
         url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 4,
-        indexName: 'quotation',
+        indexName: 'quotation-september',
         overwrite: true,
         mapping: {
             quotations: {
@@ -58,6 +58,12 @@ class exportProducts extends TaskExportElasticsearch {
                     },
                     date: {
                         type: 'date'
+                    },
+                    stats: {
+                        dynamic: true,
+                        ema20: {
+                            type: 'float'
+                        }
                     }
                 }
             }
