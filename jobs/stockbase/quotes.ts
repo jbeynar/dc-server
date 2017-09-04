@@ -8,6 +8,7 @@ const symbols = ['11-BIT-STUDIOS', 'AAT', 'ASSECO-POLAND', 'AMICA', 'APR', 'ARTI
 
 export class download extends TaskDownload {
     name = 'stockbase-quotations';
+    autoRemove = true;
 
     urls() {
         const urls = [];
