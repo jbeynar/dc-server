@@ -32,7 +32,7 @@ class exportProducts extends TaskExportElasticsearch {
         indexName: 'quotation-september',
         overwrite: true,
         mapping: {
-            quotations: {
+            'quotation-september': {
                 dynamic: 'strict',
                 properties: {
                     symbol: {
