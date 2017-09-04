@@ -62,8 +62,10 @@ class exportProducts extends TaskExportElasticsearch {
                     },
                     stats: {
                         dynamic: true,
-                        ema20: {
-                            type: 'float'
+                        properties: {
+                            ema20: {
+                                type: 'float'
+                            }
                         }
                     }
                 }
