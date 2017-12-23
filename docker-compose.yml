@@ -24,7 +24,11 @@ services:
             - "9200:9200"
         volumes:
             - ./docker_volumes/esdata:/usr/share/elasticsearch/data
-
+        environment:
+            - xpack.security.enabled=false
+            - http.cors.enabled=true
+            - http.cors.allow-origin=*
+            - http.cors.allow-headers="X-Requested-With, Content-Type, Content-Length, Authorization"
     kibana:
         image: docker.elastic.co/kibana/kibana:5.4.3
         ports:
