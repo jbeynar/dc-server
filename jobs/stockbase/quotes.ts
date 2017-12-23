@@ -14,7 +14,7 @@ export class download extends TaskDownload {
         const urls = [];
         _.forEach(symbols, (symbol) => {
             _.times(40, (i) => {
-                urls.push('http://www.biznesradar.pl/notowania-historyczne/' + symbol + ',' + i+1);
+                urls.push('http://www.biznesradar.pl/notowania-historyczne/' + symbol + ',' + (i+1));
             });
         });
         return urls;
