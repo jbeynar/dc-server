@@ -14,7 +14,7 @@ export class download extends TaskDownload {
         const urls = [];
         _.forEach(symbols, (symbol) => {
             _.times(40, (i) => {
-                urls.push('http://www.biznesradar.pl/notowania-historyczne/' + symbol + ',' + i);
+                urls.push('http://www.biznesradar.pl/notowania-historyczne/' + symbol + ',' + i+1);
             });
         });
         return urls;
@@ -29,10 +29,10 @@ class exportProducts extends TaskExportElasticsearch {
     target: TaskExportElasticsearchTargetConfig = {
         url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 4,
-        indexName: 'quotation-september',
+        indexName: 'quotation-december',
         overwrite: true,
         mapping: {
-            'quotation-september': {
+            'quotation-december': {
                 dynamic: 'strict',
                 properties: {
                     symbol: {
