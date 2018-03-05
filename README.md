@@ -2,17 +2,8 @@
 
 ## Database
 
-### Database setup
+### Database seed
 
-Before start, make sure you've got at least PgSQL 9.4 in your system, it's configured to listen localhost connection (refer to `postgresql.conf`) and accept 
-md5 authentication (refer to `pg_hba.conf`).
-
-Command below must be run from postgres system user (switch to root user then switch to postgres by su postgres). When prompted for password, enter 
-`jbl-dc`.
-
-```
-createuser jbl-dc -P && createdb jbl-dc -O jbl-dc && psql -d jbl-dc -c 'ALTER SCHEMA public OWNER TO "jbl-dc";'
-```
 In order to seed database run `npm run seed` and to seed testing schema run `MOCHA=true npm run seed`.
 
 ### Document table backup
@@ -38,6 +29,10 @@ Try this:
 ```
 npm install node-libcurl --build-from-source
 ```
+
+### Issue on Debian
+1. chmod 777 on esedate
+2. sudo sysctl -w vm.max_map_count=262144
 
 ## TypeScript
 ### Watch and transpile TypeScript files
