@@ -68,7 +68,7 @@ Executing specific task run:
 npm run dc jobName specificTaskName
 ```
 
-Executing all job's task:
+Executing all job's tasks sequentially in order of job file:
 ```
 npm run dc jobName
 ```
