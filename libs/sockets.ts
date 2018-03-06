@@ -4,7 +4,6 @@ const io = require('socket.io-client');
 import {config} from "../config";
 import * as _ from 'lodash';
 
-console.log('Sockets Mirror Setup');
 const conn = io.connect(config.webapi.socketServer.url);
 
 export function progressNotification(jobName, taskType, taskName, progress): void {

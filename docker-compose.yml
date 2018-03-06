@@ -1,11 +1,5 @@
 version: "3"
 services:
-
-    mongodb:
-        image: mongo:3.2.12
-        ports:
-            - "27017:27017"
-
     postgresql:
         image: postgres:9.6.3
         ports:
@@ -29,9 +23,15 @@ services:
             - http.cors.enabled=true
             - http.cors.allow-origin=*
             - http.cors.allow-headers="X-Requested-With, Content-Type, Content-Length, Authorization"
-    kibana:
-        image: docker.elastic.co/kibana/kibana:5.4.3
-        ports:
-            - "5601:5601"
-        depends_on:
-            - elasticsearch
+
+#    mongodb:
+#        image: mongo:3.2.12
+#        ports:
+#            - "27017:27017"
+
+#    kibana:
+#        image: docker.elastic.co/kibana/kibana:5.4.3
+#        ports:
+#            - "5601:5601"
+#        depends_on:
+#            - elasticsearch

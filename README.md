@@ -1,25 +1,33 @@
 # JBL Data Center Server
 
-## Database
+## Prerequirements
+Nodejs 4 in your system. Current version was tested on nodejs 4.6.2. 
 
-### Database seed
+## Services
+Use docker-compose.yml to ensure postgresql and elasticsearch; mongodb and kibana are optional services.
 
-In order to seed database run `npm run seed` and to seed testing schema run `MOCHA=true npm run seed`.
+## Database seed
+In order to seed database run:
+```
+npm run seed
+``` 
+and to seed schema for the tests run: 
+```
+MOCHA=true npm run seed
+```
 
-### Document table backup
-
+## Document table backup
 ```
 pg_dump -h localhost -U jbl-dc -W -h localhost -a -n public -t document -v --format=tar -f dump.document.tar.gz jbl-dc
 ```
 You can also use custom format, it's probably even lighter.
 
-### Document table restore
-
+## Document table restore
 ```
 pg_restore -h localhost -U jbl-dc -W -n public -t document -a -v --format=tar dump.document.tar.gz -d jbl-dc
 ```
 
-### Issue on OS X
+## Issue on macOS
 
 If you encounter issue like this:
 ```
@@ -30,19 +38,26 @@ Try this:
 npm install node-libcurl --build-from-source
 ```
 
-### Issue on Debian
+## Elasticsearch issue on Debian
 1. chmod 777 on esedate
 2. sudo sysctl -w vm.max_map_count=262144
 
-## TypeScript
-### Watch and transpile TypeScript files
+
+## Run tests
+Before start and finish your work run tests
+```
+npm run test
+
+```
+
+## TypeScript watch and transpile
 ```
 tsc -w --pretty
 ```
 
 You can also configure Webstorm to transpile them using options from tsconfig.json (Open settings and search for "use tsconfig.json")
 
-## JBL Data Center Launcher
+## DC job manager
 Listing job's tasks run:
 ```
 npm run dc jobName listTasks
