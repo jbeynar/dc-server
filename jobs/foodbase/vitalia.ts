@@ -42,8 +42,7 @@ class esExport extends TaskExportElasticsearch {
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        // url: 'http://elastic:changeme@localhost:9200',
-        url: 'http://elastic:changeme@vps404988.ovh.net:9200',
+        url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 50,
         indexName: 'ingredient',
         overwrite: true,

@@ -2,9 +2,11 @@ import {
     TaskDownload, TaskExportElasticsearch, TaskExportElasticsearchTargetConfig,
     TaskExtract
 } from "../../shared/typings";
-import * as _ from 'lodash';
+// import * as _ from 'lodash';
 import * as Promise from 'bluebird';
 import * as http from 'http-as-promised';
+
+const _ = require('lodash');
 
 let categories = [];
 const bulkSize = 200;
@@ -34,7 +36,7 @@ export class extractCategories extends TaskExtract {
         }
     };
 
-    process(extracted, doc) {
+    process(extracted) {
         let categoriesIds = [];
         extracted.categories.forEach((path) => {
             let cid = _.get(path.match(/\/c,([0-9]*)\/cat,/), '[1]');
@@ -118,11 +120,10 @@ export class extractProductsLists extends TaskExtract {
     sourceHttpDocuments = {
         name: 'frisco-products-lists'
     };
-    targetJsonDocuments = {
-        typeName: 'productIds',
-    };
 
-    process(extracted, doc) {
+    exportJsonDocuments = new exportProductsIds();
+
+    process(extracted) {
         const products = _.get(extracted, 'products', []);
         const data = _.map(products, (p) => {
             return {
@@ -134,7 +135,6 @@ export class extractProductsLists extends TaskExtract {
         return data;
     };
 
-    exportJsonDocuments = new exportProductsIds();
 }
 
 export class downloadProducts extends TaskDownload {
@@ -144,8 +144,8 @@ export class downloadProducts extends TaskDownload {
     urls() {
         const url = 'http://localhost:9200/foodbasebase-frisco-products-ids/_search?_source=id&size=10000';
         return http.get(url).spread((result) => {
-            const ids = _.map(_.get(JSON.parse(result.body), 'hits.hits', []), (v) => {
-                return _.get(v, '_source.id', undefined);
+            const ids = _.map(_.get(JSON.parse(result.body), 'hits.hits', []), (doc) => {
+                return _.get(doc, '_source.id', undefined);
             });
             return _.map(ids, (id) => {
                 return `https://products.frisco.pl/api/products/get/${id}`;
@@ -153,3 +153,60 @@ export class downloadProducts extends TaskDownload {
         });
     };
 }
+
+class exportProducts extends TaskExportElasticsearch {
+    transform(dataset) {
+        return dataset;
+    }
+
+    target: TaskExportElasticsearchTargetConfig = {
+        url: 'http://elastic:changeme@localhost:9200',
+        bulkSize: 200,
+        indexName: 'foodbasebase-products',
+        overwrite: true,
+        mapping: {
+            'foodbasebase-products': {
+                dynamic: 'strict',
+                properties: {
+                    id: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
+                    name: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
+                    ingredients: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    }
+                }
+            }
+        }
+    };
+}
+
+export class extractProducts extends TaskExtract {
+    sourceHttpDocuments = {
+        name: 'foodbase-frisco-products'
+    };
+
+    exportJsonDocuments = new exportProducts();
+
+    process(extracted) {
+        const ingredients = _.chain(extracted)
+            .get('brandbank', [])
+            .find({'sectionName': 'Składniki'})
+            .get('fields', [])
+            .find({'fieldId': 84})
+            .get('content')
+            .value();
+        const data = {
+            id: _.get(extracted, 'productId'),
+            name: _.get(extracted, 'seoData.title'),
+            ingredients: ingredients
+        };
+        return data;
+    }
+}
+
