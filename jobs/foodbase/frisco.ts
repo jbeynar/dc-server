@@ -1,74 +1,193 @@
-'use strict';
-
-import {TaskDownload, TaskExtract, IDocumentHttp} from "../../shared/typings";
-import * as _ from "lodash";
+import {
+    IJsonSearchConfig,
+    TaskDownload,
+    TaskExportElasticsearch,
+    TaskExportElasticsearchTargetConfig,
+    TaskExtract
+} from "../../shared/typings";
 import * as Promise from 'bluebird';
-import {isCodeExists} from "./shared";
+import * as http from 'http-as-promised';
+import {getJsonDocuments} from "../../libs/repo";
+const _ = require('lodash');
 
-const frisco = {
-    friscoApi: () => { // note extraction path: return _.get(extracted, 'data.product', {});
-        return _.map(_.range(43300, 44300, 1), (i) => {
-            return `https://www.frisco.pl/.api/product/productId,${i}`;
-        });
-    },
-    fabloApi: (bulkSize, totalCount) => {
-        return _.map(_.range(0, totalCount, bulkSize), (offset) => {
-            return `https://api.fablo.pl/api/2/frisco.pl/products/query?prefilter=status=0||3&&status=0||3&results=${bulkSize}&start=${offset}`;
-        });
-    }
-};
+let categories = [];
+const bulkSize = 200;
 
-export class download extends TaskDownload {
-    name = 'foodbase-frisco';
+export class DownloadCategoriesIds extends TaskDownload {
+    name = 'foodbase-frisco-categories-ids';
     autoRemove = true;
 
     urls() {
-        return frisco.fabloApi(5000, 1500000);
-    };
-
-    options = {
-        headers: ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36',
-            'Accept: application/json'],
+        return ['https://www.frisco.pl/'];
     };
 }
 
-export class extractProducts extends TaskExtract {
+export class ExtractCategories extends TaskExtract {
     sourceHttpDocuments = {
-        name: 'foodbase-frisco'
+        name: 'foodbase-frisco-categories-ids'
     };
     targetJsonDocuments = {
-        typeName: 'product',
+        typeName: 'foodbase-frisco-categories-ids',
+        autoRemove: true
     };
 
-    process(extracted: any, doc: IDocumentHttp): any {
-        const products = _.get(extracted, 'products.results', []), results = [];
-        let code;
+    map = {
+        categories: {
+            attribute: 'href',
+            selector: '.horizontal-navigation-bar_all-categories .horizontal-navigation-category .horizontal-navigation-category_categories a'
+        }
+    };
 
-        return Promise.each(products, (product) => {
-            code = _.get(product, 'attributes.ean[0]');
-            return isCodeExists(code).then((ans) => {
-                if (ans) {
-                    console.log(`Code ${code} already exists`);
-                } else {
-                    results.push({
-                        code: code,
-                        name: _.get(product, 'name'),
-                        producer: _.get(product, 'attributes.producer[0]'),
-                        brand: _.get(product, 'attributes.brand_name[0]'),
-                        weight: _.get(product, 'human_grammage_gross[0]'),
-                        imgAddress: _.get(product, 'images[0]'),
-                        price: {
-                            price: _.get(product, 'extra-info.orginal_price[0]'),
-                            humanUnitPrice: _.get(product, 'extra-info.human_unit_price[0]')
-                        },
-                        sourceUrl: _.get(product, 'url'),
-                        ingredients: _.get(product, 'extra-info.nutrient_elements[0]'),
-                        components: [],
-                        queryCount: 0,
-                        source: 'frisco'
-                    });
+    process(extracted) {
+        let categoriesIds = [];
+        extracted.categories.forEach((path) => {
+            let cid = _.get(path.match(/\/c,([0-9]*)\/cat,/), '[1]');
+            if (cid) {
+                categoriesIds.push(parseInt(<string>cid));
+            }
+        });
+        categoriesIds = _.orderBy(_.uniq(categoriesIds), undefined);
+        console.log('Downloading categories counts');
+        return Promise.mapSeries(categoriesIds, (cid) => {
+            let url = `https://commerce.frisco.pl/api/offer/categories/${cid}/products?pageSize=1&includeWineFacets=false&pageIndex=1`;
+            return http.get(url).spread((result) => {
+                return Promise.delay(25).then(() => {
+                    process.stdout.write('.');
+                    var obj = {
+                        cid: cid,
+                        count: _.get(JSON.parse(result.body), 'totalCount')
+                    };
+                    return obj;
+                });
+            });
+        }).then((cats) => {
+            process.stdout.write('\n');
+            categories = cats;
+            return {'categories': cats}
+        });
+    };
+}
+
+export class DownloadProductsLists extends TaskDownload {
+    name = 'foodbase-frisco-products-lists';
+    autoRemove = true;
+
+    urls() {
+        const urls = [];
+        _.forEach(categories, (cat) => {
+            const n = _.ceil(cat.count / bulkSize);
+            _.times(n, (i) => {
+                urls.push(`https://commerce.frisco.pl/api/offer/categories/${cat.cid}/products?pageSize=${bulkSize}&includeWineFacets=false&pageIndex=${i + 1}`);
+            });
+        });
+        return urls;
+    };
+}
+
+export class ExtractProductsMeta extends TaskExtract {
+    sourceHttpDocuments = {
+        name: 'foodbase-frisco-products-lists'
+    };
+    targetJsonDocuments = {
+        typeName: 'foodbase-frisco-products-meta',
+        autoRemove: true
+    };
+    process(extracted) {
+        const products = _.get(extracted, 'products', []);
+        const data = _.map(products, (p) => {
+            return {
+                id: _.get(p, 'productId', ''),
+                ean: _.get(p, 'product.ean', ''),
+                name: _.get(p, 'product.name.pl', ''),
+                imageUrl: _.get(p, 'product.imageUrl', ''),
+                price: _.get(p, 'product.price.price', 0),
+                categoryId: _.get(p, 'product.categories[0].categoryId', 0),
+                categoryName: _.get(p, 'product.categories[0].name.en', 'N/A')
+            }
+        });
+        return data;
+    };
+
+}
+
+export class DownloadProducts extends TaskDownload {
+    name = 'foodbase-frisco-products';
+    urls() {
+        const query: IJsonSearchConfig = {
+            type: 'foodbase-frisco-products-meta',
+            sort: {id: 'ASC'}
+        };
+        return getJsonDocuments(query).then((data) => {
+            return _.map(data.results, (row) => {
+                return {
+                    url: `https://products.frisco.pl/api/products/get/${_.get(row, 'body.id')}`,
+                    categoryId: _.get(row, 'body.categoryId'),
+                    imageUrl: _.get(row, 'body.imageUrl')
                 }
             });
-        }).then(() => results);
+        });
+    }
+}
+
+class ExportProducts extends TaskExportElasticsearch {
+    transform(dataset) {
+        return dataset;
+    }
+
+    target: TaskExportElasticsearchTargetConfig = {
+        url: 'http://elastic:changeme@localhost:9200',
+        bulkSize: 200,
+        indexName: 'foodbasebase-products',
+        overwrite: true,
+        mapping: {
+            'foodbasebase-products': {
+                dynamic: 'strict',
+                properties: {
+                    id: {
+                        type: 'integer',
+                        index: 'not_analyzed'
+                    },
+                    name: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
+                    categoryId: {
+                        type: 'integer'
+                    },
+                    imageUrl: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
+                    ingredients: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    }
+                }
+            }
+        }
     };
+}
+
+export class ExtractProducts extends TaskExtract {
+    sourceHttpDocuments = {
+        name: 'foodbase-frisco-products'
+    };
+    exportJsonDocuments = new ExportProducts();
+
+    process(extracted, doc, meta) {
+        const ingredients = _.chain(extracted)
+            .get('brandbank', [])
+            .find({'sectionName': 'Składniki'})
+            .get('fields', [])
+            .find({'fieldId': 84})
+            .get('content')
+            .value();
+        return {
+            id: parseInt(_.get(extracted, 'productId')),
+            name: _.get(extracted, 'seoData.title'),
+            categoryId: parseInt(_.get(meta, 'metadata.categoryId', 0)),
+            imageUrl: _.get(meta, 'metadata.imageUrl', ''),
+            ingredients: ingredients
+        };
+    }
 }
