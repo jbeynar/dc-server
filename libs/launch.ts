@@ -5,7 +5,6 @@ import * as _ from 'lodash';
 import {readdirSync,realpathSync,readdir} from "fs";
 import {log} from './logger';
 import {Task} from "../shared/typings";
-import {progressNotification} from "./sockets";
 
 const JOBS_PATH = realpathSync('./jobs');
 
@@ -43,11 +42,11 @@ export function run(jobName, jobTask) {
         }
         let jobConfigPath = JOBS_PATH + '/' + jobName;
 
-        log(`Loading job config ${jobConfigPath}... `, 1);
+        log(`Loading job file ${jobConfigPath}... `, 1);
         const job = require(jobConfigPath);
 
         if (!_.isObject(job)) {
-            throw new Error('Job config format is malformed');
+            throw new Error('Job file format is malformed');
         }
 
         const tasksNames = _.keys(job);
@@ -62,7 +61,7 @@ export function run(jobName, jobTask) {
 
         _.each(jobTask, (task) => {
             if (!_.has(job, task)) {
-                throw new Error(`Missing ${task} on job config`);
+                throw new Error(`Missing task ${task} on job file`);
             }
         });
 
@@ -77,20 +76,16 @@ export function run(jobName, jobTask) {
                 throw new Error('Task must be a function');
             }
             let task: Task = new Task;
-            progressNotification(job.name, task.type, taskName, -1);
             if (!task.execute) {
                 throw new Error('Task must be executable');
             }
             t0 = new Date();
-            log(`Executing task ${taskName} type ${task.type}... `, 1);
+            log(`Executing task "${taskName}" type ${task.type}... `, 1);
             log(`Starts at ${t0.toLocaleString()}`, 1);
-            progressNotification(job.name, task.type, taskName, -2);
             return task.execute().then(() => {
                 t1 = new Date();
-                log(`Task ${taskName} complete`, 1);
-                log(`Ends at ${t1.toLocaleString()}`, 1);
-                log(`Total time ${_.round((t1 - t0) / 1000 / 60, 2)} minutes`, 1);
-                progressNotification(job.name, task.type, taskName, -100);
+                log(`Task "${taskName}" finished at ${t1.toLocaleString()}`, 1);
+                log(`Cost ${_.round((t1 - t0) / 1000 / 60, 2)} minutes`, 1);
             });
         });
     });
