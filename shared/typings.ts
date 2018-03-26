@@ -18,6 +18,7 @@ export interface IDocumentHttp {
     length: number;
     retry_count?: number;
     ts?: Date|string;
+    metadata?: any;
 }
 
 export interface IDocumentJson {

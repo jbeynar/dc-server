@@ -95,7 +95,7 @@ export function extract(document: IDocumentHttp, extractionTask: TaskExtract, wh
         metadata = {};
 
         if (decorateWithMetadata) {
-            metadata = _.pick(document, ['url', 'path', 'code', 'ts']);
+            metadata = _.pick(document, ['url', 'path', 'code', 'ts', 'metadata']);
         }
 
         if (_.isEmpty(extractionTask.map)) {

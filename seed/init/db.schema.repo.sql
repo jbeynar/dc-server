@@ -30,7 +30,8 @@ CREATE TABLE document_http (
     body text,
     length bigint,
     retry_count integer DEFAULT 0,
-    ts timestamp without time zone DEFAULT now()
+    ts timestamp without time zone DEFAULT now(),
+    metadata jsonb
 );
 
 CREATE TABLE document_json (

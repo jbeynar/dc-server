@@ -6,7 +6,7 @@ import * as Promise from 'bluebird';
 import * as urlInfoService from 'url';
 import {Curl} from 'node-libcurl';
 import {log} from "./logger";
-import {TaskDownload} from "../shared/typings";
+import {IDocumentHttp, TaskDownload} from "../shared/typings";
 import {progressNotification} from "./sockets";
 
 const defaultOptions = {
@@ -33,7 +33,14 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
         return Promise.resolve(downloadTask.urls()).then((urls) => {
             let i = 0;
             const failedItems = [];
-            return Promise.mapSeries(urls, function (url: string) {
+            return Promise.mapSeries(urls, function (target: string | any) {
+                let url;
+                if (_.isObject(target)) {
+                    url = _.get(target, 'url');
+                    delete target.url;
+                } else {
+                    url = target;
+                }
                 if (!_.isString(url)) {
                     console.error(url);
                     throw new Error(`URL must be string, but ${typeof url} was given`);
@@ -51,7 +58,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
 
                     curl.on('end', function (statusCode, body, headers) {
                         let urlInfo = urlInfoService.parse(url);
-                        let documentHttp = {
+                        let documentHttp: IDocumentHttp = {
                             type: curl.getInfo(Curl.info.CONTENT_TYPE),
                             name: downloadTask.name,
                             url: url,
@@ -59,10 +66,13 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                             path: urlInfo.pathname,
                             query: urlInfo.query,
                             code: statusCode,
-                            headers: JSON.stringify(headers),
+                            headers: (<any>JSON).stringify(headers),
                             body: body,
                             length: body.length
                         };
+                        if (_.isObject(target)) {
+                            documentHttp.metadata = (<any>JSON).stringify(target);
+                        }
 
                         log(' [' + documentHttp.code + ']', 1);
 
