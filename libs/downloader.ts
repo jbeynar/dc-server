@@ -7,7 +7,6 @@ import * as urlInfoService from 'url';
 import {Curl} from 'node-libcurl';
 import {log} from "./logger";
 import {IDocumentHttp, TaskDownload} from "../shared/typings";
-import {progressNotification} from "./sockets";
 
 const defaultOptions = {
     intervalTime: 600
@@ -23,10 +22,6 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
         } else {
             return Promise.resolve();
         }
-    }
-
-    function isDocumentExists(url) {
-        // todo implement function body
     }
 
     function downloadSeries() {
@@ -45,61 +40,62 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                     console.error(url);
                     throw new Error(`URL must be string, but ${typeof url} was given`);
                 }
-                log(++i + '/' + urls.length + ' ' + url);
-                return new Promise((resolve) => {
-                    const curl = new Curl();
-                    curl.setOpt(Curl.option.URL, url);
-                    curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
-                    curl.setOpt(Curl.option.TIMEOUT, 30);
+                log(`${++i}/${urls.length} ${url}`);
+                return repo.isDocumentExists(url).then(() => {
+                    log(' [SKIP]', 1)
+                }).catch(() => {
+                    return new Promise((resolve) => {
+                        const curl = new Curl();
+                        curl.setOpt(Curl.option.URL, url);
+                        curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
+                        curl.setOpt(Curl.option.TIMEOUT, 30);
 
-                    if (_.get(downloadTask, 'options.headers') && !_.isEmpty(downloadTask.options.headers)) {
-                        curl.setOpt(Curl.option.HTTPHEADER, downloadTask.options.headers);
-                    }
-
-                    curl.on('end', function (statusCode, body, headers) {
-                        let urlInfo = urlInfoService.parse(url);
-                        let documentHttp: IDocumentHttp = {
-                            type: curl.getInfo(Curl.info.CONTENT_TYPE),
-                            name: downloadTask.name,
-                            url: url,
-                            host: urlInfo.hostname,
-                            path: urlInfo.pathname,
-                            query: urlInfo.query,
-                            code: statusCode,
-                            headers: (<any>JSON).stringify(headers),
-                            body: body,
-                            length: body.length
-                        };
-                        if (_.isObject(target)) {
-                            documentHttp.metadata = (<any>JSON).stringify(target);
+                        if (_.get(downloadTask, 'options.headers') && !_.isEmpty(downloadTask.options.headers)) {
+                            curl.setOpt(Curl.option.HTTPHEADER, downloadTask.options.headers);
                         }
 
-                        log(' [' + documentHttp.code + ']', 1);
+                        curl.on('end', function (statusCode, body, headers) {
+                            let urlInfo = urlInfoService.parse(url);
+                            let documentHttp: IDocumentHttp = {
+                                type: curl.getInfo(Curl.info.CONTENT_TYPE),
+                                name: downloadTask.name,
+                                url: url,
+                                host: urlInfo.hostname,
+                                path: urlInfo.pathname,
+                                query: urlInfo.query,
+                                code: statusCode,
+                                headers: (<any>JSON).stringify(headers),
+                                body: body,
+                                length: body.length
+                            };
+                            if (_.isObject(target)) {
+                                documentHttp.metadata = (<any>JSON).stringify(target);
+                            }
 
-                        if (200 !== documentHttp.code) {
-                            failedItems.push({url: url, code: documentHttp.code});
-                        }
+                            log(' [' + documentHttp.code + ']', 1);
 
-                        repo.saveHttpDocument(documentHttp).then(() => {
-                            const progress = i / urls.length;
-                            progressNotification('terminal', downloadTask.type, downloadTask.name, progress);
+                            if (200 !== documentHttp.code) {
+                                failedItems.push({url: url, code: documentHttp.code});
+                            }
+
+                            repo.saveHttpDocument(documentHttp).then(() => {
+                                this.close();
+                                resolve();
+                            });
+                        });
+
+                        curl.on('error', function (error, errCode) {
+                            console.log(`Downloader error: ${errCode}`);
+                            console.log(error);
+                            console.log(`Faild on ${url}`, 1);
+                            failedItems.push({url: url, error: error});
                             this.close();
                             resolve();
                         });
-                    });
 
-                    curl.on('error', function (error, errCode) {
-                        console.log(`Downloader error: ${errCode}`);
-                        console.log(error);
-                        console.log(`Faild on ${url}`, 1);
-                        failedItems.push({url: url, error: error});
-                        this.close();
-                        resolve();
-                    });
-
-                    curl.perform();
-
-                }).delay(_.get(downloadTask, 'options.intervalTime', options.intervalTime));
+                        curl.perform();
+                    }).delay(_.get(downloadTask, 'options.intervalTime', options.intervalTime));
+                });
             }).then(() => {
                 if (!_.isEmpty(failedItems)) {
                     console.log('Fail on some URLs');
