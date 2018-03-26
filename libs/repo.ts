@@ -50,36 +50,7 @@ export function getJsonDocuments(config?: IJsonSearchConfig) {
     }
 
     return db.query(stmt.toString()).then(function (rows) {
-        let keys;
-        let allProps = {};
-        _.forEach(rows, function (record) {
-            _.assign(allProps, record.body);
-        });
-        allProps = _.keys(allProps);
-        if (_.isEmpty(query.whitelist)) {
-            keys = allProps;
-            if (!_.isEmpty(query.blacklist)) {
-                keys = _.filter(keys, function (key) {
-                    return query.blacklist.indexOf(key) === -1;
-                });
-            }
-            keys = _.sortBy(keys);
-        } else {
-            keys = query.whitelist;
-        }
-        _.forEach(rows, function (record)
-        {
-            const sortedBody = {};
-            _.forEach(keys, function (key)
-            {
-                sortedBody[key] = record.body[key];
-            });
-            record.body = sortedBody;
-        });
-        return {
-            properties: allProps,
-            results: rows
-        };
+        return {results: rows};
     });
 }
 

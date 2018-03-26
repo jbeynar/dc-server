@@ -56,45 +56,6 @@ describe('Repo library provide database abstraction layer', () => {
 
     describe('getJsonDocuments', function ()
     {
-        it('accept whitelist', () =>
-        {
-            return repo.getJsonDocuments({whitelist: ['symbol', 'cz']}).then((data) =>
-            {
-                expect(data.results[0].body).to.eql({
-                    symbol: 'ETA',
-                    cz: undefined
-                });
-                expect(data.results[1].body).to.eql({
-                    symbol: 'ABS',
-                    cz: undefined
-                });
-                return expect(data.results[2].body).to.eql({
-                    symbol: 'ABM',
-                    cz: 12
-                });
-            });
-        });
-
-        it('accept blacklist', () =>
-        {
-            return repo.getJsonDocuments({blacklist: ['cwk']}).then((data) =>
-            {
-                expect(data.results[0].body).to.eql({
-                    cz: undefined,
-                    symbol: 'ETA',
-                    price: 23,
-                    value_1: 30,
-                    value_2: 30
-                });
-                return expect(data.results[1].body).to.eql({
-                    cz: undefined,
-                    symbol: 'ABS',
-                    price: 23,
-                    value_2: undefined,
-                    value_1: undefined
-                });
-            });
-        });
         it('support pagination', () => {
             return repo.getJsonDocuments({type: 'valuation', from: 1, size: 2}).then((data) => {
                 expect(data.results[0].body.symbol).to.eql(JSON.parse(documents[1].body).symbol);
