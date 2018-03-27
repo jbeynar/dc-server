@@ -215,7 +215,10 @@ export function extractFromRepo(extractionTask: TaskExtract) {
 
     if (extractionTask.exportJsonDocuments) { // export to elasticsearch
         logger.log(`Target URL ${extractionTask.exportJsonDocuments.target.url}`, 1);
-        targetInitPromise = esExporter.createMapping(extractionTask.exportJsonDocuments.target);
+        if (extractionTask.exportJsonDocuments.target.overwrite) {
+            targetInitPromise = esExporter.createMapping(extractionTask.exportJsonDocuments.target);
+        }
+
         observable = observable.flatMap((bulk) => {
             return Promise.map(bulk, extractionTask.exportJsonDocuments.transform).then((transformatedBulk) => {
                 return esExporter.bulkSaveEs(
