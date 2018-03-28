@@ -116,7 +116,13 @@ export function bulkSaveEs(esUrl, indexName, bulk): Promise<any> {
 }
 
 export function stream(exportTask: TaskExportElasticsearch, stream: Rx.Observable<IDocumentJson>): Promise<Rx.Observable<IDocumentJson>> {
-    return createMapping(exportTask.target).then(() => {
+    let promise;
+    if (exportTask.target.overwrite) {
+        promise = createMapping(exportTask.target);
+    } else {
+        promise = Promise.resolve();
+    }
+    return promise.then(() => {
         const concurrencyCount = 2;
         return stream
             .flatMap(exportTask.transform)

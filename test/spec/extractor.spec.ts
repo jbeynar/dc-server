@@ -230,42 +230,4 @@ describe('Extractor library', () =>
             });
         });
     });
-
-    describe('Accept map whitelist', function ()
-    {
-        // todo consider droping this functionality
-        it.skip('Should only extract elements passed as props param', ()=>
-        {
-            var mapping = {
-                map: {
-                    title: {
-                        singular: true,
-                        selector: 'h1'
-                    },
-                    subtitle: {
-                        singular: true,
-                        selector: 'h4'
-                    },
-                    leading: {
-                        singular: true,
-                        selector: 'p'
-                    },
-                    author: {
-                        singular: true,
-                        selector: 'strong'
-                    }
-                }
-            };
-
-            var expected = {
-                title: 'Employee list',
-                author: 'Authored by jbeynar'
-            };
-
-            return extractor.extract({body:htmlDocument}, mapping, ['title', 'author']).then((data)=>
-            {
-                return expect(data).to.eql(expected);
-            });
-        });
-    });
 });

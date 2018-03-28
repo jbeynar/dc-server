@@ -9,7 +9,7 @@ import * as repo from "../../libs/repo";
 import {config} from '../../config';
 
 const expect = chai.expect;
-const esExecutionDelay = 2500;
+const esExecutionDelay = 2000;
 
 const targetConfig = {
     url: 'http://elastic:changeme@localhost:9200',
@@ -77,7 +77,7 @@ describe('elasticsearchExporter', () => {
 
         before(() => {
             return repo.removeJsonDocuments(targetConfig.indexName).then(() => {
-                return Promise.map(generateData(100), (item) => {
+                return Promise.map(generateData(5), (item) => {
                     return repo.saveJsonDocument(targetConfig.indexName, item);
                 }, {concurrency: 10});
             });
@@ -98,7 +98,7 @@ describe('elasticsearchExporter', () => {
                     return http.get(url).spread((result, body) => {
                         body = JSON.parse(body);
                         expect(result.statusCode).to.be.equal(200);
-                        expect(body.hits.total).to.be.equal(100);
+                        expect(body.hits.total).to.be.equal(5);
                         expect(body.hits.hits[0]._source).to.have.property('name');
                         expect(body.hits.hits[0]._source).to.have.property('address');
                         expect(body.hits.hits[0]._source).to.have.property('country');
@@ -117,7 +117,7 @@ describe('elasticsearchExporter', () => {
                     return http.get(url).spread((result, body) => {
                         body = JSON.parse(body);
                         expect(result.statusCode).to.be.equal(200);
-                        expect(body.hits.total).to.be.equal(100);
+                        expect(body.hits.total).to.be.equal(5);
                         expect(body.hits.hits[0]._source).to.have.property('name');
                         expect(body.hits.hits[0]._source).to.have.property('address');
                         expect(body.hits.hits[0]._source).to.have.property('country');
@@ -133,7 +133,7 @@ describe('elasticsearchExporter', () => {
         before(() => {
             const concurrencyOpenConnections = Math.max(config.db.poolConfig.max - 10, 5);
             return repo.removeJsonDocuments(targetConfig.indexName).then(() => {
-                return Promise.map(generateData(2000), (item) => {
+                return Promise.map(generateData(1000), (item) => {
                     return repo.saveJsonDocument(targetConfig.indexName, item);
                 }, {concurrency: concurrencyOpenConnections});
             })
@@ -145,15 +145,15 @@ describe('elasticsearchExporter', () => {
             return Promise.all([repo.removeJsonDocuments(targetConfig.indexName), http({uri: url, method: 'DELETE'})]);
         });
 
-        it('can handle 2000 documents (500x4 bulks)', () => {
+        it('can handle 1000 documents in bulks', () => {
             const task = new ExportTask();
             task.target.bulkSize = 500;
-            return task.execute().delay(esExecutionDelay * 2).then(() => {
+            return task.execute().delay(esExecutionDelay * 3).then(() => {
                 const url = `${targetConfig.url}/${targetConfig.indexName}/_search?size=1`;
                 return http.get(url).spread((result, body) => {
                     body = JSON.parse(body);
                     expect(result.statusCode).to.be.equal(200);
-                    expect(body.hits.total).to.be.equal(2000);
+                    expect(body.hits.total).to.be.equal(1000);
                     expect(body.hits.hits[0]._source).to.have.property('name');
                     expect(body.hits.hits[0]._source).to.have.property('address');
                     expect(body.hits.hits[0]._source).to.have.property('country');

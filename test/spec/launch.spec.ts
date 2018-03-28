@@ -83,11 +83,11 @@ describe('Launch library', () => {
                     dependencies[`${JOBS_PATH}/bmw`] = 666;
                     proxyquireLaunch(dependencies);
                 });
-                it('should inform that "job config format is malformed"', () => {
+                it('should inform that "job file format is malformed"', () => {
                     launch.run('bmw').then(() => {
                         throw notExpectedError;
                     }).catch(err => {
-                        expect(err.message).to.be.eql('Job config format is malformed');
+                        expect(err.message).to.be.eql('Job file format is malformed');
                     });
                 });
             });
@@ -106,11 +106,11 @@ describe('Launch library', () => {
                 before(() => {
                     notExpectedError = new Error('some error message');
                 });
-                it('should throw error with message that task is missing on job config', () => {
+                it('should throw error with message that task is missing on job file', () => {
                     launch.run('tarnowiak', 'none').then(() => {
                         throw notExpectedError;
                     }).catch(err => {
-                        expect(err.message).to.be.eql(`Missing none on job config`);
+                        expect(err.message).to.be.eql(`Missing task none on job file`);
                     });
                 });
             });
@@ -170,7 +170,7 @@ describe('Launch library', () => {
                     });
                     it('should inform about executing it and what type it is', () => {
                         launch.run('tarnowiak', 'functionWithMethodExecute').then(() => {
-                            expect('Executing task functionWithMethodExecute type TaskExtract... ').to.be.eql(logSpy.secondCall.args[0]);
+                            expect('Executing task "functionWithMethodExecute" type TaskExtract... ').to.be.eql(logSpy.secondCall.args[0]);
                         });
                     });
                     it('should call execute method', () => {
@@ -180,7 +180,7 @@ describe('Launch library', () => {
                     });
                     it('should inform when executing task is complete', () => {
                         launch.run('tarnowiak', 'functionWithMethodExecute').then(() => {
-                            expect('Task functionWithMethodExecute complete').to.be.eql(logSpy.getCall(3).args[0]);
+                            expect('Task "functionWithMethodExecute" finished at').to.be.eql(String(logSpy.getCall(3).args[0]).substr(0, 44));
                         });
                     });
                 });
