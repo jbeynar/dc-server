@@ -21,7 +21,7 @@ function setSearchPath(client: Client): Promise<Client> {
 }
 
 export function exceptionHandler(err) {
-    error('SQL ' + err.toString());
+    error('SQL Exception ' + err.toString());
     if (err.detail) {
         error('detail: ' + err.detail);
     }
@@ -37,7 +37,10 @@ export function query(query: string, bindings?: string[]|number[]): Promise<any[
             client.query(query, bindings).then((res) => {
                 client.release();
                 resolve(res.rows);
-            }).catch(exceptionHandler);
+            }).catch((err) => {
+                console.error('[SQL Query Exception]', query);
+                exceptionHandler(err);
+            });
         }).catch(exceptionHandler);
     }).catch(exceptionHandler) as Promise<any[]>;
 }

@@ -72,7 +72,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                                 documentHttp.metadata = (<any>JSON).stringify(target);
                             }
 
-                            log(' [' + documentHttp.code + ']', 1);
+                            log(` ${parseInt(body.length).toLocaleString()} b [${documentHttp.code}]`, 1);
 
                             if (200 !== documentHttp.code) {
                                 failedItems.push({url: url, code: documentHttp.code});
