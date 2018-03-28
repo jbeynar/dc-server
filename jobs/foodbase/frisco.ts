@@ -135,13 +135,14 @@ class ExportProducts extends TaskExportElasticsearch {
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        url: 'http://elastic:changeme@localhost:9200',
+        url: "http://vps437867.ovh.net:9200",
+        // url: 'http://elastic:changeme@localhost:9200',
         bulkSize: 200,
-        indexName: 'foodbasebase-products',
-        overwrite: true,
+        indexName: 'foodbase-products',
+        overwrite: false,
         mapping: {
-            'foodbasebase-products': {
-                dynamic: 'strict',
+            'foodbase-products': {
+                dynamic: false,
                 properties: {
                     id: {
                         type: 'integer',
@@ -152,7 +153,8 @@ class ExportProducts extends TaskExportElasticsearch {
                         index: 'not_analyzed'
                     },
                     categoryId: {
-                        type: 'integer'
+                        type: 'string',
+                        index: 'not_analyzed'
                     },
                     imageUrl: {
                         type: 'string',
@@ -161,7 +163,19 @@ class ExportProducts extends TaskExportElasticsearch {
                     ingredients: {
                         type: 'string',
                         index: 'not_analyzed'
-                    }
+                    },
+                    origin: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
+                    language: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
+                    source: {
+                        type: 'string',
+                        index: 'not_analyzed'
+                    },
                 }
             }
         }
@@ -187,7 +201,10 @@ export class ExtractProducts extends TaskExtract {
             name: _.get(extracted, 'seoData.title'),
             categoryId: parseInt(_.get(meta, 'metadata.categoryId', 0)),
             imageUrl: _.get(meta, 'metadata.imageUrl', ''),
-            ingredients: ingredients
+            ingredients: ingredients,
+            origin: 'pl',
+            language: 'pl',
+            source: 'FPL'
         };
     }
 }
