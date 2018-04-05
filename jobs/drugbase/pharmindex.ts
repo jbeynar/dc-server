@@ -17,21 +17,26 @@ export class Downloadx extends TaskDownload {
 export class Download extends TaskDownload {
     name = 'drugbase';
     autoRemove = true;
+    
+    const pkid = 21;
 
     urls() {
-        return ['http://pharmindex.pl/searchResultsSingle.php?oper=dc.la&pkid=']
+        return [`http://pharmindex.pl/searchResultsSingle.php?oper=dc.la&pkid=${pkid}`]
     };
 
     options = {
-        headers: ['Host: www.alleceny.pl',
-            'Referer: http://www.alleceny.pl',
-            'Connection: keep-alive',
-            'Cache-Control: max-age=0',
-            'Upgrade-Insecure-Requests: 1',
-            'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language: pl',
-            'Cookie: PHPSESSID=n35noqf9lmlm70peoi8hhkime6; grey_wizard=%2BqQzF2OI5kpFHrijKBL%2FiLvGcmeIrmsEBoLn1l5pOMROXnUA2g%2B%2B5oGf7mNZ9TDNodtKAhKB8vdERZP283fDSm2dSDLnDN6nS9vpQ%2B9j4Vg%3D; _gat=1; _ga=GA1.2.2091708389.1493022157; _gid=GA1.2.1000376719.1501059718; _gat_UA-19035528-6=1'],
+        headers: [
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Host': 'pharmindex.pl', 
+            'Origin': 'http://pharmindex.pl', 
+            'Referer': `http://pharmindex.pl/searchResultsSingle.php?oper=dc.la&pkid=${pkid}`,
+            'X-Requested-With': 'XMLHttpRequest',
+        ],
+        body: {
+            'oper': 'dc.la',
+            'pkid': pkid,
+            'd': 1
+        }
         intervalTime: 1250
     }
 }
