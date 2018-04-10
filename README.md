@@ -37,6 +37,10 @@ Try this:
 ```
 npm install node-libcurl --build-from-source
 ```
+If your get error while installing node-libcurl try to:
+```
+npm install node-gyp
+```
 
 ## Elasticsearch issue on Debian
 1. chmod 777 on esedate
