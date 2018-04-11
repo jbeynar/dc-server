@@ -1,5 +1,8 @@
 import {getJsonDocuments} from "../../libs/repo";
-import {IJsonSearchConfig, TaskDownload, TaskExtract} from "../../shared/typings";
+import {
+    IJsonSearchConfig, TaskDownload, TaskExportElasticsearch, TaskExportElasticsearchTargetConfig,
+    TaskExtract
+} from "../../shared/typings";
 import _ = require('lodash');
 
 export class DownloadAptekawawCategory extends TaskDownload {
@@ -159,14 +162,30 @@ const productInfoLabelsMap = {
     "BLOZ7:": 'bloz7'
 };
 
+class ExportProducts extends TaskExportElasticsearch {
+    transform(dataset) {
+        return dataset;
+    }
+
+    target: TaskExportElasticsearchTargetConfig = {
+        // url: "http://localhost:9200",
+        url: 'http://vps437867.ovh.net:9200',
+        bulkSize: 200,
+        indexName: 'drugbase-product-img',
+        overwrite: false,
+        mapping: {
+            'drugbase-product-img': {
+                dynamic: true
+            }
+        }
+    };
+}
+
 export class ExtractAptekawawProducts extends TaskExtract {
     sourceHttpDocuments = {
         name: 'drugbase-aptekawaw-product'
     };
-    targetJsonDocuments = {
-        typeName: 'drugbase-aptekawaw-product',
-        autoRemove: true
-    };
+    exportJsonDocuments = new ExportProducts();
     map = {
         title: {
             singular: true,
@@ -206,4 +225,3 @@ export class ExtractAptekawawProducts extends TaskExtract {
         return product
     }
 }
-
