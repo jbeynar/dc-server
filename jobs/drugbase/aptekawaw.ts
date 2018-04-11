@@ -171,10 +171,10 @@ class ExportProducts extends TaskExportElasticsearch {
         // url: "http://localhost:9200",
         url: 'http://vps437867.ovh.net:9200',
         bulkSize: 200,
-        indexName: 'drugbase-product-img',
+        indexName: 'drugbase-product-source1',
         overwrite: false,
         mapping: {
-            'drugbase-product-img': {
+            'drugbase-product-source1': {
                 dynamic: true
             }
         }
@@ -187,7 +187,7 @@ export class ExtractAptekawawProducts extends TaskExtract {
     };
     exportJsonDocuments = new ExportProducts();
     map = {
-        title: {
+        name: {
             singular: true,
             selector: 'h1#nazwa_produktu'
         },
