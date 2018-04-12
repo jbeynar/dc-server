@@ -1,15 +1,13 @@
 import {
     TaskDownload, TaskExtract, IJsonSearchConfig, TaskExportElasticsearch,
-    TaskExportElasticsearchTargetConfig
+    TaskExportElasticsearchTargetConfig, TaskScript
 } from "../../shared/typings";
-import _ = require('lodash');
+import * as _ from "lodash";
 import {getJsonDocuments} from "../../libs/repo";
 
 
 export class DownloadBartoszDocumentsMeta extends TaskDownload {
     name = 'drugbase-bartosz-documents-meta';
-
-    // autoRemove = true;
 
     urls() {
         return _.map(_.range(613), (v) => {
@@ -36,7 +34,6 @@ export class ExtractBartoszDocumentsMeta extends TaskExtract {
         }
     };
 
-
     process(extracted) {
         return _.map(extracted, (v) => {
             return {
@@ -48,7 +45,6 @@ export class ExtractBartoszDocumentsMeta extends TaskExtract {
 
 export class DownloadBartoszDocuments extends TaskDownload {
     name = 'drugbase-bartosz-products';
-    // autoRemove = true;
     options = {
         intervalTime: 500
     };
@@ -76,17 +72,88 @@ class ExportProducts extends TaskExportElasticsearch {
     }
 
     target: TaskExportElasticsearchTargetConfig = {
-        // url: "http://localhost:9200",
-        url: 'http://vps437867.ovh.net:9200',
+        url: "http://localhost:9200",
+        // url: 'http://vps437867.ovh.net:9200',
         bulkSize: 200,
         indexName: 'drugbase-product',
-        overwrite: false,
+        overwrite: true,
         mapping: {
             'drugbase-product': {
-                dynamic: true
+                dynamic: 'strict',
+                properties: {
+                    "code": {"type": "text"},
+                    "name": {"type": "keyword"},
+                    "vendor": {"type": "keyword"},
+                    "rx": {"type": "keyword"},
+                    "free": {"type": "text"},
+                    "senior75": {"type": "boolean"},
+                    "refund": {"type": "boolean"},
+                    "price": {"type": "float"},
+                    "fullPrice": {"type": "float"},
+                    "repayment_F": {"type": "float"},
+                    "repayment_R": {"type": "float"},
+                    "repayment_30": {"type": "float"},
+                    "repayment_50": {"type": "float"},
+                    "repaymentLevel": {"type": "keyword"},
+                    "range_30": {"type": "keyword"},
+                    "range_30_S": {"type": "keyword"},
+                    "range_50": {"type": "keyword"},
+                    "range_F": {"type": "keyword"},
+                    "range_R": {"type": "keyword"},
+                    "range_R_S": {"type": "keyword"},
+                    "indications": {"type": "text"},
+                    "dosing": {"type": "text"},
+                    "packaging": {"type": "keyword"},
+                    "substance": {"type": "keyword"},
+                    "pharmindex": {"type": "text"},
+                    "chpl": {"type": "text"}
+                }
             }
         }
     };
+}
+
+const fieldsMap = {
+    rx: {
+        "OTC": 'RX_OTC',
+        "produkt wydawany z apteki na podstawie recepty": 'RX_RX',
+        "produkt dostępny bez recepty": 'RX_NO',
+        "produkt wydawany z apteki na podstawie recepty zastrzeżonej": 'RX_RESTRICTED',
+        "produkt stosowany wyłącznie w lecznictwie zamkniętym": 'RX_CLOSED',
+        "produkt wydawany z apteki na podstawie recepty z wtórnikiem": 'RX_REPEATER'
+    },
+    senior75: {
+        "tak, we wskazaniach objętych refundacją.": true,
+        "nie": false
+    },
+    refund: {
+        "tak": true,
+        "nie": false
+    },
+    repaymentLevel: {
+        "ryczałt": [NaN],
+        "30%": [30],
+        "50%": [50],
+        "bezpłatny,30%": [0, 30],
+        "ryczałt,30%": [NaN, 30],
+        "bezpłatny": [0],
+        "bezpłatny,ryczałt": [0, NaN],
+        "30%,50%": [30, 50],
+        "bezpłatny,50%": [0, 50]
+    }
+};
+
+export class GenerateMap extends TaskScript {
+    script() {
+        const esResponse = {};
+        const data = _.get(esResponse, 'aggregations.count.buckets', []);
+        const countsMap = _.reduce(data, (acc: any, bucket: any) => {
+            _.set(acc, bucket.key, bucket.doc_count);
+            return acc;
+        }, {});
+        console.log(JSON.stringify(countsMap, null, 4));
+        return Promise.resolve();
+    }
 }
 
 const displayTextMap = {
@@ -103,11 +170,11 @@ const displayTextMap = {
     'Dawkowanie': 'dosing',
     'Poziom odpłatnosci': 'repaymentLevel',
     'Cena pełnopłatna': 'fullPrice',
-    'Wysokość dopłaty (ryczałt)': 'repayment',
-    'Wysokość dopłaty (50%)': 'repayment50',
-    'Wysokość dopłaty (30%)': 'repayment30',
-    'Wysokość dopłaty (bezpłatny)': 'free',
-    'Zakres wskazań objętych refundacją (bezpłatny )': 'range_Free',
+    'Wysokość dopłaty (ryczałt)': 'repayment_R',
+    'Wysokość dopłaty (50%)': 'repayment_50',
+    'Wysokość dopłaty (30%)': 'repayment_30',
+    'Wysokość dopłaty (bezpłatny)': 'repayment_F',
+    'Zakres wskazań objętych refundacją (bezpłatny )': 'range_F',
     'Zakres wskazań objętych refundacją (ryczałt  i S)': 'range_R_S',
     'Zakres wskazań objętych refundacją (30%  i S)': 'range_30_S',
     'Zakres wskazań objętych refundacją (ryczałt )': 'range_R',
@@ -191,26 +258,48 @@ export class ExtractBartoszDocuments extends TaskExtract {
     };
 
     process(extracted) {
-        const document = {};
+        const document: any = {};
         _.set(document, 'pharmindex', extracted.pharmindex);
         _.set(document, 'chpl', extracted.chpl);
         delete extracted.pharmindex;
         delete extracted.chpl;
-        _.forEach(extracted, (rows, index) => {
-            if (!_.isEmpty(rows)) {
-                let displayText = _.trim(<string>_.first(rows));
-                let value = _.trim(<string>_.last(rows));
-                let key = _.get(displayTextMap, displayText);
-                if (key) {
-                    document[<string>key] = <string>value;
-                } else {
-                    // TODO investigate here for more data
-                    // console.error("Bartosz products not found product param on map");
-                    // console.log(displayText);
-                    // console.log('VALUE=', value);
-                }
+
+        // Capture key value pairs via documents display texts mapping
+        _.forEach(extracted, (rows) => {
+            if (_.isEmpty(rows)) {
+                return;
+            }
+            let displayText = _.trim(<string>_.first(rows));
+            let value = _.trim(<string>_.last(rows));
+            let key = _.get(displayTextMap, displayText);
+            if (key) {
+                document[<string>key] = <string>value;
+            } else {
+                // console.error("Bartosz products not found product param on map", displayText);
             }
         });
+        extracted = null;
+
+        // Static map translation
+        _.set(document, 'senior75', _.get(fieldsMap, `senior75[${document.senior75}]`, document.senior75));
+        _.set(document, 'rx', _.get(fieldsMap, `rx[${document.rx}]`, document.rx));
+        _.set(document, 'refund', _.get(fieldsMap, `refund[${document.refund}]`, document.refund));
+        _.set(document, 'repaymentLevel', _.get(fieldsMap, `repaymentLevel[${document.repaymentLevel}]`, document.repaymentLevel));
+
+        // Price conversion
+        function castPrice(formattedString) {
+            if (_.isEmpty(formattedString) || !_.isString(formattedString)) {
+                return NaN;
+            }
+            return _.toNumber(formattedString.replace(' PLN', '').replace(',', '.')) || NaN;
+        }
+
+        _.set(document, 'price', castPrice(document.price));
+        _.set(document, 'fullPrice', castPrice(document.fullPrice));
+        _.set(document, 'repayment_R', castPrice(document.repayment_R));
+        _.set(document, 'repayment_F', castPrice(document.repayment_F));
+        _.set(document, 'repayment_30', castPrice(document.repayment_30));
+        _.set(document, 'repayment_50', castPrice(document.repayment_50));
         return document;
     };
 }
