@@ -4,6 +4,7 @@ import {
     TaskExtract
 } from "../../shared/typings";
 import _ = require('lodash');
+import {esHttpCall} from "../../libs/exporterElasticsearch";
 
 export class DownloadAptekawawCategory extends TaskDownload {
     name = 'drugbase-aptekawaw-category-hrefs';
@@ -134,94 +135,87 @@ export class ExtractAptekawawProductMeta extends TaskExtract {
     };
 
     process(extracted, document, meta) {
-        return _.map(_.get(extracted, 'urls', []), (url) => ({url}));
+        return _.map(_.get(extracted, 'urls', []), (url) => {
+            const split = url.replace('-p-', '.').split('.');
+            const id = _.get(split, `[${split.length - 2}]`);
+            return {id};
+        });
     };
 }
 
 export class DownloadAptekawawProducts extends TaskDownload {
     name = 'drugbase-aptekawaw-product';
     options = {
-        intervalTime: 500
+        headers: ['Content-Type: application/x-www-form-urlencoded'],
+        intervalTime: 350
     };
 
-    autoRemove: false;
+    autoRemove = false;
 
     urls() {
         const query: IJsonSearchConfig = {
             type: 'drugbase-aptekawaw-product-meta',
             sort: {url: 'ASC'}
         };
-        return getJsonDocuments(query).then((data) => _.map(data.results, 'body.url'));
-    }
-}
-
-const productInfoLabelsMap = {
-    "Kod:": 'id',
-    "EAN:": 'code',
-    "Producent:": 'vendor',
-    "BLOZ7:": 'bloz7'
-};
-
-class ExportProducts extends TaskExportElasticsearch {
-    transform(dataset) {
-        return dataset;
-    }
-
-    target: TaskExportElasticsearchTargetConfig = {
-        // url: "http://localhost:9200",
-        url: 'http://vps437867.ovh.net:9200',
-        bulkSize: 200,
-        indexName: 'drugbase-product-source1',
-        overwrite: false,
-        mapping: {
-            'drugbase-product-source1': {
-                dynamic: true
+        return getJsonDocuments(query).then((data) => _.map(data.results, (res) => {
+            return {
+                url: 'https://aptekawaw.pl/rpc.php?action=get_product_data',
+                body: {products_id: _.get(res, 'body.id')}
             }
-        }
-    };
+        }));
+    }
 }
 
-export class ExtractAptekawawProducts extends TaskExtract {
+export class DecorateProducts extends TaskExtract {
+    esUrl = 'http://vps437867.ovh.net:9200';
+    targetIndexName = 'drugbase-product';
+
     sourceHttpDocuments = {
         name: 'drugbase-aptekawaw-product'
     };
-    exportJsonDocuments = new ExportProducts();
-    map = {
-        name: {
-            singular: true,
-            selector: 'h1#nazwa_produktu'
-        },
-        img: {
-            attribute: 'src',
-            singular: true,
-            selector: '#gallery img'
-        },
-        infoLabels: {
-            singular: false,
-            selector: '#szczegolyProduktu .informacje span.nazwa'
-        },
-        infoValues: {
-            singular: false,
-            selector: '#szczegolyProduktu .informacje span.wartosc'
-        },
-        price: {
-            singular: true,
-            selector: '#cena > span'
-        }
+
+    // TODO change dc-server targetJsonDocuments should NOT be mandatory
+    targetJsonDocuments = {
+        typeName: 'product-source-1-x',
+        autoRemove: true
     };
 
-    process(extracted, d, m) {
-        const keys = _.map(extracted.infoLabels, (label) => _.get(productInfoLabelsMap, label, label));
-        if (keys.length != extracted.infoValues.length) {
-            console.error("Product info data vectors different sizes");
+    process(aptekawawDecorationData) {
+        const code = _.get(aptekawawDecorationData, 'ean');
+        if (!code) {
+            return Promise.resolve();
         }
-        const infoParams = _.zipObject(keys, _.map(extracted.infoValues, _.trim));
-        delete extracted.infoValues;
-        delete extracted.infoLabels;
-        const product = _.assign(extracted, infoParams);
-        const priceString = product.price.replace(' zł', '').replace(',', '.');
-        _.set(product, 'price', _.toNumber(priceString));
-        _.set(product, 'img', 'https://aptekawaw.pl/' + product.img.replace('images/min/product_min/', 'images/'));
-        return product
-    }
+        const payload = {
+            query: {
+                term: {
+                    code: code
+                }
+            }
+        };
+        return esHttpCall(this.esUrl, this.targetIndexName + '/_search', 'POST', payload).spread((targetResults) => {
+            const _id = _.get(targetResults, 'body.hits.hits[0]._id');
+            const count = _.get(targetResults, 'body.hits.total');
+            const targetProduct: any = _.get(targetResults, 'body.hits.hits[0]._source');
+            if (count === 0) {
+                return;
+            }
+            _.set(targetProduct, 'img', _.get(aptekawawDecorationData, 'images[0].image'));
+            _.set(targetProduct, 'bloz7', _.get(aptekawawDecorationData, 'model'));
+            const prices = [];
+            if (_.get(targetProduct, 'price')) {
+                prices.push(parseFloat(targetProduct.price))
+            }
+            if (_.get(aptekawawDecorationData, 'price')) {
+                prices.push(parseFloat(aptekawawDecorationData.price))
+            }
+            _.set(targetProduct, 'prices', prices);
+
+            process.stdout.write('.');
+            return esHttpCall(this.esUrl, this.targetIndexName + '/' + this.targetIndexName + '/' + _id, 'PUT', targetProduct);
+        }).then(() => true).catch((error) => {
+            console.log('=== ERROR ON decorateProductIndex ===');
+            console.error(error.toString());
+            console.error(error);
+        });
+    };
 }

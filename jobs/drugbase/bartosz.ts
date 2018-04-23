@@ -73,7 +73,6 @@ class ExportProducts extends TaskExportElasticsearch {
 
     target: TaskExportElasticsearchTargetConfig = {
         url: "http://localhost:9200",
-        // url: 'http://vps437867.ovh.net:9200',
         bulkSize: 200,
         indexName: 'drugbase-product',
         overwrite: true,
@@ -82,13 +81,16 @@ class ExportProducts extends TaskExportElasticsearch {
                 dynamic: 'strict',
                 properties: {
                     "code": {"type": "text"},
-                    "name": {"type": "keyword"},
+                    "bloz7": {"type": "keyword"},
+                    "name": {"type": "text"},
                     "vendor": {"type": "keyword"},
+                    "img": {"type": "keyword"},
                     "rx": {"type": "keyword"},
                     "free": {"type": "text"},
                     "senior75": {"type": "boolean"},
                     "refund": {"type": "boolean"},
                     "price": {"type": "float"},
+                    "prices": {"type": "float"},
                     "fullPrice": {"type": "float"},
                     "repayment_F": {"type": "float"},
                     "repayment_R": {"type": "float"},
@@ -104,7 +106,7 @@ class ExportProducts extends TaskExportElasticsearch {
                     "indications": {"type": "text"},
                     "dosing": {"type": "text"},
                     "packaging": {"type": "keyword"},
-                    "substance": {"type": "keyword"},
+                    "substance": {"type": "text"},
                     "pharmindex": {"type": "text"},
                     "chpl": {"type": "text"}
                 }
@@ -275,7 +277,7 @@ export class ExtractBartoszDocuments extends TaskExtract {
             if (key) {
                 document[<string>key] = <string>value;
             } else {
-                // console.error("Bartosz products not found product param on map", displayText);
+                console.error("Bartosz products not found product param on map", displayText);
             }
         });
         extracted = null;
