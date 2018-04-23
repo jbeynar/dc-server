@@ -7,6 +7,7 @@ import * as urlInfoService from 'url';
 import {Curl} from 'node-libcurl';
 import {log} from "./logger";
 import {IDocumentHttp, TaskDownload} from "../shared/typings";
+import * as querystring from 'querystring';
 
 const defaultOptions = {
     intervalTime: 600
@@ -30,9 +31,13 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
             const failedItems = [];
             return Promise.mapSeries(urls, function (target: string | any) {
                 let url;
+                let payload = '';
                 if (_.isObject(target)) {
                     url = _.get(target, 'url');
                     delete target.url;
+                    if (_.has(target, 'body')) {
+                        payload = querystring.stringify(_.get(target, 'body'));
+                    }
                 } else {
                     url = target;
                 }
@@ -40,15 +45,19 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                     console.error(url);
                     throw new Error(`URL must be string, but ${typeof url} was given`);
                 }
-                log(`${++i}/${urls.length} ${url}`);
-                return repo.isDocumentExists(url).then(() => {
+                log(`${++i}/${urls.length} ${url + payload}`);
+                return repo.isDocumentExists(url + payload).then(() => {
                     log(' [SKIP]', 1)
                 }).catch(() => {
                     return new Promise((resolve) => {
                         const curl = new Curl();
                         curl.setOpt(Curl.option.URL, url);
                         curl.setOpt(Curl.option.FOLLOWLOCATION, 1);
-                        curl.setOpt(Curl.option.TIMEOUT, 30);
+                        curl.setOpt(Curl.option.TIMEOUT, 120);
+
+                        if (!_.isEmpty(payload)) {
+                            curl.setOpt(Curl.option.POSTFIELDS, payload);
+                        }
 
                         if (_.get(downloadTask, 'options.headers') && !_.isEmpty(downloadTask.options.headers)) {
                             curl.setOpt(Curl.option.HTTPHEADER, downloadTask.options.headers);
@@ -59,7 +68,7 @@ export function downloadHttpDocuments(downloadTask: TaskDownload): Promise<any> 
                             let documentHttp: IDocumentHttp = {
                                 type: curl.getInfo(Curl.info.CONTENT_TYPE),
                                 name: downloadTask.name,
-                                url: url,
+                                url: url + payload,
                                 host: urlInfo.hostname,
                                 path: urlInfo.pathname,
                                 query: urlInfo.query,

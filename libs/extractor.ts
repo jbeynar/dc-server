@@ -202,7 +202,7 @@ export function extractFromRepo(extractionTask: TaskExtract) {
                     document = null;
                     return data;
                 });
-            }).then((dataSet) => {
+            }, {concurrency: 10}).then((dataSet) => {
                 logger.log('.');
                 cursor.read(readBulkSize, readHandler); // backpressure
                 return dataSet;

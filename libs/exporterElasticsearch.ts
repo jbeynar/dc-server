@@ -10,9 +10,9 @@ import {IDocumentJson, TaskExportElasticsearch, TaskExportElasticsearchTargetCon
 import {log} from "./logger";
 import {Curl} from 'node-libcurl';
 
-function esHttpCall(esUrl, indexName, method?, body?) {
+export function esHttpCall(esUrl, targetPath, method?, body?) {
     return http({
-        uri: `${esUrl}/${indexName}`,
+        uri: `${esUrl}/${targetPath}`,
         method: method || 'GET',
         json: body
     });
