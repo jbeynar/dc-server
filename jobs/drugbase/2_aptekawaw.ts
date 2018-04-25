@@ -167,7 +167,7 @@ export class DownloadAptekawawProducts extends TaskDownload {
 }
 
 export class DecorateProducts extends TaskExtract {
-    esUrl = 'http://vps437867.ovh.net:9200';
+    esUrl = 'http://localhost:9200';
     targetIndexName = 'drugbase-product';
 
     sourceHttpDocuments = {
@@ -196,22 +196,45 @@ export class DecorateProducts extends TaskExtract {
             const _id = _.get(targetResults, 'body.hits.hits[0]._id');
             const count = _.get(targetResults, 'body.hits.total');
             const targetProduct: any = _.get(targetResults, 'body.hits.hits[0]._source');
+            let price;
+            if (_.get(aptekawawDecorationData, 'price')) {
+                price = parseFloat(aptekawawDecorationData.price);
+            }
             if (count === 0) {
-                return;
+                const newProduct = {
+                    code: _.get(aptekawawDecorationData, 'ean'),
+                    name: _.get(aptekawawDecorationData, 'name'),
+                    img: _.get(aptekawawDecorationData, 'images[0].image'),
+                    bloz7: _.get(aptekawawDecorationData, 'model'),
+                    prices: []
+                };
+                if (price) {
+                    newProduct.prices.push(price);
+                }
+                return esHttpCall(this.esUrl, `${this.targetIndexName}/${this.targetIndexName}`, 'POST', newProduct);
+            }
+            if (price) {
+                targetProduct.prices.push(price);
+                targetProduct.prices = targetProduct.prices.sort();
+            }
+            const packaging = _.get(targetProduct, 'packaging');
+            const pricesPerUnit = [];
+            if (!_.isEmpty(targetProduct.prices) && !_.isEmpty(packaging)) {
+                if (packaging[0]) {
+                    const pricePerUnit0 = targetProduct.prices[0] / packaging[0].count;
+                    pricesPerUnit.push({price: pricePerUnit0, unit: packaging[0].unit})
+                }
+                if (packaging[1]) {
+                    const pricePerMultiUnit = targetProduct.prices[0] / (packaging[0].count * packaging[1].count);
+                    pricesPerUnit.push({price: pricePerMultiUnit, unit: packaging[1].unit});
+                }
             }
             _.set(targetProduct, 'img', _.get(aptekawawDecorationData, 'images[0].image'));
             _.set(targetProduct, 'bloz7', _.get(aptekawawDecorationData, 'model'));
-            const prices = [];
-            if (_.get(targetProduct, 'price')) {
-                prices.push(parseFloat(targetProduct.price))
-            }
-            if (_.get(aptekawawDecorationData, 'price')) {
-                prices.push(parseFloat(aptekawawDecorationData.price))
-            }
-            _.set(targetProduct, 'prices', prices);
-
+            _.set(targetProduct, 'pricesPerUnit', pricesPerUnit);
             process.stdout.write('.');
-            return esHttpCall(this.esUrl, this.targetIndexName + '/' + this.targetIndexName + '/' + _id, 'PUT', targetProduct);
+            const path = `${this.targetIndexName}/${this.targetIndexName}/${_id}`;
+            return esHttpCall(this.esUrl, path, 'PUT', targetProduct);
         }).then(() => true).catch((error) => {
             console.log('=== ERROR ON decorateProductIndex ===');
             console.error(error.toString());

@@ -89,8 +89,13 @@ class ExportProducts extends TaskExportElasticsearch {
                     "free": {"type": "text"},
                     "senior75": {"type": "boolean"},
                     "refund": {"type": "boolean"},
-                    "price": {"type": "float"},
                     "prices": {"type": "float"},
+                    "pricesPerUnit": {
+                        "properties": {
+                            "price": {"type": "float"},
+                            "unit": {"type": "keyword"}
+                        }
+                    },
                     "fullPrice": {"type": "float"},
                     "repayment_F": {"type": "float"},
                     "repayment_R": {"type": "float"},
@@ -105,7 +110,12 @@ class ExportProducts extends TaskExportElasticsearch {
                     "range_R_S": {"type": "keyword"},
                     "indications": {"type": "text"},
                     "dosing": {"type": "text"},
-                    "packaging": {"type": "keyword"},
+                    "packaging": {
+                        "properties": {
+                            "count": {"type": "float"},
+                            "unit": {"type": "keyword"}
+                        }
+                    },
                     "substance": {"type": "text"},
                     "pharmindex": {"type": "text"},
                     "chpl": {"type": "text"}
@@ -171,7 +181,7 @@ const displayTextMap = {
     'Wskazania (w tym pkt 4.1 ChPL)': 'indications',
     'Dawkowanie': 'dosing',
     'Poziom odpłatnosci': 'repaymentLevel',
-    'Cena pełnopłatna': 'fullPrice',
+    'Cena pełnopłatna': 'price',
     'Wysokość dopłaty (ryczałt)': 'repayment_R',
     'Wysokość dopłaty (50%)': 'repayment_50',
     'Wysokość dopłaty (30%)': 'repayment_30',
@@ -259,14 +269,64 @@ export class ExtractBartoszDocuments extends TaskExtract {
 
     };
 
+    units = [
+        'szt.',
+        'szt',
+        'poj.',
+        'but.',
+        'butli',
+        'amp.',
+        'dawek',
+        'tabl.',
+        'wiązka',
+        'amp.-strzyk.',
+        'amp-strzyk.',
+        'sasz.',
+        'saszetka',
+        'saszetki',
+        'saszetek',
+        'wkład',
+        'wkłady',
+        'wkładów',
+        'wstrzyk.',
+        'wstrzykiwacz',
+        'wstrzykiwacze',
+        'worków',
+        'fiol.',
+        'fiolek',
+        'fiolki',
+        'fiolka',
+        'zestaw',
+        'inhalator',
+        'ml',
+        'g',
+        'j.m.'];
+
+    isNumber(token) {
+        if (!_.isString(token)) {
+            return false;
+        }
+        const text = token.replace(',', '.');
+        return String(Number(text)) == text;
+    }
+
+    isValidUnit(text) {
+        return this.units.indexOf(text) > -1;
+    }
+
+    castPrice(formattedString) {
+        if (_.isEmpty(formattedString) || !_.isString(formattedString)) {
+            return NaN;
+        }
+        return _.toNumber(formattedString.replace(' PLN', '').replace(',', '.')) || NaN;
+    }
+
     process(extracted) {
         const document: any = {};
         _.set(document, 'pharmindex', extracted.pharmindex);
         _.set(document, 'chpl', extracted.chpl);
         delete extracted.pharmindex;
         delete extracted.chpl;
-
-        // Capture key value pairs via documents display texts mapping
         _.forEach(extracted, (rows) => {
             if (_.isEmpty(rows)) {
                 return;
@@ -276,32 +336,39 @@ export class ExtractBartoszDocuments extends TaskExtract {
             let key = _.get(displayTextMap, displayText);
             if (key) {
                 document[<string>key] = <string>value;
-            } else {
-                console.error("Bartosz products not found product param on map", displayText);
             }
         });
         extracted = null;
-
-        // Static map translation
+        const packaging = [];
+        const packagingTokens = _.get(document, 'packaging', '').split(' ');
+        const n = packagingTokens.length;
+        for (var i = 0; i < n - 1; i++) {
+            if (this.isNumber(packagingTokens[i]) && this.isValidUnit(packagingTokens[i + 1])) {
+                packaging.push({count: parseFloat(packagingTokens[i]), unit: packagingTokens[i + 1]})
+            }
+        }
+        if (packaging.length == 1) {
+            document.packaging = [packaging[0]];
+        } else if (packaging.length == 2) {
+            document.packaging = packaging;
+            const unitIndex0 = this.units.indexOf(packaging[0].unit);
+            const unitIndex1 = this.units.indexOf(packaging[1].unit);
+            if (unitIndex0 > unitIndex1) {
+                document.packaging = [packaging[1], packaging[0]];
+            }
+        } else {
+            document.packaging = packaging;
+        }
         _.set(document, 'senior75', _.get(fieldsMap, `senior75[${document.senior75}]`, document.senior75));
         _.set(document, 'rx', _.get(fieldsMap, `rx[${document.rx}]`, document.rx));
         _.set(document, 'refund', _.get(fieldsMap, `refund[${document.refund}]`, document.refund));
         _.set(document, 'repaymentLevel', _.get(fieldsMap, `repaymentLevel[${document.repaymentLevel}]`, document.repaymentLevel));
-
-        // Price conversion
-        function castPrice(formattedString) {
-            if (_.isEmpty(formattedString) || !_.isString(formattedString)) {
-                return NaN;
-            }
-            return _.toNumber(formattedString.replace(' PLN', '').replace(',', '.')) || NaN;
-        }
-
-        _.set(document, 'price', castPrice(document.price));
-        _.set(document, 'fullPrice', castPrice(document.fullPrice));
-        _.set(document, 'repayment_R', castPrice(document.repayment_R));
-        _.set(document, 'repayment_F', castPrice(document.repayment_F));
-        _.set(document, 'repayment_30', castPrice(document.repayment_30));
-        _.set(document, 'repayment_50', castPrice(document.repayment_50));
+        _.set(document, 'prices', [this.castPrice(document.price)].filter(p => p ? true : false));
+        _.set(document, 'repayment_R', this.castPrice(document.repayment_R));
+        _.set(document, 'repayment_F', this.castPrice(document.repayment_F));
+        _.set(document, 'repayment_30', this.castPrice(document.repayment_30));
+        _.set(document, 'repayment_50', this.castPrice(document.repayment_50));
+        delete(document.price);
         return document;
     };
 }
