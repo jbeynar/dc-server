@@ -168,7 +168,7 @@ export class DownloadAptekawawProducts extends TaskDownload {
 
 export class DecorateProducts extends TaskExtract {
     esUrl = 'http://localhost:9200';
-    targetIndexName = 'drugbase-product';
+    targetIndexName = 'drugbase-product-june';
 
     sourceHttpDocuments = {
         name: 'drugbase-aptekawaw-product'

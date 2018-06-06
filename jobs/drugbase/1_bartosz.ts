@@ -74,10 +74,10 @@ class ExportProducts extends TaskExportElasticsearch {
     target: TaskExportElasticsearchTargetConfig = {
         url: "http://localhost:9200",
         bulkSize: 200,
-        indexName: 'drugbase-product',
+        indexName: 'drugbase-product-june',
         overwrite: true,
         mapping: {
-            'drugbase-product': {
+            'drugbase-product-june': {
                 dynamic: 'strict',
                 properties: {
                     "code": {"type": "text"},
