@@ -51,7 +51,7 @@ export class DownloadAptekawawProductsListsMeta extends TaskDownload {
         intervalTime: 500
     };
 
-    autoRemove = false;
+    autoRemove = true;
 
     urls() {
         const query: IJsonSearchConfig = {
@@ -97,7 +97,7 @@ export class DownloadAptekawawProductsLists extends TaskDownload {
         intervalTime: 500
     };
 
-    autoRemove = false;
+    autoRemove = true;
 
     urls() {
         const query: IJsonSearchConfig = {
@@ -150,7 +150,7 @@ export class DownloadAptekawawProducts extends TaskDownload {
         intervalTime: 350
     };
 
-    autoRemove = false;
+    autoRemove = true;
 
     urls() {
         const query: IJsonSearchConfig = {

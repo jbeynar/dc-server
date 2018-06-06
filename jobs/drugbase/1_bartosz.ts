@@ -10,7 +10,7 @@ export class DownloadBartoszDocumentsMeta extends TaskDownload {
     name = 'drugbase-bartosz-documents-meta';
 
     urls() {
-        return _.map(_.range(613), (v) => {
+        return _.map(_.range(617), (v) => {
             return `http://www.bartoszmowi.pl/phx_drugs/glossary/page:${v}`
         })
     };
@@ -163,7 +163,6 @@ export class GenerateMap extends TaskScript {
             _.set(acc, bucket.key, bucket.doc_count);
             return acc;
         }, {});
-        console.log(JSON.stringify(countsMap, null, 4));
         return Promise.resolve();
     }
 }
