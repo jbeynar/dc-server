@@ -37,5 +37,5 @@
     "trailing": true,
     "undef": true,
     "unused": true,
-    "esnext": true
+    "esversion": 6
 }
