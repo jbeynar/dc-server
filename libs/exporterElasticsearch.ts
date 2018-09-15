@@ -8,7 +8,6 @@ import * as db from './db';
 import * as http from 'http-as-promised';
 import {IDocumentJson, TaskExportElasticsearch, TaskExportElasticsearchTargetConfig} from "../shared/typings";
 import {log} from "./logger";
-import {Curl} from 'node-libcurl';
 
 export function esHttpCall(esUrl, targetPath, method?, body?) {
     return http({

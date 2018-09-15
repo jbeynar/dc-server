@@ -1,9 +1,5 @@
 `use strict`;
 
-import {config as configDotEnv} from 'dotenv';
-
-configDotEnv({silent:true});
-
 export const config = {
     mocha: process.env.MOCHA || false,
     webapi: {

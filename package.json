@@ -26,7 +26,6 @@
         "lodash": "4.16.6",
         "mongodb": "2.2.11",
         "new-hapi-project": "0.0.4",
-        "node-libcurl": "1.0.0",
         "pg": "6.1.4",
         "pg-cursor": "^1.2.0",
         "pg-rxjs": "1.0.20",
