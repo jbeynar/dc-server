@@ -4,22 +4,24 @@ const io = require('socket.io-client');
 import {config} from "../config";
 import * as _ from 'lodash';
 
-const conn = io.connect(config.webapi.socketServer.url);
+let conn;
 
-export function progressNotification(jobName, taskType, taskName, progress): void {
-    const msg = {
+export function initializeConnection() {
+    conn = io.connect(config.webapi.socketServer.url);
+}
+
+export function sendTaskStatus(jobName, taskType, taskName, progress): void {
+    conn.emit('progressNotification', {
         jobName: jobName,
         taskType: taskType,
         taskName: taskName,
         progress: progress
-    };
-    conn.emit('progressNotification', msg);
+    });
 }
 
 export function debugNotification(level, buffer): void {
-    const msg = {
+    conn.emit('logger', {
         level: level,
         msg: _.toString(buffer)
-    };
-    conn.emit('logger', msg);
+    });
 }

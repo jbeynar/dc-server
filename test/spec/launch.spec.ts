@@ -3,7 +3,6 @@
 import * as chai from 'chai';
 import * as fs from 'fs';
 import * as proxyquire from 'proxyquire';
-import * as promise from 'bluebird';
 import * as _ from 'lodash';
 
 const JOBS_PATH = fs.realpathSync('./test/jobs');

@@ -1,5 +1,0 @@
-#!/bin/bash
-# Find and remove js and js.map files that has been converted to ts
-find -name '*.ts' \
-  ! -path './node_modules/*' \
-  -exec bash -c 'git rm --cached ${1%%.ts}.js; git rm --cached ${1%%.ts}.js.map' -- {} \;
