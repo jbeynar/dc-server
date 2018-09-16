@@ -1,6 +1,5 @@
 'use strict';
 
-import rfr = require('rfr');
 import promise = require('bluebird');
 import {query} from "../libs/db";
 import * as Squel from 'squel';

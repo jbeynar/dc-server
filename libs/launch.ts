@@ -2,9 +2,8 @@
 
 import * as Promise from 'bluebird';
 import * as _ from 'lodash';
-import {readdirSync,realpathSync,readdir} from "fs";
+import {readdirSync, realpathSync, readdir} from "fs";
 import {log} from './logger';
-import {Task} from "../shared/typings";
 
 const JOBS_PATH = realpathSync('./jobs');
 
@@ -37,7 +36,7 @@ export function run(jobName, jobTask) {
             log(`\nYou did not provide task name, available tasks: ${separator}${files.join(separator)}`);
             return;
         }
-        if(_.isString(jobTask)){
+        if (_.isString(jobTask)) {
             jobTask = [jobTask];
         }
         let jobConfigPath = JOBS_PATH + '/' + jobName;
@@ -71,11 +70,12 @@ export function run(jobName, jobTask) {
 
         let t0, t1;
         return Promise.mapSeries(jobTask, (taskName: string) => {
-            let Task = job[taskName];
-            if (!_.isFunction(Task)) {
+            let taskClassName: () => void = job[taskName];
+            if (!_.isFunction(taskClassName)) {
                 throw new Error('Task must be a function');
             }
-            let task: Task = new Task;
+            // @ts-ignore: TS2350
+            let task = new taskClassName;
             if (!task.execute) {
                 throw new Error('Task must be executable');
             }

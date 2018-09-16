@@ -44,7 +44,7 @@ export class extractLinks extends TaskExtract {
         const products = _.get(extracted, 'content', []), results = [];
         let code;
 
-        return Promise.each(products, (product) => {
+        return Promise.each(products, (product: any) => {
             code = _.get(product, 'product.code');
             return isCodeExists(code).then((ans) => {
                 if (ans) {

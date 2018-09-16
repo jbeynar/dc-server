@@ -8,6 +8,7 @@ import * as _ from 'lodash';
 import {Server} from 'hapi';
 import {error, log} from "./libs/logger";
 import {IJsonSearchConfig} from "./shared/typings";
+import {IServerConnectionOptions} from 'hapi';
 
 const RepoApi = {
     getJsonDocuments: {
@@ -91,8 +92,11 @@ const LaunchApi = {
 
 function setupHttpServer() {
     const server = new Server();
-
-    server.connection({port: config.webapi.httpServer.port, routes: {cors: true}});
+    const options: IServerConnectionOptions = {
+        port: config.webapi.httpServer.port,
+        routes: {cors: {origin: ['*']}}
+    };
+    server.connection(options);
 
     _.forEach(RepoApi, (route) => {
         server.route({method: route.method, path: route.path, handler: route.handler});
