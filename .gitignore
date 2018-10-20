@@ -2,8 +2,11 @@ node_modules
 .idea
 npm-debug.log
 built
-typings
-*.js
+typings/*.js
+shared/*.js
+libs/*.js
+jobs/*.js
+scripts/*.js
 *.js.map
 .env
 coverage
