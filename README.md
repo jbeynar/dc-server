@@ -1,10 +1,18 @@
 # JBL Data Center Server
 
 ## Prerequirements
-Nodejs 4 in your system. Current version was tested on nodejs 4.6.2. 
+- NodeJS (tested on 8.12.0)
+- Docker (tested on 18.03.1-ce)
+- Docker Compose (tested on 1.21.1)
 
 ## Services
 Use docker-compose.yml to ensure postgresql and elasticsearch; mongodb and kibana are optional services.
+
+## Dependencies
+Installing npm dependencies:
+```
+npm install
+```
 
 ## Database seed
 In order to seed database run:
@@ -27,21 +35,6 @@ You can also use custom format, it's probably even lighter.
 pg_restore -h localhost -U jbl-dc -W -n public -t document -a -v --format=tar dump.document.tar.gz -d jbl-dc
 ```
 
-## Issue on macOS
-
-If you encounter issue like this:
-```
-Reason: Incompatible library version: node_libcurl.node requires version 9.0.0 or later, but libcurl.4.dylib provides version 7.0.0
-```
-Try this:
-```
-npm install node-libcurl --build-from-source
-```
-If your get error while installing node-libcurl try to:
-```
-npm install node-gyp
-```
-
 ## Elasticsearch issue on Debian
 1. chmod 777 on esedate
 2. sudo sysctl -w vm.max_map_count=262144
@@ -54,12 +47,12 @@ npm run test
 
 ```
 
-## TypeScript watch and transpile
+## TypeScript
 ```
-tsc -w --pretty
+./node_modules/.bin/tsc
 ```
 
-You can also configure Webstorm to transpile them using options from tsconfig.json (Open settings and search for "use tsconfig.json")
+You can also configure WebStorm to transpile them using options from tsconfig.json (Open settings and search for "use tsconfig.json")
 
 ## DC job manager
 Listing job's tasks run:
@@ -76,3 +69,7 @@ Executing all job's tasks sequentially in order of job file:
 ```
 npm run dc jobName
 ```
+
+## Contribution
+
+http://reactivex.io/documentation/operators.html
