@@ -69,7 +69,3 @@ Executing all job's tasks sequentially in order of job file:
 ```
 npm run dc jobName
 ```
-
-## Contribution
-
-http://reactivex.io/documentation/operators.html
